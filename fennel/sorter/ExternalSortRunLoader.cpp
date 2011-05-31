@@ -96,6 +96,7 @@ void ExternalSortRunLoader::startRun()
     dataBuffers.clear();
     pDataBuffer = NULL;
     pIndexBuffer = NULL;
+    partitionKeyInitialized = false;
 
     if (!allocateDataBuffer()) {
         permAssert(false);
@@ -215,6 +216,9 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
             // first make sure we have room for the key pointer
             if (pIndexBuffer >= pIndexBufferEnd) {
                 if (!allocateIndexBuffer()) {
+                    FENNEL_TRACE(
+                        TRACE_FINEST,
+                        " No space for new index Buffer. Overflow.... ");
                     overflow = true;
                     break;
                 }
@@ -226,6 +230,9 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
                     // first tuple:  try to allocate a new buffer
                     if (!allocateDataBuffer()) {
                         // since cbCopy is zero, we can return right now
+                        FENNEL_TRACE(
+                            TRACE_FINEST,
+                            " No space for new data Buffer. Overflow.... ");
                         return EXTSORT_OVERFLOW;
                     }
                 }

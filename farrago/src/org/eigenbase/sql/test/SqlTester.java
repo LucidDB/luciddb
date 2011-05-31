@@ -22,6 +22,8 @@
 */
 package org.eigenbase.sql.test;
 
+import java.sql.ResultSet;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 
@@ -233,6 +235,22 @@ public interface SqlTester
         double delta);
 
     /**
+     * Tests that a SQL query returns a result of expected type and value.
+     * Checking of type and value are abstracted using {@link TypeChecker}
+     * and {@link ResultChecker} functors.
+     *
+     * @param query SQL query
+     * @param typeChecker Checks whether the result is the expected type; must
+     *     not be null
+     * @param resultChecker Checks whether the result has the expected value;
+     *     must not be null
+     */
+    void check(
+        String query,
+        TypeChecker typeChecker,
+        ResultChecker resultChecker);
+
+    /**
      * Declares that this test is for a given operator. So we can check that all
      * operators are tested.
      *
@@ -310,6 +328,11 @@ public interface SqlTester
     interface TypeChecker
     {
         void checkType(RelDataType type);
+    }
+
+    interface ResultChecker
+    {
+        void checkResult(ResultSet result) throws Exception;
     }
 }
 

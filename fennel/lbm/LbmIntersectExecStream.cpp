@@ -84,7 +84,7 @@ ExecStreamResult LbmIntersectExecStream::execute(
             }
 
             // now try reading segments from the other streams
-            iInput = ++iInput % nInputs;
+            iInput = (iInput + 1) % nInputs;
         }
 
         // intersect the overlapping segments

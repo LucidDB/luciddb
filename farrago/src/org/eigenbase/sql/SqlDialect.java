@@ -166,6 +166,8 @@ public class SqlDialect
             return DatabaseProduct.LUCIDDB;
         } else if (upperProductName.indexOf("SQL SERVER") >= 0) {
             return DatabaseProduct.MSSQL;
+        } else if (upperProductName.indexOf("PARACCEL") >= 0) {
+            return DatabaseProduct.PARACCEL;
         } else if (productName.equals("Oracle")) {
             return DatabaseProduct.ORACLE;
         } else if (upperProductName.indexOf("POSTGRE") >= 0) {
@@ -284,9 +286,63 @@ public class SqlDialect
      */
     public String quoteStringLiteral(String val)
     {
-        val = FakeUtil.replace(val, "'", "''");
-        return "'" + val + "'";
+        if (containsNonAscii(val)) {
+            final StringBuilder buf = new StringBuilder();
+            quoteStringLiteralUnicode(buf, val);
+            return buf.toString();
+        } else {
+            val = FakeUtil.replace(val, "'", "''");
+            return "'" + val + "'";
+        }
     }
+
+    /**
+     * Returns whether the string contains any characters outside the
+     * comfortable 7-bit ASCII range (32 through 127).
+     *
+     * @param s String
+     * @return Whether string contains any non-7-bit-ASCII characters
+     */
+    private static boolean containsNonAscii(String s)
+    {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c < 32 || c >= 128) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Converts a string into a unicode string literal. For example,
+     * <code>can't{tab}run\</code> becomes <code>u'can''t\0009run\\'</code>.
+     */
+    public void quoteStringLiteralUnicode(StringBuilder buf, String val)
+    {
+        buf.append("u&'");
+        for (int i = 0; i < val.length(); i++) {
+            char c = val.charAt(i);
+            if (c < 32 || c >= 128) {
+                buf.append('\\');
+                buf.append(hex[(c >> 12) & 0xf]);
+                buf.append(hex[(c >> 8) & 0xf]);
+                buf.append(hex[(c >> 4) & 0xf]);
+                buf.append(hex[c & 0xf]);
+            } else if (c == '\'' || c == '\\') {
+                buf.append(c);
+                buf.append(c);
+            } else {
+                buf.append(c);
+            }
+        }
+        buf.append("'");
+    }
+
+    private static final char[] hex = {
+        '0', '1', '2', '3', '4', '5', '6', '7',
+        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+    };
 
     /**
      * Converts a string literal back into a string. For example, <code>'can''t
@@ -367,7 +423,7 @@ public class SqlDialect
     public static class FakeUtil {
         public static Error newInternal(Throwable e, String s)
         {
-            String message = "Internal error: " + s;
+            String message = "Internal error: \u0000" + s;
             AssertionError ae = new AssertionError(message);
             ae.initCause(e);
             return ae;
@@ -440,6 +496,7 @@ public class SqlDialect
         HSQLDB("Hsqldb", null),
         VERTICA("Vertica", "\""),
         SQLSTREAM("SQLstream", "\""),
+        PARACCEL("Paraccel", "\""),
         /**
          * Placeholder for the unknown database.
          *
@@ -449,11 +506,14 @@ public class SqlDialect
          */
         UNKNOWN("Unknown", "`");
 
-        private final SqlDialect dialect;
+        private SqlDialect dialect = null;
+        private String databaseProductName;
+        private String quoteString;
 
         DatabaseProduct(String databaseProductName, String quoteString)
         {
-            dialect = new SqlDialect(this, databaseProductName, quoteString);
+            this.databaseProductName = databaseProductName;
+            this.quoteString = quoteString;
         }
 
         /**
@@ -469,6 +529,10 @@ public class SqlDialect
          */
         public SqlDialect getDialect()
         {
+            if (dialect == null) {
+                dialect =
+                    new SqlDialect(this, databaseProductName, quoteString);
+            }
             return dialect;
         }
     }

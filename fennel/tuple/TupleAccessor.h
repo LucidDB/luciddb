@@ -122,6 +122,9 @@ class FENNEL_TUPLE_EXPORT TupleAccessor
 
     TupleFormat format;
 
+    TupleAlign alignment;
+    int tupleAlignmentMask;
+
     // private helpers
     void initFixedAccessors(TupleDescriptor const &,VectorOfUint &);
     void clear();
@@ -157,7 +160,8 @@ public:
      */
     void compute(
         TupleDescriptor const &tuple,
-        TupleFormat format = TUPLE_FORMAT_STANDARD);
+        TupleFormat format = TUPLE_FORMAT_STANDARD,
+        TupleAlign alignment = TUPLE_ALIGN_NATIVE);
 
     /**
      * @return the maximum possible tuple storage size in bytes

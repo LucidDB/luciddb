@@ -62,7 +62,7 @@ public class SqlToRelConverter
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger sqlToRelTracer =
+    protected static final Logger sqlToRelTracer =
         EigenbaseTrace.getSqlToRelTracer();
 
     //~ Instance fields --------------------------------------------------------
@@ -2473,7 +2473,7 @@ public class SqlToRelConverter
      *
      * @pre bb.root != null
      */
-    private void gatherOrderExprs(
+    protected void gatherOrderExprs(
         Blackboard bb,
         SqlSelect select,
         SqlNodeList orderList,

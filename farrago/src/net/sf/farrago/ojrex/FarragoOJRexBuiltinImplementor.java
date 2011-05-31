@@ -174,11 +174,11 @@ public class FarragoOJRexBuiltinImplementor
                 false);
             break;
         default:
-            assert (false);
+            throw Util.unexpected(builtinFunction);
         }
 
-        // All the builtin function returns null if
-        // one of the arguements is null.
+        // All the builtin functions return null if
+        // one of the arguments is null.
 
         if (nullTest != null) {
             translator.addStatement(

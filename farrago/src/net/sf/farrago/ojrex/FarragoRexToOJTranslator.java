@@ -23,6 +23,7 @@
 package net.sf.farrago.ojrex;
 
 import java.util.*;
+import java.util.List;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
@@ -38,6 +39,7 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
@@ -70,11 +72,19 @@ public class FarragoRexToOJTranslator
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoRepos repos;
-    private StatementList stmtList;
+    private final Frame frame;
     private final MemberDeclarationList memberList;
     private final FarragoOJRexCastImplementor castImplementor;
     private final OJClass ojNullablePrimitive;
     private final Map<Integer, String> localRefMap;
+
+    /**
+     * Scopes, each consisting of a {@link StatementList} and zero or more
+     * variable declarations, being built up for ROW or CASE expression. For
+     * CASE expressions, each WHEN, THEN or ELSE has one statementList. For ROW
+     * expressions, each value in a row has one statementList.
+     */
+    private Frame[] frames;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -84,9 +94,10 @@ public class FarragoRexToOJTranslator
      * @param repos repository
      * @param relImplementor implementation context
      * @param contextRel relational expression which is the context for the
-     * row-expressions which are to be translated
+     *     row-expressions which are to be translated
      * @param implementorTable table of implementations for SQL operators
-     * @param stmtList statement list for side-effects of translation
+     * @param frame Frame containing statement list for side-effects of
+     *     translation
      * @param memberList member list for class-level state required by
      * @param program Program, may be null
      * @param localRefMap map from RexLocalRef index to name of method which
@@ -96,16 +107,16 @@ public class FarragoRexToOJTranslator
         JavaRelImplementor relImplementor,
         RelNode contextRel,
         OJRexImplementorTable implementorTable,
-        StatementList stmtList,
+        Frame frame,
         MemberDeclarationList memberList,
         RexProgram program,
         Map<Integer, String> localRefMap)
     {
         super(relImplementor, contextRel, implementorTable);
         this.repos = repos;
-        this.stmtList = stmtList;
+        this.frame = frame;
+        assert frame != null;
         this.memberList = memberList;
-
         this.localRefMap = localRefMap;
 
         // keep a reference to the implementor for CAST, which
@@ -134,7 +145,7 @@ public class FarragoRexToOJTranslator
             relImplementor,
             contextRel,
             implementorTable,
-            stmtList,
+            new Frame(null, false, stmtList),
             memberList,
             program,
             new HashMap<Integer, String>());
@@ -142,18 +153,23 @@ public class FarragoRexToOJTranslator
 
     //~ Methods ----------------------------------------------------------------
 
-    // override, with refined return type
     public FarragoRexToOJTranslator push(StatementList stmtList)
     {
-        // NOTE jvs 16-Oct-2006: The child translator inherits important state
-        // like localRefMap.  (Otherwise common expressions would be translated
-        // and evaluated more than once.)
+        return pushFrame(new Frame(frame, true, stmtList));
+    }
+
+    public FarragoRexToOJTranslator pushFrame(Frame frame)
+    {
+        // The child translator inherits important state like localRefMap.
+        // (Otherwise common expressions would be translated more than once.)
+        // But the frame has no parent, so it cannot inherit the result of
+        // common expressions that have already been calculated.
         return new FarragoRexToOJTranslator(
             repos,
             getRelImplementor(),
             getContextRel(),
             getImplementorTable(),
-            stmtList,
+            frame,
             memberList,
             getProgram(),
             localRefMap);
@@ -166,12 +182,27 @@ public class FarragoRexToOJTranslator
 
     public void addStatement(Statement stmt)
     {
-        stmtList.add(stmt);
+        frame.stmtList.add(stmt);
     }
 
     public void addStatementsFromList(StatementList newStmtList)
     {
-        stmtList.addAll(newStmtList);
+        frame.stmtList.addAll(newStmtList);
+    }
+
+    /**
+     * Returns the frame (including a {@link StatementList} a set of variables
+     * in scope) corresponding to a subexpression of a CASE or ROW expression.
+     */
+    public Frame getSubFrame(int i)
+    {
+        if (frames == null) {
+            return null;
+        }
+        if (i < frames.length) {
+            return frames[i];
+        }
+        return null;
     }
 
     // override RexToOJTranslator
@@ -199,53 +230,98 @@ public class FarragoRexToOJTranslator
             return super.visitLocalRef(localRef);
         }
 
-        // See if we've already generated code for this common subexpression.
-        String methodName = localRefMap.get(localRef.getIndex());
-        if (methodName != null) {
-            return setTranslation(
-                new MethodCall(
-                    methodName,
-                    new ExpressionList()));
-        }
-
-        // Nope, generate it now.
-
-        StatementList methodBody = new StatementList();
-        FarragoRexToOJTranslator subTranslator =
-            (FarragoRexToOJTranslator) push(methodBody);
-
-        Expression expr = subTranslator.translateSubExpression(localRef);
-
-        int complexity = OJUtil.countParseTreeNodes(expr);
-        if (methodBody.isEmpty() && (complexity < 5)) {
-            // The expression is very simple (like maybe just a constant);
-            // don't bother with a separate method.
+        // First see if there is a variable in scope for this common
+        // subexpression.
+        Expression expr = frame.lookupExprImpl(localRef.getIndex());
+        if (expr != null) {
             return setTranslation(expr);
         }
 
-        methodName = "calc_cse_" + localRef.getIndex();
-        localRefMap.put(localRef.getIndex(), methodName);
+        // See if we've already generated code for this common subexpression.
+        String methodName = localRefMap.get(localRef.getIndex());
+        int complexity = OJUtil.countParseTreeNodes(expr);
+        if (methodName != null) {
+            expr =
+                new MethodCall(
+                    methodName,
+                    new ExpressionList());
+        } else if (complexity > 100) {
+            // The expression is very complicated, so to avoid pushing this
+            // method over the 32kB bytecode limit, put the new code in its
+            // own method. There is a cost to this: any common subexpressions
+            // will have to be evaluated afresh in the method.
+            StatementList methodBody = new StatementList();
+            FarragoRexToOJTranslator subTranslator =
+                pushFrame(
+                    new Frame(null, false, methodBody));
 
-        methodBody.add(new ReturnStatement(expr));
+            Expression subExpr = subTranslator.translateSubExpression(localRef);
+            methodName = "calc_cse_" + localRef.getIndex();
+            localRefMap.put(localRef.getIndex(), methodName);
 
-        // Wrap the expression as a method declaration. Allow the method to
-        // throw any Exception, because without analyzing the parse tree, it's
-        // difficult to know which exceptions the code will throw.
-        MemberDeclaration methodDecl =
-            new MethodDeclaration(
-                new ModifierList(
-                    ModifierList.PRIVATE | ModifierList.FINAL),
-                TypeName.forOJClass(
-                    OJUtil.typeToOJClass(
-                        localRef.getType(),
-                        getFarragoTypeFactory())),
-                methodName,
-                new ParameterList(),
-                null,
-                methodBody);
-        addMember(methodDecl);
+            methodBody.add(new ReturnStatement(subExpr));
 
-        return setTranslation(new MethodCall(methodName, new ExpressionList()));
+            // Wrap the expression as a method declaration. Allow the method to
+            // throw any Exception, because without analyzing the parse tree,
+            // it's difficult to know which exceptions the code will throw.
+            MemberDeclaration methodDecl =
+                new MethodDeclaration(
+                    new ModifierList(
+                        ModifierList.PRIVATE | ModifierList.FINAL),
+                    TypeName.forOJClass(
+                        OJUtil.typeToOJClass(
+                            localRef.getType(),
+                            getFarragoTypeFactory())),
+                    methodName,
+                    new ParameterList(),
+                    null,
+                    methodBody);
+            addMember(methodDecl);
+
+            expr = new MethodCall(methodName, new ExpressionList());
+        } else {
+            expr = translateSubExpression(localRef);
+        }
+
+        // If the expression is very simple (say a literal, or another
+        // variable) don't store it in its own variable. If it's a variable,
+        // register it.
+        complexity = OJUtil.countParseTreeNodes(expr);
+        if (expr instanceof Variable || complexity > 1) {
+            final Variable variable =
+                variablize(localRef.getType(), expr);
+            frame.varMap.put(localRef.getIndex(), variable);
+            expr = variable;
+        }
+
+        return setTranslation(expr);
+    }
+
+    /**
+     * Converts an expression to a local variable, to prevent propagation of
+     * the same expression.
+     *
+     * <p>To make sure that all references to a given
+     * {@link org.eigenbase.rex.RexLocalRef} get the same variable, calling this
+     * method is not sufficient. You also have to register the ref index in
+     * {@link Frame#varMap}.
+     *
+     * @param type Value type
+     * @param expr Expression
+     * @return Variable
+     */
+    public Variable variablize(RelDataType type, Expression expr)
+    {
+        if (expr instanceof Variable) {
+            return (Variable) expr;
+        }
+        final Variable variable = newVariable();
+        frame.stmtList.add(
+            declareLocalVariable(
+                typeToOJClass(type),
+                variable,
+                expr));
+        return variable;
     }
 
     // implement RexVisitor
@@ -258,6 +334,70 @@ public class FarragoRexToOJTranslator
                 new ExpressionList(
                     Literal.makeLiteral(
                         dynamicParam.getIndex()))));
+    }
+
+    @Override
+    protected Expression convertCallAndOperands(RexCall call)
+    {
+        // TODO jvs 16-Oct-2006:  make this properly extensible
+        final boolean needSub;
+        final SqlKind operatorKind = call.getOperator().getKind();
+        switch (operatorKind) {
+        case CASE:
+        case NEW_SPECIFICATION:
+        case ROW:
+            needSub = true;
+            break;
+        default:
+            needSub = false;
+            break;
+        }
+        if (!needSub) {
+            return super.convertCallAndOperands(call);
+        }
+        final Frame[] savedFrames = frames;
+        try {
+            final RexNode[] operands = call.getOperands();
+            frames = new Frame[operands.length];
+            List<Expression> exprs = new ArrayList<Expression>();
+            for (int i = 0; i < operands.length; i++) {
+                RexNode operand = operands[i];
+                switch (operatorKind) {
+                case CASE:
+                    frames[i] =
+                        i == 0
+                        ? frame
+                        : new Frame(
+                            frames[i - 2 + (i % 2)],
+                            false,
+                            new StatementList());
+                    break;
+                case NEW_SPECIFICATION:
+                case ROW:
+                    // Each expression in a ROW or NEW has its own statement
+                    // list. Expression #0 inherits variables from the parent
+                    // context, and the other expressions inherit from their
+                    // older sibling. It is not feasible to share expressions
+                    // back with the parent frame, because we are generated
+                    // inside a function call.
+                    frames[i] =
+                        new Frame(
+                            i == 0
+                            ? frame
+                            : frames[i - 1],
+                            i > 0,
+                            new StatementList());
+                    break;
+                default:
+                    throw Util.unexpected(operatorKind);
+                }
+                RexToOJTranslator subTranslator = pushFrame(frames[i]);
+                exprs.add(subTranslator.translateRexNode(operand));
+            }
+            return convertCall(call, exprs);
+        } finally {
+            frames = savedFrames;
+        }
     }
 
     public Expression convertVariable(
@@ -665,7 +805,7 @@ public class FarragoRexToOJTranslator
     {
         Expression rhsExp = translateRexNode(rhs);
         convertCastOrAssignmentWithStmtList(
-            stmtList,
+            frame.stmtList,
             getRepos().getLocalizedObjectName(
                 lhsField.getName()),
             lhsField.getType(),
@@ -709,6 +849,64 @@ public class FarragoRexToOJTranslator
                     AssignmentExpression.EQUALS,
                     result));
         stmtList.add(stmt);
+    }
+
+    /**
+     * A location to which code is being generated.
+     *
+     * <p>Contains a {@link openjava.ptree.StatementList}. May define variables;
+     * inherits variables from parent frames.
+     *
+     * <p>Immutable after construction.
+     */
+    public static class Frame
+    {
+        public final Frame parentFrame;
+        public final StatementList stmtList;
+        public final Map<Integer, Variable> varMap;
+
+        /**
+         * Creates a Frame.
+         *
+         * @param parentFrame Parent frame
+         * @param mandatory Whether this is a mandatory child of the parent
+         *     frame. This means that expressions will definitely be executed.
+         *     Therefore it is safe to declare variables in the frame's variable
+         *     map.
+         * @param stmtList Statement list
+         */
+        public Frame(
+            Frame parentFrame,
+            boolean mandatory,
+            StatementList stmtList)
+        {
+            this.parentFrame = parentFrame;
+            this.stmtList = stmtList;
+            assert stmtList != null;
+            assert !(parentFrame == null && mandatory);
+            this.varMap =
+                mandatory
+                ? parentFrame.varMap
+                : new HashMap<Integer, Variable>(0);
+        }
+
+        /**
+         * Looks up an implementation of a given local reference in this frame
+         * or a frame it inherits from.
+         *
+         * @param index Local variable ordinal
+         * @return Variable, or null if not found
+         */
+        public Expression lookupExprImpl(int index)
+        {
+            for (Frame frame = this; frame != null; frame = frame.parentFrame) {
+                Variable variable = frame.varMap.get(index);
+                if (variable != null) {
+                    return variable;
+                }
+            }
+            return null;
+        }
     }
 }
 

@@ -555,16 +555,19 @@ public class FarragoRelImplementor
     // override JavaRelImplementor
     protected RexToOJTranslator newTranslator(RelNode rel)
     {
-        // NOTE jvs 14-June-2004:  since we aren't given stmtList/memberList,
+        // NOTE jvs 14-June-2004: since we aren't given memberList,
         // this translator is not usable for actual code generation, but
         // it's sufficient for use in TranslationTester, which is
-        // currently the only caller
+        // currently the only caller.
+        //
+        // Updated jhyde 03-June-2010: Create a dummy StatementList because the
+        // translator now requires one.
         return new FarragoRexToOJTranslator(
             preparingStmt.getRepos(),
             this,
             rel,
             implementorTable,
-            null,
+            new StatementList(),
             null,
             null);
     }

@@ -205,6 +205,7 @@ public class ArrayQueue<E>
         }
 
         E result = queue[start];
+        queue[start] = null; // Let the "result" be GCed as soon as possible
         start = increment(start);
         return result;
     }

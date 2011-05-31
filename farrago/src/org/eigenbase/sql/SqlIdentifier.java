@@ -24,11 +24,9 @@ package org.eigenbase.sql;
 
 import java.util.*;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -132,7 +130,7 @@ public class SqlIdentifier
     public SqlNode clone(SqlParserPos pos)
     {
         return new SqlIdentifier(
-            Util.clone(names),
+            names.clone(),
             collation,
             pos,
             componentPositions);

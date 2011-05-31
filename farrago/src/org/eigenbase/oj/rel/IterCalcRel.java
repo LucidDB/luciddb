@@ -42,7 +42,6 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
-
 /**
  * <code>IterCalcRel</code> is an iterator implementation of a combination of
  * {@link ProjectRel} above an optional {@link FilterRel}. It takes a {@link
@@ -504,6 +503,7 @@ public class IterCalcRel
             final List<RexLocalRef> projectRefList = program.getProjectList();
             int i = -1;
             for (RexLocalRef rhs : projectRefList) {
+
                 // NOTE jvs 14-Sept-2006:  Put complicated project expressions
                 // into their own method, otherwise a big select list can easily
                 // blow the 64K Java limit on method bytecode size.  Make
@@ -534,7 +534,18 @@ public class IterCalcRel
                 projTranslator.translateAssignment(fields[i], lhs, rhs);
 
                 int complexity = OJUtil.countParseTreeNodes(projMethodBody);
-                if (complexity < 20) {
+
+                // REVIEW: HCP 5/18/2011
+                // The projMethod should be checked
+                // for causing possible compiler errors caused by the use of
+                // variables declared in other projMethods.  Also the
+                // local declaration of variabled used by other proj methods
+                // should also be checked.
+
+                // Fixing for backswing integration 14270
+                // TODO: check if abstracting this method body will cause
+                // a compiler error
+                if (true) {
                     // No method needed; just append.
                     condBody.addAll(projMethodBody);
                     continue;

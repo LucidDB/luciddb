@@ -320,70 +320,11 @@ inline void deleteAndNullifyArray(T *&p)
 
 // Memory alignment
 
-/**
- * \def ARCH_ALIGN_BYTES
- * Note that on SPARC, uint64_t access has to be 64-bit aligned even for
- * a 32-bit processor
- * // TODO:  make this a const rather than a define; would a
- *       uint work for all types T below?
- */
-#if (__WORDSIZE == 64) || defined(sun)
-#define ARCH_ALIGN_BYTES 8
-#else
-#define ARCH_ALIGN_BYTES 4
-#endif
-
-/**
- * A bitmask which selects the unaligned bits of a memory address or size.
- */
-#define ARCH_ALIGN_MASK (ARCH_ALIGN_BYTES - 1)
-
-/**
- * Align a size DOWN to the next alignment multiple.
- */
-template<class T>
-inline T alignRoundDown(T t)
-{
-    return t & ~ARCH_ALIGN_MASK;
-}
-
-/**
- * Align a pointer DOWN (assuming <code>sizeof(uint) == sizeof(void *)</code>).
- */
-template<class T>
-inline T *alignRoundPtrDown(T *t)
-{
-    return (T *) alignRoundDown(uint(t));
-}
-
-/**
- * Align a size UP to the next alignment multiple.
- */
-template<class T>
-inline T alignRoundUp(T t)
-{
-    if (t & ARCH_ALIGN_MASK) {
-        return alignRoundDown(t) + ARCH_ALIGN_BYTES;
-    } else {
-        return t;
-    }
-}
-
-/**
- * Align a pointer UP.
- */
-template<class T>
-inline T *alignRoundPtrUp(T *t)
-{
-    return (T *) alignRoundUp(uint(t));
-}
-
 // calculate number of bytes needed to hold given number of bits
 inline uint bytesForBits(uint cBits)
 {
     return (cBits >> 3) + ((cBits & 7) ? 1 : 0);
 }
-
 
 // Misc types and utils
 

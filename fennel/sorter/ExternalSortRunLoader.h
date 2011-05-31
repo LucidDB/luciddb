@@ -30,6 +30,7 @@
 #include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/segment/SegPageLock.h"
 #include "fennel/sorter/ExternalSortSubStream.h"
+#include "fennel/common/TraceSource.h"
 
 #include <vector>
 
@@ -51,7 +52,7 @@ class ExternalSortInfo;
  * page).
  */
 class FENNEL_SORTER_EXPORT ExternalSortRunLoader
-    : public ExternalSortSubStream
+    : public ExternalSortSubStream, virtual public TraceSource
 {
 
 protected:
@@ -205,7 +206,7 @@ public:
     /**
      * Prepares this loader to begin a new run.
      */
-    void startRun();
+    virtual void startRun();
 
     /**
      * @return whether this loader has been started and not yet fetched

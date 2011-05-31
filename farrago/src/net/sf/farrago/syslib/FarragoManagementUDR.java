@@ -631,8 +631,9 @@ public abstract class FarragoManagementUDR
             NativeTrace.instance().getPerfCounters();
         for (Map.Entry<String, String> entry : perfCounters.entrySet()) {
             String[] info = perf_counter_info.get(entry.getKey());
-            if (info == null)
+            if (info == null) {
                 info = new String[]{null, null, null};
+            }
             addSysInfo(
                 resultInserter,
                 info[0],
@@ -640,8 +641,7 @@ public abstract class FarragoManagementUDR
                 "Fennel",
                 entry.getKey(),
                 entry.getValue(),
-                info[2]
-            );
+                info[2]);
         }
     }
 
@@ -756,9 +756,8 @@ public abstract class FarragoManagementUDR
             String itemValue = st.nextToken();
             String itemUnits = st.nextToken();
             addSysInfo(
-                    resultInserter, null, null, src, itemName,
-                    itemValue, itemUnits
-            );
+                resultInserter, null, null, src, itemName, itemValue,
+                itemUnits);
         }
     }
 
@@ -779,9 +778,8 @@ public abstract class FarragoManagementUDR
             String itemValue = st.nextToken().trim();
             String itemUnits = null;
             addSysInfo(
-                    resultInserter, null, null, src, itemName,
-                    itemValue, itemUnits
-            );
+                resultInserter, null, null, src, itemName, itemValue,
+                itemUnits);
         }
     }
 
@@ -1132,7 +1130,6 @@ public abstract class FarragoManagementUDR
             timer.schedule(task, jvmShutdownDelayInMillis);
         }
     }
-
 }
 
 // End FarragoManagementUDR.java

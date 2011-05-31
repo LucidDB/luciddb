@@ -58,7 +58,7 @@ public class FarragoDbStmtContext
 
     private long updateCount;
     private ResultSet resultSet;
-    private FarragoSessionExecutableStmt executableStmt;
+    protected FarragoSessionExecutableStmt executableStmt;
     private FarragoCompoundAllocation allocations;
     private FarragoSessionRuntimeContext runningContext;
     private final FarragoWarningQueue warningQueue;
@@ -138,7 +138,7 @@ public class FarragoDbStmtContext
         }
     }
 
-    private void finishPrepare()
+    protected void finishPrepare()
     {
         if (isPrepared()) {
             final RelDataType dynamicParamRowType =
@@ -268,7 +268,7 @@ public class FarragoDbStmtContext
         try {
             checkDynamicParamsSet();
             FarragoSessionRuntimeParams params =
-                session.newRuntimeContextParams();
+                session.newRuntimeContextParams(this);
             if (executableStmt.getTableModOp() == null) {
                 // only use txnCodeCache for real DML, not CALL
                 params.txnCodeCache = null;

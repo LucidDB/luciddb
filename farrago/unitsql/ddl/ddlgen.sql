@@ -28,7 +28,9 @@ OPTIONS (
     extent_name 'MOF',
     schema_name 'Model',
     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
-    "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
+    "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr',
+    explicit_unicode_string u&'a tab\0009, ''quotes'' and \\backslash',
+    implicit_unicode_string 'a (c)©, ''quotes'' and \backslash')
 DESCRIPTION 'a server';
 
 CREATE FOREIGN TABLE ddlgen.mof_exception(

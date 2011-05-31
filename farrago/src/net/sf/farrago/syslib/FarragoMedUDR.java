@@ -269,7 +269,8 @@ public abstract class FarragoMedUDR
             }
 
             FarragoMedMetadataSink sink = new MedAbstractMetadataSink(
-                    query, null) {
+                    query, null)
+            {
                 // implement FarragoMedMetadataSink
                 public boolean writeObjectDescriptor(
                         String name,
@@ -283,7 +284,8 @@ public abstract class FarragoMedUDR
 
                     if (properties.getProperty("SCHEMA_NAME") != null
                             && !properties.getProperty(
-                                "SCHEMA_NAME").equals(schema)) {
+                                "SCHEMA_NAME").equals(schema))
+                    {
                         return false;
                     }
 
@@ -293,8 +295,8 @@ public abstract class FarragoMedUDR
                             resultInserter.setString(2, remarks);
                             resultInserter.executeUpdate();
                         } catch (SQLException ex) {
-                            throw FarragoResource.instance(
-                                    ).ValidatorImportFailed.ex(
+                            throw FarragoResource.instance()
+                                    .ValidatorImportFailed.ex(
                                         name,
                                         server,
                                         ex);

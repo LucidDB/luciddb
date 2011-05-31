@@ -12,7 +12,8 @@
 Error: Type mismatch in value ''turing'' for system parameter "calcVirtualMachine" (state=,code=0)
 > 
 > -- should work
-> alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
+> alter system set "calcVirtualMachine" = 'CALCVM_'
+>                                          'AUTO';
 > 
 > -- should work
 > alter system set "cachePagesMax" = 1001;
@@ -87,7 +88,7 @@ Error: Type mismatch in value ''foo'' for system parameter "deviceSchedulerType"
 > 
 > -- should work
 > select * from sys_boot.mgmt.session_parameters_view
->   where param_name in 
+>   where param_name in
 >     ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric',
 >      'validateDdlOnPrepare',
 >      'cacheStatements', 'reduceNonCorrelatedSubqueries')
@@ -135,7 +136,10 @@ Error: 'or anything besides a boolean' is not a valid boolean value (state=,code
 > -- should work
 > alter session set "logDir" = 'testlog';
 > alter session set "etlProcessId" = 1234;
-> alter session set "etlActionId" = 'LoadAccount';
+> alter session set "etlActionId" = 'Load'  /* comment */ 'Acc' // end of line comment
+>   ''
+>   'ount'
+>   '';
 > alter session set "errorMax" = 1000;
 > alter session set "errorLogMax" = 1000;
 > 
@@ -157,7 +161,7 @@ Error: Value '-1' is out of range for parameter of type errorLogMax (state=,code
 > 
 > -- should work
 > select * from sys_boot.mgmt.session_parameters_view
->   where param_name in 
+>   where param_name in
 >     ('logDir', 'etlProcessId', 'etlActionId', 'errorMax', 'errorLogMax')
 >   order by 1;
 +---------------+--------------+
@@ -172,6 +176,37 @@ Error: Value '-1' is out of range for parameter of type errorLogMax (state=,code
 > 
 > -- should work
 > alter session set "etlActionId" = null;
+> 
+> -- should not work
+> alter session set "etlActionId" = null || null;
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "||" at line 1, column 40.
+Was expecting:
+    <EOF> (state=,code=0)
+> alter session set "etlActionId" = cast(null as varchar(5));
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "cast" at line 1, column 35.
+Was expecting one of:
+    "DATE" ...
+    "FALSE" ...
+    "INTERVAL" ...
+    "MAX" ...
+    "MIN" ...
+    "NULL" ...
+    "TIME" ...
+    "TIMESTAMP" ...
+    "TRUE" ...
+    "UNKNOWN" ...
+    <UNSIGNED_INTEGER_LITERAL> ...
+    <APPROX_NUMERIC_LITERAL> ...
+    <DECIMAL_NUMERIC_LITERAL> ...
+    <BINARY_STRING_LITERAL> ...
+    <QUOTED_STRING> ...
+    <PREFIXED_STRING_LITERAL> ...
+    <UNICODE_STRING_LITERAL> ...
+    <LBRACE_D> ...
+    <LBRACE_T> ...
+    <LBRACE_TS> ...
+    "+" ...
+    "-" ... (state=,code=0)
 > 
 > -- should not work
 > alter system set "prefetchPagesMax" = -10;
@@ -197,5 +232,7 @@ Error: Invalid parameter setting.  Setting must be between 0 and 'cachePagesInit
 > drop schema param cascade;
 > 
 > alter system set "prefetchPagesMax" = 12;
+> 
+> -- End params.sql
 > 
 > !quit

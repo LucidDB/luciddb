@@ -311,6 +311,21 @@ public class SqlLiteral
     }
 
     /**
+     * Converts a chained string literals into regular literals; returns regular
+     * literals unchanged.
+     */
+    public static SqlLiteral unchain(SqlNode node)
+    {
+        if (node instanceof SqlLiteral) {
+            return (SqlLiteral) node;
+        } else if (SqlUtil.isLiteralChain(node)) {
+            return SqlLiteralChainOperator.concatenateOperands((SqlCall) node);
+        } else {
+            throw Util.newInternal("invalid literal: " + node);
+        }
+    }
+
+    /**
      * For calc program builder - value may be different than {@link #unparse}
      * Typical values:
      *
@@ -495,6 +510,16 @@ public class SqlLiteral
         default:
             throw Util.unexpected(typeName);
         }
+    }
+
+    /**
+     * Returns sign of value.
+     *
+     * @return -1, 0 or 1
+     */
+    public int signum() {
+        return bigDecimalValue().compareTo(
+            BigDecimal.ZERO);
     }
 
     /**

@@ -41,9 +41,6 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 
-import java.util.logging.*;
-import net.sf.farrago.trace.*;
-
 /**
  * FirewaterDataWrapper implements the
  * {@link net.sf.farrago.namespace.FarragoMedLocalDataServer}
@@ -59,12 +56,6 @@ public class FirewaterDataServer
     public static final String PROP_PARTITIONING = "PARTITIONING";
     public static final String DEFAULT_PARTITIONING =
         FirewaterPartitioning.HASH.toString();
-
-    public static final String PROP_PARTITION_COLUMN = "PARTITION_COLUMN";
-    public static final String DEFAULT_PARTITION_COLUMN = "";
-
-    private static final Logger tracer
-        = FarragoTrace.getClassTracer(FirewaterDataServer.class);
 
     protected FirewaterDataServer(
         String serverMofId,
@@ -112,8 +103,6 @@ public class FirewaterDataServer
             throw FirewaterSessionFactory.res.InvalidPartitioning.ex(
                 partitioningString);
         }
-        String partition_column = tableProps.getProperty(
-            PROP_PARTITION_COLUMN, DEFAULT_PARTITION_COLUMN);
         return new FirewaterColumnSet(
             directory,
             localName,
@@ -121,8 +110,7 @@ public class FirewaterDataServer
             select,
             dialect,
             rowType,
-            partitioning,
-            partition_column);
+            partitioning);
     }
 
     // implement FarragoMedLocalDataServer
@@ -226,9 +214,6 @@ public class FirewaterDataServer
         // TODO jvs 13-May-2009:  move this to LucidDB planner instead.
         // Also, need special case for grouping on partitioning key
         // (then we can skip top-level agg).
-        //
-        // ks 6-May-2011: special case added:
-        planner.addRule(FirewaterPushDistinctRule.instance);
         planner.addRule(
             PushAggregateThroughUnionRule.instance);
         planner.addRule(

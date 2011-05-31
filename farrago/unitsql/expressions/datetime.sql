@@ -172,3 +172,7 @@ values cast(
 
 -- ensure time does not keep unecessary components
 values cast (timestamp'2006-09-27 23:59:59' as time) = time'23:59:59';
+
+-- Tests monotonicity evaluation for x * interval constant.
+select age, age * interval '1' second, age * interval '1' year from sales.emps;
+select age, interval '1' second * age, interval '1' year * age from sales.emps;

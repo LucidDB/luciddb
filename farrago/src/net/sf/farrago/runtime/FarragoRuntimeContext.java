@@ -80,6 +80,7 @@ public class FarragoRuntimeContext
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoSession session;
+    protected final FarragoSessionStmtContext stmtContext;
     private final FarragoRepos repos;
     protected final FarragoObjectCache codeCache;
     private final Map<String, FarragoObjectCache.Entry> txnCodeCache;
@@ -133,6 +134,7 @@ public class FarragoRuntimeContext
     public FarragoRuntimeContext(FarragoSessionRuntimeParams params)
     {
         session = params.session;
+        stmtContext = params.stmtContext;
         repos = params.repos;
         codeCache = params.codeCache;
         txnCodeCache = params.txnCodeCache;

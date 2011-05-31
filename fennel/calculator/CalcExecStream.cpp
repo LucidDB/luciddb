@@ -91,6 +91,7 @@ void CalcExecStream::prepare(CalcExecStreamParams const &params)
         pOutAccessor->setTupleShape(
             outputDesc,
             pInAccessor->getTupleFormat());
+        lastInBuffer = NULL;
 
         inputData.compute(inputDesc);
 
@@ -179,9 +180,12 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
         }
 
         FENNEL_TRACE(TRACE_FINER, "output row " << nWritten);
+        PConstBuffer bufferEnd = pOutAccessor->getConsumptionEnd();
         if (!pOutAccessor->produceTuple(outputData)) {
             TRACE_RETURN;
             return EXECRC_BUF_OVERFLOW;
+        } else {
+            lastInBuffer = bufferEnd;
         }
         ++nWritten;
         pInAccessor->consumeTuple();

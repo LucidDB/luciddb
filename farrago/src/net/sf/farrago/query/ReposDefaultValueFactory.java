@@ -204,7 +204,7 @@ public class ReposDefaultValueFactory
      */
     private RexNode convertExpression(CwmExpression cwmExp)
     {
-        if (cwmExp.getBody().equalsIgnoreCase("NULL")) {
+        if (null == cwmExp || "NULL".equalsIgnoreCase(cwmExp.getBody())) {
             return farragoPreparingStmt.sqlToRelConverter.getRexBuilder()
                 .constantNull();
         }
@@ -242,7 +242,7 @@ public class ReposDefaultValueFactory
         CwmExpression cwmExp =
             (CwmExpression) farragoPreparingStmt.getRepos().getMdrRepos()
             .getByMofId(mofId);
-        String defaultString = cwmExp.getBody();
+        String defaultString = cwmExp != null ? cwmExp.getBody() : "NULL";
         SqlParser sqlParser = new SqlParser(defaultString);
         SqlNode sqlNode;
         try {

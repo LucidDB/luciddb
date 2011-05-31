@@ -177,19 +177,23 @@ public abstract class DdlHandler
             attribute,
             attribute.getOwner());
 
-        String defaultExpression = attribute.getInitialValue().getBody();
-        if (!defaultExpression.equalsIgnoreCase("NULL")) {
-            FarragoSession session = validator.newReentrantSession();
-            try {
-                validateDefaultClause(attribute, session, defaultExpression);
-            } catch (Throwable ex) {
-                throw validator.newPositionalError(
-                    attribute,
-                    res.ValidatorBadDefaultClause.ex(
-                        repos.getLocalizedObjectName(attribute),
-                        ex));
-            } finally {
-                validator.releaseReentrantSession(session);
+        if (attribute.getInitialValue() != null) {
+            String defaultExpression = attribute.getInitialValue().getBody();
+
+            if (!defaultExpression.equalsIgnoreCase("NULL")) {
+                FarragoSession session = validator.newReentrantSession();
+                try {
+                    validateDefaultClause(
+                        attribute, session, defaultExpression);
+                } catch (Throwable ex) {
+                    throw validator.newPositionalError(
+                        attribute,
+                        res.ValidatorBadDefaultClause.ex(
+                            repos.getLocalizedObjectName(attribute),
+                            ex));
+                } finally {
+                    validator.releaseReentrantSession(session);
+                }
             }
         }
     }

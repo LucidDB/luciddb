@@ -279,6 +279,30 @@ public class FarragoDefaultSessionPersonality
         return stmt;
     }
 
+    /**
+     * Creates a preparing statement for testing purposes.
+     *
+     * <p>Unlike {@link #newPreparingStmt}, the preparing statement's planner
+     * has not been initialized, and it will not throw an error if a plan cannot
+     * be found.
+     *
+     * @param sql SQL text of statement being prepared
+     * @param stmtValidator generic stmt validator
+     * @return a new preparing statement
+     */
+    public FarragoSessionPreparingStmt newPreparingStmtForTesting(
+        String sql,
+        FarragoSessionStmtValidator stmtValidator)
+    {
+        FarragoPreparingStmt stmt =
+            new FarragoPreparingStmt(
+                null,
+                stmtValidator,
+                sql);
+        stmt.enablePartialImplementation();
+        return stmt;
+    }
+
     protected void initPreparingStmt(FarragoPreparingStmt stmt)
     {
         FarragoSessionStmtValidator stmtValidator = stmt.getStmtValidator();

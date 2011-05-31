@@ -25,7 +25,6 @@ package net.sf.farrago.test;
 import java.sql.*;
 
 import java.util.*;
-import java.util.regex.*;
 
 import junit.framework.*;
 
@@ -206,11 +205,22 @@ public class FarragoSqlOperatorsSuite
             }
         }
 
-        public void check(
+        public final void check(
             String query,
             TypeChecker typeChecker,
             Object result,
             double delta)
+        {
+            check(
+                query,
+                typeChecker,
+                AbstractSqlTester.createChecker(result, delta));
+        }
+
+        public void check(
+            String query,
+            TypeChecker typeChecker,
+            ResultChecker resultChecker)
         {
             try {
                 farragoTest.setUp();
@@ -219,8 +229,7 @@ public class FarragoSqlOperatorsSuite
                     getFor(),
                     query,
                     typeChecker,
-                    result,
-                    delta);
+                    resultChecker);
             } catch (Exception e) {
                 throw wrap(e);
             } finally {
@@ -277,9 +286,8 @@ public class FarragoSqlOperatorsSuite
             FarragoCalcSystemTest.VirtualMachine vm,
             SqlOperator operator,
             String query,
-            SqlTester.TypeChecker typeChecker,
-            Object result,
-            double delta)
+            TypeChecker typeChecker,
+            ResultChecker resultChecker)
             throws Exception
         {
             Assert.assertNotNull("Test must call isFor() first", operator);
@@ -288,24 +296,7 @@ public class FarragoSqlOperatorsSuite
             }
             farragoTest.stmt.execute(vm.getAlterSystemCommand());
             farragoTest.resultSet = farragoTest.stmt.executeQuery(query);
-            if (result instanceof Pattern) {
-                farragoTest.compareResultSetWithPattern((Pattern) result);
-            } else if (delta != 0) {
-                Assert.assertTrue(result instanceof Number);
-                farragoTest.compareResultSetWithDelta(
-                    ((Number) result).doubleValue(),
-                    delta);
-            } else {
-                Set<String> refSet = new HashSet<String>();
-                if (result == null) {
-                    refSet.add(null);
-                } else if (result instanceof Collection) {
-                    refSet.addAll((Collection<String>) result);
-                } else {
-                    refSet.add(result.toString());
-                }
-                farragoTest.compareResultSet(refSet);
-            }
+            resultChecker.checkResult(farragoTest.resultSet);
 
             // Check result type
             ResultSetMetaData md = farragoTest.resultSet.getMetaData();

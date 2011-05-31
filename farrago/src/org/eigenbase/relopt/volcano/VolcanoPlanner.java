@@ -1070,8 +1070,7 @@ SUBSET_LOOP:
         }
 
         // Add the relational expression into the correct set and subset.
-        RelSubset subset2 = set.add(rel);
-        mapRel2Subset.put(rel, subset2);
+        RelSubset subset2 = asd(rel, set);
     }
 
     /**
@@ -1332,8 +1331,8 @@ SUBSET_LOOP:
             set = set.equivalentSet;
         }
         registerCount++;
-        RelSubset subset = set.add(rel);
-        mapRel2Subset.put(rel, subset);
+        RelSubset subset = asd(rel, set);
+
         final RelNode xx = mapDigestToRel.put(digest, rel);
         assert ((xx == null) || (xx == rel));
 
@@ -1380,6 +1379,22 @@ SUBSET_LOOP:
 
         // Queue up all rules triggered by this relexp's creation.
         fireRules(rel, true);
+
+        return subset;
+    }
+
+    private RelSubset asd(RelNode rel, RelSet set)
+    {
+        RelSubset subset = set.add(rel);
+        mapRel2Subset.put(rel, subset);
+
+        // While a tree of RelNodes is being registered, sometimes nodes' costs
+        // improve and the subset doesn't hear about it. You can end up with
+        // a subset with a single rel of cost 99 which thinks its best cost is
+        // 100. We think this happens because the back-links to parents are
+        // not established. So, give the subset another change to figure out
+        // its cost.
+        subset.propagateCostImprovements(this, rel, new HashSet<RelSubset>());
 
         return subset;
     }

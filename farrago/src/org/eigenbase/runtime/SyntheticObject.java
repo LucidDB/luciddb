@@ -51,6 +51,10 @@ import java.lang.reflect.*;
  */
 public abstract class SyntheticObject
 {
+
+    //~ Fields ----------------------------------------------------------------
+    Field[] fields = null;
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -74,7 +78,10 @@ public abstract class SyntheticObject
      */
     public Field [] getFields()
     {
-        return getClass().getDeclaredFields();
+        if (fields == null) {
+            fields = getClass().getDeclaredFields();
+        }
+        return fields;
     }
 }
 

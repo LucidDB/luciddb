@@ -32,6 +32,7 @@ import openjava.ptree.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Pair;
 
 
 /**
@@ -78,13 +79,17 @@ public class FarragoOJRexBinaryExpressionImplementor
         }
 
         if (!call.getType().isNullable()) {
+            FarragoTypeFactory factory = translator.getFarragoTypeFactory();
             Expression expr = implementNotNull(translator, call, valueOperands);
-            Statement ifstmt =
+            Pair<Statement, Variable> ifstmt =
                 checkOverflow(
+                    translator,
                     expr,
                     call.getType());
             if (ifstmt != null) {
-                translator.addStatement(ifstmt);
+                translator.addStatement(ifstmt.left);
+                // TODO: use variable:
+                // expr = ifstmt.right;
             }
 
             return expr;
@@ -134,8 +139,9 @@ public class FarragoOJRexBinaryExpressionImplementor
                     AssignmentExpression.EQUALS,
                     implementNotNull(translator, call, valueOperands)));
 
-        Statement overflowStmt =
+        Pair<Statement, Variable> overflow =
             checkOverflow(
+                translator,
                 varResultValue,
                 call.getType());
         StatementList stmtList =
@@ -144,8 +150,10 @@ public class FarragoOJRexBinaryExpressionImplementor
                     varResult,
                     false),
                 assignmentStmt);
-        if (overflowStmt != null) {
-            stmtList.add(overflowStmt);
+        if (overflow != null) {
+            stmtList.add(overflow.left);
+            // TODO: use variable:
+            // varResultValue = overflow.right;
         }
 
         if (nullTest == null) {
@@ -292,12 +300,17 @@ public class FarragoOJRexBinaryExpressionImplementor
             Literal.makeLiteral(0));
     }
 
-    private Statement checkOverflow(Expression expr, RelDataType returnType)
+    private Pair<Statement, Variable> checkOverflow(
+        FarragoRexToOJTranslator translator,
+        Expression expr,
+        RelDataType returnType)
     {
         if (SqlTypeUtil.isApproximateNumeric(returnType)
             && ((ojBinaryExpressionOrdinal == BinaryExpression.DIVIDE)
                 || (ojBinaryExpressionOrdinal == BinaryExpression.TIMES)))
         {
+            final Variable variable =
+                null; // TODO: translator.variablize(returnType, expr);
             Statement ifStatement =
                 new IfStatement(
                     new MethodCall(
@@ -314,7 +327,7 @@ public class FarragoOJRexBinaryExpressionImplementor
                                     "net.sf.farrago.resource.FarragoResource.instance().Overflow"),
                                 "ex",
                                 new ExpressionList()))));
-            return ifStatement;
+            return Pair.of(ifStatement, variable);
         } else {
             return null;
         }
