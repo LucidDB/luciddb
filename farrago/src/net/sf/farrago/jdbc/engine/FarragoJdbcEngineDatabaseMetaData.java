@@ -310,7 +310,10 @@ public class FarragoJdbcEngineDatabaseMetaData
     public String getStringFunctions()
         throws SQLException
     {
-        return SqlJdbcFunctionCall.getStringFunctions();
+        // these functions are supported by rewriting and so are not in the
+        // internal lookup table as that could possibly confuse the planner
+        return "LOWER," + SqlJdbcFunctionCall.getStringFunctions()
+            + ",TRIM,UPPER,INITCAP,OVERLAY";
     }
 
     // implement DatabaseMetaData
