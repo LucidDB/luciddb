@@ -159,8 +159,8 @@ public abstract class FarragoReduceExpressionsRule
                         } else {
                             call.transformTo(
                                 new EmptyRel(
-                                        filter.getCluster(),
-                                        filter.getRowType()));
+                                    filter.getCluster(),
+                                    filter.getRowType()));
                         }
                     }
                 }

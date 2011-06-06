@@ -30,8 +30,8 @@ using namespace boost::local_time;
 
 void
 CastDateToStrA(
-        RegisterRef<char*>* result,
-        RegisterRef<int64_t>* date)
+    RegisterRef<char*>* result,
+    RegisterRef<int64_t>* date)
 {
     assert(date->type() == STANDARD_TYPE_INT_64);
     assert(StandardTypeDescriptor::isTextArray(result->type()));
@@ -51,8 +51,8 @@ CastDateToStrA(
 
 void
 CastTimeToStrA(
-        RegisterRef<char*>* result,
-        RegisterRef<int64_t>* time)
+    RegisterRef<char*>* result,
+    RegisterRef<int64_t>* time)
 {
     assert(time->type() == STANDARD_TYPE_INT_64);
     assert(StandardTypeDescriptor::isTextArray(result->type()));
@@ -71,8 +71,8 @@ CastTimeToStrA(
 
 void
 CastTimestampToStrA(
-        RegisterRef<char*>* result,
-        RegisterRef<int64_t>* tstamp)
+    RegisterRef<char*>* result,
+    RegisterRef<int64_t>* tstamp)
 {
     assert(tstamp->type() == STANDARD_TYPE_INT_64);
     assert(StandardTypeDescriptor::isTextArray(result->type()));
@@ -91,8 +91,8 @@ CastTimestampToStrA(
 
 void
 CastStrAToDate(
-        RegisterRef<int64_t>* result,
-        RegisterRef<char*>* dateStr)
+    RegisterRef<int64_t>* result,
+    RegisterRef<char*>* dateStr)
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
     assert(StandardTypeDescriptor::isTextArray(dateStr->type()));
@@ -109,8 +109,8 @@ CastStrAToDate(
 
 void
 CastStrAToTime(
-        RegisterRef<int64_t>* result,
-        RegisterRef<char*>* timeStr)
+    RegisterRef<int64_t>* result,
+    RegisterRef<char*>* timeStr)
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
     assert(StandardTypeDescriptor::isTextArray(timeStr->type()));
@@ -127,8 +127,8 @@ CastStrAToTime(
 
 void
 CastStrAToTimestamp(
-        RegisterRef<int64_t>* result,
-        RegisterRef<char*>* timestampStr)
+    RegisterRef<int64_t>* result,
+    RegisterRef<char*>* timestampStr)
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
     assert(StandardTypeDescriptor::isTextArray(timestampStr->type()));
@@ -405,4 +405,3 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
 FENNEL_END_CPPFILE("$Id$");
 
 // End ExtDateTime.cpp
-

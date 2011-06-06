@@ -229,7 +229,8 @@ public class SargIntervalExpr
 
         // Complement of empty set is unconstrained set.
         if (originalSeq.getList().isEmpty()) {
-            seq.addInterval(new SargInterval(
+            seq.addInterval(
+                new SargInterval(
                     factory,
                     getDataType()));
             return seq;

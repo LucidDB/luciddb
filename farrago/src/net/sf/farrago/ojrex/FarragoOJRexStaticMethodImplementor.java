@@ -202,7 +202,8 @@ public class FarragoOJRexStaticMethodImplementor
             new CatchList(
                 new CatchBlock(
                     new Parameter(
-                        TypeName.forOJClass(OJClass.forClass(
+                        TypeName.forOJClass(
+                            OJClass.forClass(
                                 Throwable.class)),
                         varException.toString()),
                     new StatementList(

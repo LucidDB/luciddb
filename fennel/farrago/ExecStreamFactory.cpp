@@ -80,8 +80,7 @@
 #include "fennel/hashexe/LhxJoinExecStream.h"
 #include "fennel/hashexe/LhxAggExecStream.h"
 
-FENNEL_BEGIN_CPPFILE(
-        "$Id$");
+FENNEL_BEGIN_CPPFILE("$Id$");
 
 ExecStreamFactory::ExecStreamFactory(
     SharedDatabase pDatabaseInit,

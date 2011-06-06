@@ -455,7 +455,8 @@ public final class CalcRel
                     || (fieldNames.size() <= i)
                     || (fieldNames.get(i) == null)) ? sourceField.getName()
                 : fieldNames.get(i));
-            projectRefList.add(new RexLocalRef(
+            projectRefList.add(
+                new RexLocalRef(
                     source,
                     sourceField.getType()));
         }

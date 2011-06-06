@@ -423,8 +423,8 @@ static bool RunTest(
 
     /* --- */
     if (!DoOp_2(
-        iType, g_Ops[iOp].iOpCode, iExType,
-        tExpected._cptr, tOp0._cptr, tOp1._cptr, tResult._cptr))
+            iType, g_Ops[iOp].iOpCode, iExType,
+            tExpected._cptr, tOp0._cptr, tOp1._cptr, tResult._cptr))
     {
         fprintf(stdout, "Line %d: Calculated result [", iLine);
         fprintf(stdout, "%s", tResult._cptr);

@@ -1035,10 +1035,8 @@ public abstract class SqlTypeStrategies
                             pickedCollation))
                     {
                         pickedType = opBinding.getOperandType(0);
-                    } else if (
-                        opBinding.getOperandType(
-                            1).getCollation().equals(
-                                     pickedCollation))
+                    } else if (opBinding.getOperandType(1).getCollation()
+                            .equals(pickedCollation))
                     {
                         pickedType = opBinding.getOperandType(1);
                     } else {

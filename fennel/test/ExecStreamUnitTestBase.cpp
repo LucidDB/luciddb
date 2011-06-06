@@ -403,7 +403,7 @@ void ExecStreamUnitTestBase::verifyConstantOutput(
         bufAccessor.unmarshalTuple(actualTuple);
 
         int c = bufAccessor.getTupleDesc().compareTuples(
-                               expectedTuple, actualTuple);
+            expectedTuple, actualTuple);
         bufAccessor.consumeTuple();
         ++nRows;
         if (c) {

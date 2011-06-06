@@ -229,7 +229,7 @@ public:
      * @return true, if "end of partition" detected.
      */
     virtual bool checkEndOfPartition(
-       ExecStreamBufAccessor &bufAccessor, PConstBuffer pSrcTuple);
+        ExecStreamBufAccessor &bufAccessor, PConstBuffer pSrcTuple);
 
     /**
      * check if the tuple pSrcTuple needs to be skipped from sort operation.
@@ -239,7 +239,7 @@ public:
      *               false.
      */
     virtual bool skipRow(
-       ExecStreamBufAccessor &bufAccessor, PConstBuffer pSrcTuple);
+        ExecStreamBufAccessor &bufAccessor, PConstBuffer pSrcTuple);
 
     /**
      * Sorts loaded run.

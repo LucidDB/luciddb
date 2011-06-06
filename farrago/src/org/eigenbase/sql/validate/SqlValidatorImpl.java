@@ -4032,9 +4032,7 @@ public class SqlValidatorImpl
             final SelectScope scope = getRawSelectScope(sqlSelect);
             final List<SqlNode> selectList = scope.getExpandedSelectList();
             SqlNode selectItem = selectList.get(i);
-            if (SqlUtil.isCallTo(
-                selectItem, SqlStdOperatorTable.asOperator))
-            {
+            if (SqlUtil.isCallTo(selectItem, SqlStdOperatorTable.asOperator)) {
                 selectItem = ((SqlCall) selectItem).getOperands()[0];
             }
             if (selectItem instanceof SqlIdentifier) {

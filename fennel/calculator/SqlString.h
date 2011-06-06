@@ -1166,7 +1166,8 @@ SqlStrCastToExact(
                         {
                             exponent = SqlStrCastToExact
                                 <CodeUnitBytes, MaxCodeUnitsPerCodePoint>(
-                                (char const * const) ptr, end - ptr, padChar);
+                                    (char const * const) ptr, end - ptr,
+                                    padChar);
                         } else {
                             parsed = false;
                         }
@@ -2093,4 +2094,3 @@ FENNEL_END_NAMESPACE
 #endif
 
 // End SqlString.h
-

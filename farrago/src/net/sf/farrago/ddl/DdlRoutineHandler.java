@@ -814,7 +814,7 @@ public class DdlRoutineHandler
         String url = jar.getUrl().trim();
         String expandedUrl = FarragoProperties.instance().expandProperties(url);
         if (expandedUrl.startsWith(
-            FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX2))
+                FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX2))
         {
             throw validator.newPositionalError(
                 jar,
@@ -983,7 +983,7 @@ public class DdlRoutineHandler
                         Attributes.Name attrName = (Attributes.Name) it2.next();
                         String attrValue = attrs.getValue(attrName);
                         if ("SQLJDeploymentDescriptor".equals(
-                            attrName.toString())
+                                attrName.toString())
                             && "TRUE".equals(attrValue))
                         {
                             retValue.add(entryName);

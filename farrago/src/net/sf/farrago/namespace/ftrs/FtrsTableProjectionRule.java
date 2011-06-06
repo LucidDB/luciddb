@@ -211,8 +211,8 @@ class FtrsTableProjectionRule
                 // because the subsets will be merged by the transformTo
                 // call at the end of this method.
                 if (!equalTraitSets(
-                    origProject.getTraits(),
-                    modRelNode.getTraits())
+                        origProject.getTraits(),
+                        modRelNode.getTraits())
                     && !projectedScan.getTraits().equals(
                         modRelNode.getTraits()))
                 {

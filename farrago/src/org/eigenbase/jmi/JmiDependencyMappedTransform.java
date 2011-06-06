@@ -113,8 +113,8 @@ public class JmiDependencyMappedTransform
                 }
             }
             if (!(target.refIsInstanceOf(
-                        assocEdge.getTargetEnd().getType(),
-                        true)))
+                    assocEdge.getTargetEnd().getType(),
+                    true)))
             {
                 continue;
             }

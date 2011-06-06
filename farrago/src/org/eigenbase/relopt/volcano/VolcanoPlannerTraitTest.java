@@ -557,7 +557,8 @@ public class VolcanoPlannerTraitTest
                     getOutTrait(),
                     rel.getInput(0));
 
-            call.transformTo(new IterSingleRel(
+            call.transformTo(
+                new IterSingleRel(
                     rel.getCluster(),
                     converted));
         }
@@ -598,7 +599,8 @@ public class VolcanoPlannerTraitTest
                     rel.getCluster(),
                     converted);
 
-            call.transformTo(new IterSingleRel(
+            call.transformTo(
+                new IterSingleRel(
                     rel.getCluster(),
                     child));
         }

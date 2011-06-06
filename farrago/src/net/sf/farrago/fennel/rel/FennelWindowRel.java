@@ -167,9 +167,7 @@ public class FennelWindowRel
         assert !RexOver.containsOver(inputProgram);
         assert !RexOver.containsOver(outputProgram);
         assert RelOptUtil.getFieldTypeList(outputProgram.getInputRowType())
-            .equals(outputProgramInputTypes(
-                    child.getRowType(),
-                    windows));
+            .equals(outputProgramInputTypes(child.getRowType(), windows));
         assert RelOptUtil.eq(
             "type1",
             outputProgram.getOutputRowType(),

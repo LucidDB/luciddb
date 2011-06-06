@@ -470,7 +470,8 @@ public final class RemoveDistinctAggregateRule
         final RelNode child = aggregate.getChild();
         final RelDataTypeField [] childFields = child.getRowType().getFields();
         for (int i = 0; i < aggregate.getGroupCount(); i++) {
-            exprList.add(new RexInputRef(
+            exprList.add(
+                new RexInputRef(
                     i,
                     childFields[i].getType()));
             nameList.add(childFields[i].getName());
@@ -483,7 +484,8 @@ public final class RemoveDistinctAggregateRule
             sourceOf.put(
                 arg,
                 exprList.size());
-            exprList.add(new RexInputRef(
+            exprList.add(
+                new RexInputRef(
                     arg,
                     childFields[arg].getType()));
             nameList.add(childFields[arg].getName());

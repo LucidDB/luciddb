@@ -226,8 +226,8 @@ void ExternalSortExecStreamImpl::initRunLoaders(bool restart)
         for (uint i = 0; i < nParallel; ++i) {
             runLoaders[i].reset(new ExternalSortRunLoader(sortInfo));
             runLoaders[i]->initTraceSource(
-               getSharedTraceTarget(),
-               getTraceSourceName() + ".runLoader");
+                getSharedTraceTarget(),
+                getTraceSourceName() + ".runLoader");
         }
     }
 }

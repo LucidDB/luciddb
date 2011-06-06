@@ -385,7 +385,7 @@ bool LbmMinusExecStream::canSkipMinus()
             if (byte & 1) {
                 // once we find a match, no need to look any further
                 if (subtrahendBitmap.test(
-                    opaqueToInt(rid % SUBTRAHEND_BITMAP_SIZE)))
+                        opaqueToInt(rid % SUBTRAHEND_BITMAP_SIZE)))
                 {
                     return false;
                 }
@@ -440,7 +440,7 @@ ExecStreamResult LbmMinusExecStream::minusSegments(
         // return if this subtrahend has reached EOS, as there may still be
         // other subtrahends that aren't in the EOS state
         rc = segmentReaders[minInput].advanceToRid(
-                currRid + currLen * LbmSegment::LbmOneByteSize);
+            currRid + currLen * LbmSegment::LbmOneByteSize);
         if (rc != EXECRC_YIELD && rc != EXECRC_EOS) {
             advancePending = true;
             advanceSubtrahendRid =

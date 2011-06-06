@@ -328,11 +328,20 @@ public class RexBuilder
         if (nullWhenCountZero) {
             final RelDataType bigintType = getTypeFactory().createSqlType(
                 SqlTypeName.BIGINT);
-            result = makeCall(SqlStdOperatorTable.caseOperator, makeCall(
-                SqlStdOperatorTable.greaterThanOperator, new RexOver(
-                    bigintType, SqlStdOperatorTable.countOperator, exprs,
-                    window), makeLiteral(
-                    new BigDecimal(0), bigintType, SqlTypeName.DECIMAL)), over,
+            result = makeCall(
+                SqlStdOperatorTable.caseOperator,
+                makeCall(
+                    SqlStdOperatorTable.greaterThanOperator,
+                    new RexOver(
+                        bigintType,
+                        SqlStdOperatorTable.countOperator,
+                        exprs,
+                        window),
+                    makeLiteral(
+                        new BigDecimal(0),
+                        bigintType,
+                        SqlTypeName.DECIMAL)),
+                over,
                 makeCast(over.getType(), constantNull()));
         }
         if (!allowPartial) {

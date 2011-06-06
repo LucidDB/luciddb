@@ -490,7 +490,8 @@ public class FarragoRexToOJTranslator
             getTranslation());
         assert !initStmtList.isEmpty();
 
-        addStatement(new IfStatement(
+        addStatement(
+            new IfStatement(
                 isNull(variable),
                 initStmtList));
 

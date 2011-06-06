@@ -152,7 +152,7 @@ void CollectExecStreamTestSuite::testCollectUncollect()
     transforms.push_back(collectStreamEmbryo);
     transforms.push_back(uncollectStreamEmbryo);
     SharedExecStream pOutputStream = prepareTransformGraph(
-         mockStreamEmbryo, transforms);
+        mockStreamEmbryo, transforms);
 
     RampExecStreamGenerator rampExpectedGenerator;
 
@@ -220,7 +220,7 @@ void CollectExecStreamTestSuite::testCollectCollectUncollectUncollect() {
     transforms.push_back(uncollectStreamEmbryo1);
     transforms.push_back(uncollectStreamEmbryo2);
     SharedExecStream pOutputStream = prepareTransformGraph(
-         mockStreamEmbryo, transforms);
+        mockStreamEmbryo, transforms);
 
     RampExecStreamGenerator rampExpectedGenerator;
 

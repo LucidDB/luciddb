@@ -80,147 +80,133 @@ public abstract class FarragoManagementUDR
 
     static {
         perf_counter_info.put(
-                "JvmMemoryUnused", new String[]{"JVM Memory", null, "bytes"});
+            "JvmMemoryUnused", new String[]{"JVM Memory", null, "bytes"});
         perf_counter_info.put(
-                "JvmMemoryAllocationLimit",
-                new String[]{"JVM Memory", null, "bytes"});
+            "JvmMemoryAllocationLimit",
+            new String[]{"JVM Memory", null, "bytes"});
         perf_counter_info.put(
-                "JvmMemoryAllocated",
-                new String[]{"JVM Memory", null, "bytes"});
+            "JvmMemoryAllocated",
+            new String[]{"JVM Memory", null, "bytes"});
         perf_counter_info.put(
-                "ExpectedConcurrentStatements",
-                new String[]{"Parameter Settings", null, null});
+            "ExpectedConcurrentStatements",
+            new String[]{"Parameter Settings", null, null});
         perf_counter_info.put(
-                "CacheReservePercentage",
-                new String[]{"Parameter Settings", null, null});
+            "CacheReservePercentage",
+            new String[]{"Parameter Settings", null, null});
         perf_counter_info.put(
-                "CachePagesAllocated",
-                new String[]{"Parameter Settings", null, "pages"});
+            "CachePagesAllocated",
+            new String[]{"Parameter Settings", null, "pages"});
         perf_counter_info.put(
-                "CachePagesGoverned",
-                new String[]{"Parameter Settings", null, "pages"});
+            "CachePagesGoverned",
+            new String[]{"Parameter Settings", null, "pages"});
         perf_counter_info.put(
-                "CachePagesAllocationLimit",
-                new String[]{"Parameter Settings", null, "pages"});
+            "CachePagesAllocationLimit",
+            new String[]{"Parameter Settings", null, "pages"});
         perf_counter_info.put(
-                "DatabaseCheckpoints", new String[]{"Execution", null, null});
+            "DatabaseCheckpoints", new String[]{"Execution", null, null});
         perf_counter_info.put(
-                "DatabaseCheckpointsSinceInit",
-                new String[]{"Execution", null, null});
+            "DatabaseCheckpointsSinceInit",
+            new String[]{"Execution", null, null});
         perf_counter_info.put(
-                "DatabasePagesAllocated",
-                new String[]{"Storage", null, "pages"});
+            "DatabasePagesAllocated",
+            new String[]{"Storage", null, "pages"});
         perf_counter_info.put(
-                "DatabasePagesOccupiedHighWaterSinceInit",
-                new String[]{"Storage", null, "pages"});
+            "DatabasePagesOccupiedHighWaterSinceInit",
+            new String[]{"Storage", null, "pages"});
         perf_counter_info.put(
-                "DatabasePagesExtendedSinceInit",
-                new String[]{"Storage", null, "pages"});
+            "DatabasePagesExtendedSinceInit",
+            new String[]{"Storage", null, "pages"});
         perf_counter_info.put(
-                "TempPagesAllocated", new String[]{"Storage", null, "pages"});
+            "TempPagesAllocated", new String[]{"Storage", null, "pages"});
         perf_counter_info.put(
-                "TempPagesOccupiedHighWaterSinceInit",
-                new String[]{"Storage", null, "pages"});
+            "TempPagesOccupiedHighWaterSinceInit",
+            new String[]{"Storage", null, "pages"});
         perf_counter_info.put(
-                "TempPagesExtendedSinceInit",
-                new String[]{"Storage", null, "pages"});
+            "TempPagesExtendedSinceInit",
+            new String[]{"Storage", null, "pages"});
         perf_counter_info.put(
-                "CachePagesReserved", new String[]{"Buffer Pool Statistics",
-                    "General Usage", "pages"});
+            "CachePagesReserved",
+            new String[]{"Buffer Pool Statistics", "General Usage", "pages"});
         perf_counter_info.put(
-                "CachePagesUnused", new String[]{"Buffer Pool Statistics",
-                    "General Usage", "pages"});
+            "CachePagesUnused",
+            new String[]{"Buffer Pool Statistics", "General Usage", "pages"});
         perf_counter_info.put(
-                "CacheDirtyPages", new String[]{"Buffer Pool Statistics",
-                    "General Usage", "pages"});
+            "CacheDirtyPages",
+            new String[]{"Buffer Pool Statistics", "General Usage", "pages"});
         perf_counter_info.put(
-                "CacheRequests",
-                new String[]{"Buffer Pool Statistics", "General Usage", null});
+            "CacheRequests",
+            new String[]{"Buffer Pool Statistics", "General Usage", null});
         perf_counter_info.put(
-                "CacheRequestsSinceInit",
-                new String[]{"Buffer Pool Statistics", "General Usage", null});
+            "CacheRequestsSinceInit",
+            new String[]{"Buffer Pool Statistics", "General Usage", null});
         perf_counter_info.put(
-                "CacheHits",
-                new String[]{"Buffer Pool Statistics", "General Usage", null});
+            "CacheHits",
+            new String[]{"Buffer Pool Statistics", "General Usage", null});
         perf_counter_info.put(
-                "CacheHitsSinceInit",
-                new String[]{"Buffer Pool Statistics", "General Usage", null});
+            "CacheHitsSinceInit",
+            new String[]{"Buffer Pool Statistics", "General Usage", null});
         perf_counter_info.put(
-                "CacheVictimizations",
-                new String[]{"Buffer Pool Statistics", "General Usage", null});
+            "CacheVictimizations",
+            new String[]{"Buffer Pool Statistics", "General Usage", null});
         perf_counter_info.put(
-                "CacheVictimizationsSinceInit",
-                new String[]{"Buffer Pool Statistics", "General Usage", null});
+            "CacheVictimizationsSinceInit",
+            new String[]{"Buffer Pool Statistics", "General Usage", null});
         perf_counter_info.put(
-                "CachePageIoRetries",
-                new String[]{"Buffer Pool Statistics",
-                    "General Usage", "pages"});
+            "CachePageIoRetries",
+            new String[]{"Buffer Pool Statistics", "General Usage", "pages"});
         perf_counter_info.put(
-                "CachePageIoRetriesSinceInit",
-                new String[]{"Buffer Pool Statistics",
-                    "General Usage", "pages"});
+            "CachePageIoRetriesSinceInit",
+            new String[]{"Buffer Pool Statistics", "General Usage", "pages"});
         perf_counter_info.put(
-                "CachePagesRead",
-                new String[]{"Buffer Pool Statistics",
-                    "Read-Specific", "pages"});
+            "CachePagesRead",
+            new String[]{"Buffer Pool Statistics", "Read-Specific", "pages"});
         perf_counter_info.put(
-                "CachePagesReadSinceInit",
-                new String[]{"Buffer Pool Statistics",
-                    "Read-Specific", "pages"});
+            "CachePagesReadSinceInit",
+            new String[]{"Buffer Pool Statistics", "Read-Specific", "pages"});
         perf_counter_info.put(
-                "CachePagesPrefetched",
-                new String[]{"Buffer Pool Statistics",
-                    "Read-Specific", "pages"});
+            "CachePagesPrefetched",
+            new String[]{"Buffer Pool Statistics", "Read-Specific", "pages"});
         perf_counter_info.put(
-                "CachePagesPrefetchedSinceInit",
-                new String[]{"Buffer Pool Statistics",
-                    "Read-Specific", "pages"});
+            "CachePagesPrefetchedSinceInit",
+            new String[]{"Buffer Pool Statistics", "Read-Specific", "pages"});
         perf_counter_info.put(
-                "CachePagePrefetchesRejected",
-                new String[]{"Buffer Pool Statistics",
-                    "Read-Specific", "pages"});
+            "CachePagePrefetchesRejected",
+            new String[]{"Buffer Pool Statistics", "Read-Specific", "pages"});
         perf_counter_info.put(
-                "CachePagePrefetchesRejectedSinceInit",
-                new String[]{"Buffer Pool Statistics",
-                    "Read-Specific", "pages"});
+            "CachePagePrefetchesRejectedSinceInit",
+            new String[]{"Buffer Pool Statistics", "Read-Specific", "pages"});
         perf_counter_info.put(
-                "CachePagesWritten",
-                new String[]{"Buffer Pool Statistics",
-                    "Write-Specific", "pages"});
+            "CachePagesWritten",
+            new String[]{"Buffer Pool Statistics", "Write-Specific", "pages"});
         perf_counter_info.put(
-                "CachePagesWrittenSinceInit",
-                new String[]{"Buffer Pool Statistics",
-                    "Write-Specific", "pages"});
+            "CachePagesWrittenSinceInit",
+            new String[]{"Buffer Pool Statistics", "Write-Specific", "pages"});
         perf_counter_info.put(
-                "CacheVictimizationWrites",
-                new String[]{"Buffer Pool Statistics",
-                    "Write-Specific", "pages"});
+            "CacheVictimizationWrites",
+            new String[]{"Buffer Pool Statistics", "Write-Specific", "pages"});
         perf_counter_info.put(
-                "CacheVictimizationWritesSinceInit",
-                new String[]{"Buffer Pool Statistics",
-                    "Write-Specific", "pages"});
+            "CacheVictimizationWritesSinceInit",
+            new String[]{"Buffer Pool Statistics", "Write-Specific", "pages"});
         perf_counter_info.put(
-                "CacheLazyWriteCalls",
-                new String[]{"Buffer Pool Statistics", "Write-Specific", null});
+            "CacheLazyWriteCalls",
+            new String[]{"Buffer Pool Statistics", "Write-Specific", null});
         perf_counter_info.put(
-                "CacheLazyWriteCallsSinceInit",
-                new String[]{"Buffer Pool Statistics", "Write-Specific", null});
+            "CacheLazyWriteCallsSinceInit",
+            new String[]{"Buffer Pool Statistics", "Write-Specific", null});
         perf_counter_info.put(
-                "CacheLazyWrites", new String[]{"Buffer Pool Statistics",
-                    "Write-Specific", "pages"});
+            "CacheLazyWrites",
+            new String[]{"Buffer Pool Statistics", "Write-Specific", "pages"});
         perf_counter_info.put(
-                "CacheLazyWritesSinceInit",
-                new String[]{"Buffer Pool Statistics",
-                    "Write-Specific", "pages"});
+            "CacheLazyWritesSinceInit",
+            new String[]{"Buffer Pool Statistics", "Write-Specific", "pages"});
         perf_counter_info.put(
-                "CacheCheckpointWrites", new String[]{"Buffer Pool Statistics",
-                    "Write-Specific", "pages"});
+            "CacheCheckpointWrites",
+            new String[]{"Buffer Pool Statistics", "Write-Specific", "pages"});
         perf_counter_info.put(
-                "CacheCheckpointWritesSinceInit",
-                new String[]{"Buffer Pool Statistics",
-                    "Write-Specific", "pages"});
+            "CacheCheckpointWritesSinceInit",
+            new String[]{"Buffer Pool Statistics", "Write-Specific", "pages"});
         perf_counter_info.put(
-                "JvmNanoTime", new String[]{"Miscellaneous", null, "ns"});
+            "JvmNanoTime", new String[]{"Miscellaneous", null, "ns"});
     }
 
     //~ Methods ----------------------------------------------------------------

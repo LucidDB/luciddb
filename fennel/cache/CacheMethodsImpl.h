@@ -411,8 +411,8 @@ PageT *CacheImpl<PageT, VictimPolicyT>
     if (!page->lock.waitFor(lockMode, ETERNITY, txnId)) {
         // NoWait failed; release reference
         assert(
-               (lockMode == LOCKMODE_S_NOWAIT)
-               || (lockMode == LOCKMODE_X_NOWAIT));
+            (lockMode == LOCKMODE_S_NOWAIT)
+            || (lockMode == LOCKMODE_X_NOWAIT));
         StrictMutexGuard pageGuard(page->mutex);
         page->nReferences--;
         if (!page->nReferences) {

@@ -114,7 +114,7 @@ public class FarragoServletCommandSink extends HttpServlet
                 try {
                     // Some command to process ?
                     if (method.equals(
-                           ServletCommandSinkIdentifier.PROCESS_COMMAND))
+                            ServletCommandSinkIdentifier.PROCESS_COMMAND))
                     {
                         // Read parameter objects
                         Long connuid = (Long) ois.readObject();
@@ -125,7 +125,7 @@ public class FarragoServletCommandSink extends HttpServlet
                         objectToReturn = processor.process(
                             connuid, uid, cmd, ctx);
                     } else if (method.equals(
-                                  ServletCommandSinkIdentifier.CONNECT_COMMAND))
+                            ServletCommandSinkIdentifier.CONNECT_COMMAND))
                     {
                         String url = ois.readUTF();
                         Properties props = (Properties) ois.readObject();

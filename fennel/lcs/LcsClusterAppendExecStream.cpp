@@ -116,7 +116,7 @@ void LcsClusterAppendExecStream::open(bool restart)
 }
 
 ExecStreamResult LcsClusterAppendExecStream::execute(
-        ExecStreamQuantum const &quantum)
+    ExecStreamQuantum const &quantum)
 {
     return compress(quantum);
 }

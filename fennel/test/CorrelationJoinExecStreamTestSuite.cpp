@@ -43,7 +43,7 @@ CorrelationJoinExecStreamTestSuite::CorrelationJoinExecStreamTestSuite(
     StandardTypeDescriptorFactory stdTypeFactory;
 
     descAttrInt64 = TupleAttributeDescriptor(
-                  stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     descInt64.push_back(descAttrInt64);
 }
 
@@ -60,9 +60,10 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
 
     DynamicParamId dynamicParamId(1);
     MockProducerExecStreamParams paramsMockRight(paramsMockLeft);
-    paramsMockRight.pGenerator.reset(new DynamicParamExecStreamGenerator(
-                                            dynamicParamId,
-                                            pGraph->getDynamicParamManager()));
+    paramsMockRight.pGenerator.reset(
+        new DynamicParamExecStreamGenerator(
+            dynamicParamId,
+            pGraph->getDynamicParamManager()));
     paramsMockRight.nRows = 10;
 
     ExecStreamEmbryo rightStreamEmbryo;

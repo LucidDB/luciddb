@@ -150,7 +150,8 @@ void BTreeSearchExecStream::open(bool restart)
     if (!restart && opaqueToInt(rootPageIdParamId) > 0) {
         treeDescriptor.rootPageId =
             *reinterpret_cast<PageId const *>(
-            pDynamicParamManager->getParam(rootPageIdParamId).getDatum().pData);
+                pDynamicParamManager->getParam(rootPageIdParamId)
+                    .getDatum().pData);
     }
     BTreeReadExecStream::open(restart);
     ConduitExecStream::open(restart);

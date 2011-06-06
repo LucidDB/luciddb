@@ -75,7 +75,8 @@ public class RexProgramBuilder
             final RelDataTypeField [] fields = inputRowType.getFields();
             for (int i = 0; i < fields.length; i++) {
                 RelDataTypeField field = fields[i];
-                registerInternal(new RexInputRef(
+                registerInternal(
+                    new RexInputRef(
                         i,
                         field.getType()),
                     false);
@@ -853,7 +854,8 @@ public class RexProgramBuilder
         final RelDataTypeField [] fields = inputRowType.getFields();
         for (int i = 0; i < fields.length; i++) {
             final RelDataTypeField field = fields[i];
-            addProject(new RexInputRef(
+            addProject(
+                new RexInputRef(
                     i,
                     field.getType()),
                 field.getName());

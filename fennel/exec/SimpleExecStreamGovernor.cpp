@@ -38,7 +38,7 @@ SimpleExecStreamGovernor::SimpleExecStreamGovernor(
     std::string nameInit)
     : TraceSource(pTraceTargetInit, nameInit),
       ExecStreamGovernor(
-            knobSettings, resourcesAvailable, pTraceTargetInit, nameInit)
+          knobSettings, resourcesAvailable, pTraceTargetInit, nameInit)
 {
     perGraphAllocation = computePerGraphAllocation();
 }

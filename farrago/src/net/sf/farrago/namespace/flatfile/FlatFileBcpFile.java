@@ -227,9 +227,7 @@ class FlatFileBcpFile
         if (origVal == null) {
             return true;
         }
-        if ((Integer.valueOf(origVal).compareTo(
-                    Integer.valueOf(newVal))) < 0)
-        {
+        if ((Integer.valueOf(origVal).compareTo(Integer.valueOf(newVal))) < 0) {
             return true;
         }
         return false;
@@ -259,9 +257,9 @@ class FlatFileBcpFile
             }
             if (this.colDataType[i].equals("SQLVARCHAR")) {
                 int varcharPrec =
-                    ((((Integer.valueOf(
-                                        this.colDataLength[i]) + 128) / 256)
-                            + 1) * 256);
+                    ((((Integer.valueOf(this.colDataLength[i]) + 128) / 256)
+                      + 1)
+                     * 256);
                 this.colDataLength[i] = Integer.toString(varcharPrec);
             }
             int colNo = i + 1;

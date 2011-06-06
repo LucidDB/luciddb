@@ -2061,8 +2061,8 @@ public class CalcRexImplementorTableImpl
                 CalcProgramBuilder.RegisterDescriptor rdCall =
                     translator.getCalcRegisterDescriptor(call.getType());
                 if (rdCall.getType().isNumeric()
-                    && ((getRestrictiveness(rd) - getRestrictiveness(
-                                rdCall)) != 0))
+                    && ((getRestrictiveness(rd)
+                        - getRestrictiveness(rdCall)) != 0))
                 {
                     // Do operation using same type as operands
                     CalcReg tmpRes = translator.builder.newLocal(rd);

@@ -280,10 +280,10 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     for (uint i = 0; i < nCols; i++) {
         SharedInt64ColumnGenerator col =
             SharedInt64ColumnGenerator(
-            compressed
-            ? (Int64ColumnGenerator *) new MixedDupColumnGenerator(
-                NDUPS, i + colStart, 500)
-            : new SeqColumnGenerator(i + colStart));
+                compressed
+                ? (Int64ColumnGenerator *) new MixedDupColumnGenerator(
+                    NDUPS, i + colStart, 500)
+                : new SeqColumnGenerator(i + colStart));
         columnGenerators.push_back(col);
     }
     mockParams.pGenerator.reset(
@@ -993,7 +993,7 @@ void LcsRowScanExecStreamTest::testFilterCols(
             SharedInt64ColumnGenerator(
                 compressed
                 ? (Int64ColumnGenerator*) new MixedDupColumnGenerator(
-                        NDUPS, proj[i] + 2000, 500)
+                    NDUPS, proj[i] + 2000, 500)
                 : new SeqColumnGenerator(proj[i] + offset, skipRows));
         columnGenerators.push_back(col);
     }

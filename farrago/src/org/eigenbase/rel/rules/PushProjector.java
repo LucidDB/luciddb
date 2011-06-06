@@ -836,7 +836,7 @@ public class PushProjector
         {
             return expr instanceof RexCall
                 && operatorSet.contains(
-                ((RexCall) expr).getOperator());
+                    ((RexCall) expr).getOperator());
         }
     }
 }

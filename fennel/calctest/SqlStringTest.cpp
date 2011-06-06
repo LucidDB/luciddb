@@ -579,12 +579,12 @@ SqlStringTest::testSqlStringCat_Var2()
                         caught = false;
                         try {
                             newlen = SqlStrCat(
-                            dst.mStr,
-                            dst_storage,
-                            src1.mStr,
-                            src1_len,
-                            src2.mStr,
-                            src2_len);
+                                dst.mStr,
+                                dst_storage,
+                                src1.mStr,
+                                src1_len,
+                                src2.mStr,
+                                src2_len);
                         } catch (SqlStateInfo const &info) {
                             const char *str = info.str().c_str();
                             caught = true;
@@ -2326,11 +2326,11 @@ SqlStringTest::testSqlStringCastToExact()
                 sprintf(buf, "%" FMT_INT64, value);
                 buf[0] = 'a';
                 testSqlStringCastToExact_Helper(
-                        value,
-                        buf,
-                        src_storage,
-                        src_len,
-                        true);
+                    value,
+                    buf,
+                    src_storage,
+                    src_len,
+                    true);
 
                 // negative test, "1a34   "
                 if (src_len > 2) {

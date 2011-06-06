@@ -143,7 +143,7 @@ ExecStreamResult CorrelationJoinExecStream::execute(
                          it2 != readerStreamIds.end(); ++it2)
                     {
                         pGraph->getScheduler()->setRunnable(
-                             *pGraph->getStream(*it2), true);
+                            *pGraph->getStream(*it2), true);
                     }
                 }
             }

@@ -1027,18 +1027,18 @@ TxnId Database::initiateBackup(
     scratchAccessor = pSegmentFactory->newScratchSegment(pCache);
     pBackupRestoreDevice =
         SegPageBackupRestoreDevice::newSegPageBackupRestoreDevice(
-             backupFilePathname,
+            backupFilePathname,
 #ifdef __MSVC__
-             "wb",
+            "wb",
 #else
-             "w",
+            "w",
 #endif
-             compressionProgram,
-             nScratchPages,
-             2,
-             scratchAccessor,
-             pCache->getDeviceAccessScheduler(*pDataDevice),
-             pDataDevice);
+            compressionProgram,
+            nScratchPages,
+            2,
+            scratchAccessor,
+            pCache->getDeviceAccessScheduler(*pDataDevice),
+            pDataDevice);
     VersionedRandomAllocationSegment *pVRSegment =
         SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
             pDataSegment);
@@ -1171,18 +1171,18 @@ void Database::restoreFromBackup(
         pSegmentFactory->newScratchSegment(pCache);
     pBackupRestoreDevice =
         SegPageBackupRestoreDevice::newSegPageBackupRestoreDevice(
-             backupFilePathname,
+            backupFilePathname,
 #ifdef __MSVC__
-             "rb",
+            "rb",
 #else
-             "r",
+            "r",
 #endif
-             compressionProgram,
-             nScratchPages,
-             0,
-             scratchAccessor,
-             pCache->getDeviceAccessScheduler(*pDataDevice),
-             pDataDevice);
+            compressionProgram,
+            nScratchPages,
+            0,
+            scratchAccessor,
+            pCache->getDeviceAccessScheduler(*pDataDevice),
+            pDataDevice);
 
     // Flush and unmap pages from the cache that will be restored, i.e., any
     // VersionedRandomAllocationSegment or database header pages, including
