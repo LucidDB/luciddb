@@ -356,7 +356,7 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
         ExecStreamResourceKnobs knob;
         knob.cacheReservePercentage = percent;
         if (!pDbHandle->pResourceGovernor->setResourceKnob(
-            knob, EXEC_KNOB_CACHE_RESERVE_PERCENTAGE))
+                knob, EXEC_KNOB_CACHE_RESERVE_PERCENTAGE))
         {
             throw InvalidParamExcn(
                 "1",
@@ -737,11 +737,11 @@ void CmdInterpreter::visit(ProxyCmdCreateStreamHandle &cmd)
     if (cmd.isInput()) {
         pStream =
             pStreamGraphHandle->pExecStreamGraph->findLastStream(
-            cmd.getStreamName(), 0);
+                cmd.getStreamName(), 0);
     } else {
         pStream =
             pStreamGraphHandle->pExecStreamGraph->findStream(
-            cmd.getStreamName());
+                cmd.getStreamName());
     }
 
     setExecStreamHandle(

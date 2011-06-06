@@ -753,7 +753,8 @@ public class VolcanoPlannerTest
         public void onMatch(RelOptRuleCall call)
         {
             RelNode childRel = ((ProjectRel) call.rels[0]).getChild();
-            call.transformTo(new PhysLeafRel(
+            call.transformTo(
+                new PhysLeafRel(
                     childRel.getCluster(),
                     "b"));
         }
@@ -781,7 +782,8 @@ public class VolcanoPlannerTest
         {
             PhysSingleRel singleRel = (PhysSingleRel) call.rels[0];
             PhysLeafRel leafRel = (PhysLeafRel) call.rels[1];
-            call.transformTo(new PhysLeafRel(
+            call.transformTo(
+                new PhysLeafRel(
                     singleRel.getCluster(),
                     "c"));
         }
@@ -809,7 +811,8 @@ public class VolcanoPlannerTest
         {
             NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
             PhysLeafRel leafRel = (PhysLeafRel) call.rels[1];
-            call.transformTo(new PhysLeafRel(
+            call.transformTo(
+                new PhysLeafRel(
                     singleRel.getCluster(),
                     "c"));
         }

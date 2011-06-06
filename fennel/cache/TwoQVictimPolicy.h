@@ -750,7 +750,7 @@ public:
         assert(historyQueueStart == 0);
         for (uint i = 0; i < currHistoryQueueLen; i++) {
             if (!historyBitmap.test(
-                opaqueToInt(historyQueue[i] % historyBitmap.size())))
+                    opaqueToInt(historyQueue[i] % historyBitmap.size())))
             {
                 historyQueue[i] = NULL_BLOCK_ID;
             }
@@ -845,7 +845,7 @@ public:
 
         case TwoQVictim::PAGE_STATE_FREE:
             if (historyBitmap.test(
-                opaqueToInt(page.getBlockId()) % historyBitmap.size()))
+                    opaqueToInt(page.getBlockId()) % historyBitmap.size()))
             {
                 notifyPopularPageAccess(page, pin);
             } else {
@@ -1055,7 +1055,7 @@ public:
         } else if (state == TwoQVictim::PAGE_STATE_FRESHMAN) {
             dirtyFreshmenQueue.insertAtTail(dirtyPageNode);
             dirtyPageNode.setDirtyState(
-                    TwoQDirtyPage::PAGE_DIRTY_FRESHMAN);
+                TwoQDirtyPage::PAGE_DIRTY_FRESHMAN);
         } else if (state == TwoQVictim::PAGE_STATE_POPULAR_PINNED) {
             dirtyPageNode.setDirtyState(
                 TwoQDirtyPage::PAGE_DIRTY_POPULAR_PINNED);

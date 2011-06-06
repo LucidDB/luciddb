@@ -194,7 +194,8 @@ public class FennelCalcRel
 
     // for toStreamDef():
     protected void fillStreamDef(
-       FemCalcTupleStreamDef calcStream, FennelRelImplementor implementor)
+        FemCalcTupleStreamDef calcStream,
+        FennelRelImplementor implementor)
     {
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild(), 0),

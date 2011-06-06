@@ -118,9 +118,9 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
     // assert that we're reading from a designated output stream
     assert(boost::out_degree(current, graphRep) == 1);
     assert(!graphImpl.getStreamFromVertex(
-               boost::target(
-                   *(boost::out_edges(current,graphRep).first),
-                   graphRep)));
+        boost::target(
+            *(boost::out_edges(current,graphRep).first),
+            graphRep)));
 
     // TODO:  assertions about accessor state/provision
 
@@ -153,7 +153,7 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
         case EXECRC_EOS:
             // find a consumer that is not in EOS state
             if (!findNextConsumer(
-                graphImpl, graphRep, stream, edge, current, EXECBUF_EOS))
+                    graphImpl, graphRep, stream, edge, current, EXECBUF_EOS))
             {
                 return graphImpl.getBufAccessorFromEdge(edge);
             }
@@ -163,7 +163,8 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
             // find a consumer that is not in underflow state; i.e., not
             // waiting on this producer to continue execution
             if (!findNextConsumer(
-                graphImpl, graphRep, stream, edge, current, EXECBUF_UNDERFLOW))
+                    graphImpl, graphRep, stream, edge, current,
+                    EXECBUF_UNDERFLOW))
             {
                 return graphImpl.getBufAccessorFromEdge(edge);
             }

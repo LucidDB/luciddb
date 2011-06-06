@@ -574,11 +574,11 @@ SqlSimilarPrep(
         char escapeChar;
 
         SqlSimilarPrepEscapeProcessing<CodeUnitBytes, MaxCodeUnitsPerCodePoint>(
-                escape,
-                escapeLenBytes,
-                escapeChar,
-                expPat,
-                sqlSpecial);
+            escape,
+            escapeLenBytes,
+            escapeChar,
+            expPat,
+            sqlSpecial);
 
         SqlSimilarPrepReWrite<CodeUnitBytes, MaxCodeUnitsPerCodePoint>(
             escapeChar,

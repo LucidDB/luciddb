@@ -253,7 +253,8 @@ public class SargSetExpr
             // complements of no sets, which is the intersection of no sets.
             // QED.
             seq = new SargIntervalSequence();
-            seq.addInterval(new SargInterval(
+            seq.addInterval(
+                new SargInterval(
                     factory,
                     getDataType()));
             return seq;

@@ -69,9 +69,9 @@ public class FarragoNoninteractiveCallbackHandler
                 ((PasswordCallback) callbacks[i]).setPassword(
                     pass.toCharArray());
             } else {
-                throw (new UnsupportedCallbackException(
-                        callbacks[i],
-                        "Unsupported callback class"));
+                throw new UnsupportedCallbackException(
+                    callbacks[i],
+                    "Unsupported callback class");
             }
         }
 

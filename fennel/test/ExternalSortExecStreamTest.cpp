@@ -56,13 +56,13 @@ public:
         FENNEL_UNIT_TEST_CASE(
             ExternalSortExecStreamTest, testRandomInMem);
         FENNEL_UNIT_TEST_CASE(
-                    ExternalSortExecStreamTest, testRandomInMemPartitioned);
+            ExternalSortExecStreamTest, testRandomInMemPartitioned);
         FENNEL_UNIT_TEST_CASE(
             ExternalSortExecStreamTest, testRandomDescInMem);
         FENNEL_UNIT_TEST_CASE(
             ExternalSortExecStreamTest, testRandomExternal);
         FENNEL_UNIT_TEST_CASE(
-                    ExternalSortExecStreamTest, testRandomExternalPartitioned);
+            ExternalSortExecStreamTest, testRandomExternalPartitioned);
         FENNEL_UNIT_TEST_CASE(
             ExternalSortExecStreamTest, testRandomExternalStoreFinal);
         FENNEL_UNIT_TEST_CASE(

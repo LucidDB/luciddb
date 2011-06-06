@@ -4388,8 +4388,8 @@ unitTestPointerCache()
 
     outF = liF = 0;
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
-        if (*(reinterpret_cast<double *>(const_cast<PBuffer>(
-            output[outF++].pData)))
+        if (*(reinterpret_cast<double *>(
+                const_cast<PBuffer>(output[outF++].pData)))
             != (i * 0.5))
         {
             fail("pointercache1", __LINE__);
@@ -4397,8 +4397,8 @@ unitTestPointerCache()
     }
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
         double d = outF * 3.3 + 1;
-        if ((*(reinterpret_cast<double *>(const_cast<PBuffer>(
-            output[outF].pData))) - d)
+        if ((*(reinterpret_cast<double *>(
+                const_cast<PBuffer>(output[outF].pData))) - d)
             > 0.000001)
         {
             fail("pointercache2", __LINE__);
@@ -4423,8 +4423,8 @@ unitTestPointerCache()
 
     outF = liF = 0;
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
-        if (*(reinterpret_cast<double *>(const_cast<PBuffer>(
-            output[outF++].pData)))
+        if (*(reinterpret_cast<double *>(
+                const_cast<PBuffer>(output[outF++].pData)))
             != (i * 0.5))
         {
             fail("pointercache3", __LINE__);
@@ -4432,8 +4432,8 @@ unitTestPointerCache()
     }
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
         double d = outF * 3.3 + 1;
-        if ((*(reinterpret_cast<double *>(const_cast<PBuffer>(
-            output[outF].pData)))
+        if ((*(reinterpret_cast<double *>(
+                const_cast<PBuffer>(output[outF].pData)))
              - d) > 0.000001)
         {
             fail("pointercache4", __LINE__);
@@ -5112,8 +5112,8 @@ unitTestStatusRegister()
 
     statusS = liS = 0;
     for (i = 0; i < registersize - 1 ; i++) {
-        if (*(reinterpret_cast<uint16_t *>(const_cast<PBuffer>(
-            status[statusS++].pData)))
+        if (*(reinterpret_cast<uint16_t *>(
+                const_cast<PBuffer>(status[statusS++].pData)))
             != static_cast<uint16_t>(i))
         {
             fail("statusregister1", __LINE__);

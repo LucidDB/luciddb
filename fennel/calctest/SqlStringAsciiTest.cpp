@@ -1281,7 +1281,7 @@ SqlStringAsciiTest::testSqlStringTrim_Ascii()
                     rightpad = src_storage - (src_len + leftpad);
                     for (randX = 0; randX < MAXRANDOM; randX++) {
                         BOOST_REQUIRE(
-                           leftpad + rightpad + src_len == src_storage);
+                            leftpad + rightpad + src_len == src_storage);
                         for (i = 0; i < 4; i++) {
                             int newsize;
                             int expectsize;

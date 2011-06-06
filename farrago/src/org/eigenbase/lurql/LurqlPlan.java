@@ -571,9 +571,8 @@ public class LurqlPlan
                 if (destinationClassVertex == destinationEndVertex) {
                     // nothing to do
                 } else if (
-                    modelView.getAllSuperclassVertices(
-                        destinationClassVertex).contains(
-                                 destinationEndVertex))
+                    modelView.getAllSuperclassVertices(destinationClassVertex)
+                        .contains(destinationEndVertex))
                 {
                     // the end is a superclass of the requested class,
                     // so we'll need to filter during execution

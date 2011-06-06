@@ -145,7 +145,8 @@ public abstract class LoptIterCalcRule
                         ANY))));
 
     public static LoptIterCalcRule defaultInstance =
-        new DefaultRule(new RelOptRuleOperand(
+        new DefaultRule(
+            new RelOptRuleOperand(
                 IterCalcRel.class,
                 ANY));
 

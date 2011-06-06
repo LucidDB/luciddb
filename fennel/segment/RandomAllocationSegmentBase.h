@@ -505,9 +505,9 @@ protected:
      */
     template <class ExtentAllocationNodeT, class PageEntryT>
     PageId allocateFromLockedExtentTemplate(
-         ExtentAllocationNodeT &extentNode,
-         ExtentNum extentNum,
-         PageOwnerId ownerId);
+        ExtentAllocationNodeT &extentNode,
+        ExtentNum extentNum,
+        PageOwnerId ownerId);
 
     /**
      * Sets the successor pageId for a page.
@@ -598,10 +598,10 @@ protected:
         class ExtentAllocLockT,
         class PageEntryT>
     void getPageEntryCopyTemplate(
-         PageId pageId,
-         PageEntryT &pageEntryCopy,
-         bool isAllocated,
-         bool thisSegment);
+        PageId pageId,
+        PageEntryT &pageEntryCopy,
+        bool isAllocated,
+        bool thisSegment);
 
 public:
     virtual ~RandomAllocationSegmentBase();

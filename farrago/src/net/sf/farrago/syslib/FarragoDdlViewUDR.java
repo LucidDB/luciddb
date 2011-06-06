@@ -61,17 +61,17 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForSchema(
-            String schemaName,
-            PreparedStatement resultInserter)
+        String schemaName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         createDdl(resultInserter, getElements(schemaName));
     }
 
     public static void generateForSchema(
-            String catalogName,
-            String schemaName,
-            PreparedStatement resultInserter)
+        String catalogName,
+        String schemaName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         catalog = catalogName;
@@ -90,8 +90,8 @@ public abstract class FarragoDdlViewUDR
     }
 
     public static void generateForCatalog(
-            String catalogName,
-            PreparedStatement resultInserter)
+        String catalogName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         catalog = catalogName;
@@ -106,19 +106,19 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForTable(
-            String schemaName,
-            String table,
-            PreparedStatement resultInserter)
+        String schemaName,
+        String table,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         generate(schemaName, table, resultInserter, FemAbstractColumnSet.class);
     }
 
     public static void generateForTable(
-            String catalogName,
-            String schemaName,
-            String tableName,
-            PreparedStatement resultInserter)
+        String catalogName,
+        String schemaName,
+        String tableName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         catalog = catalogName;
@@ -134,9 +134,9 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForRoutine(
-            String schemaName,
-            String routineName,
-            PreparedStatement resultInserter)
+        String schemaName,
+        String routineName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         List<CwmModelElement> routines = new ArrayList<CwmModelElement>();
@@ -153,10 +153,10 @@ public abstract class FarragoDdlViewUDR
     }
 
     public static void generateForRoutine(
-            String catalogName,
-            String schemaName,
-            String routineName,
-            PreparedStatement resultInserter)
+        String catalogName,
+        String schemaName,
+        String routineName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         catalog = catalogName;
@@ -171,19 +171,19 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForSpecificRoutine(
-            String schemaName,
-            String routineName,
-            PreparedStatement resultInserter)
+        String schemaName,
+        String routineName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         generate(schemaName, routineName, resultInserter, FemRoutine.class);
     }
 
     public static void generateForSpecificRoutine(
-            String catalogName,
-            String schemaName,
-            String routineName,
-            PreparedStatement resultInserter)
+        String catalogName,
+        String schemaName,
+        String routineName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         catalog = catalogName;
@@ -199,19 +199,19 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForJar(
-            String schemaName,
-            String jarName,
-            PreparedStatement resultInserter)
+        String schemaName,
+        String jarName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         generate(schemaName, jarName, resultInserter, FemJar.class);
     }
 
     public static void generateForJar(
-            String catalogName,
-            String schemaName,
-            String jarName,
-            PreparedStatement resultInserter)
+        String catalogName,
+        String schemaName,
+        String jarName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         catalog = catalogName;
@@ -225,8 +225,8 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForServer(
-            String serverName,
-            PreparedStatement resultInserter)
+        String serverName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         generate(null, serverName, resultInserter, FemDataServer.class);
@@ -239,8 +239,8 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForWrapper(
-            String wrapperName,
-            PreparedStatement resultInserter)
+        String wrapperName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         generate(null, wrapperName, resultInserter, FemDataWrapper.class);
@@ -253,19 +253,19 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForIndex(
-            String schemaName,
-            String indexName,
-            PreparedStatement resultInserter)
+        String schemaName,
+        String indexName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         generate(schemaName, indexName, resultInserter, FemLocalIndex.class);
     }
 
     public static void generateForIndex(
-            String catalogName,
-            String schemaName,
-            String indexName,
-            PreparedStatement resultInserter)
+        String catalogName,
+        String schemaName,
+        String indexName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         catalog = catalogName;
@@ -279,8 +279,8 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForUser(
-            String userName,
-            PreparedStatement resultInserter)
+        String userName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         generate(null, userName, resultInserter, FemUser.class);
@@ -293,8 +293,8 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForRole(
-            String roleName,
-            PreparedStatement resultInserter)
+        String roleName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         generate(null, roleName, resultInserter, FemRole.class);
@@ -307,8 +307,8 @@ public abstract class FarragoDdlViewUDR
      * @param resultInserter - Handles the output.
      */
     public static void generateForLabel(
-            String labelName,
-            PreparedStatement resultInserter)
+        String labelName,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         generate(null, labelName, resultInserter, FemLabel.class);
@@ -319,15 +319,15 @@ public abstract class FarragoDdlViewUDR
      * element.
      */
     private static <T extends CwmModelElement> void generate(
-            String schemaName,
-            String elementName,
-            PreparedStatement resultInserter,
-            Class<T> clazz)
+        String schemaName,
+        String elementName,
+        PreparedStatement resultInserter,
+        Class<T> clazz)
         throws SQLException
     {
         createDdl(
-                resultInserter,
-                getElementByNameAndType(schemaName, elementName, clazz));
+            resultInserter,
+            getElementByNameAndType(schemaName, elementName, clazz));
     }
 
     /**
@@ -379,7 +379,7 @@ public abstract class FarragoDdlViewUDR
             checkedEls = getElements(schemaName);
         }
         CwmModelElement el = FarragoCatalogUtil.getModelElementByNameAndType(
-                checkedEls, elementName, classType);
+            checkedEls, elementName, classType);
         if (el != null) {
             elList.add(el);
         }
@@ -393,8 +393,8 @@ public abstract class FarragoDdlViewUDR
      * @param elList - List of elements for which to generate DDL statements.
      */
     private static void createDdl(
-            PreparedStatement resultInserter,
-            List<CwmModelElement> elList)
+        PreparedStatement resultInserter,
+        List<CwmModelElement> elList)
         throws SQLException
     {
         FarragoDdlGenerator gen = getGenerator();
@@ -419,8 +419,8 @@ public abstract class FarragoDdlViewUDR
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = FarragoUdrRuntime.getRepos();
         FarragoDdlGenerator gen = new FarragoDdlGenerator(
-                SqlDialect.EIGENBASE,
-                repos.getModelView());
+            SqlDialect.EIGENBASE,
+            repos.getModelView());
         gen.setSchemaQualified(true);
         gen.setUglyViews(true);
         return gen;
@@ -442,8 +442,8 @@ public abstract class FarragoDdlViewUDR
             cat = repos.getCatalog(catalog);
             if (cat == null) {
                 throw new SQLException(
-                        FarragoResource.instance().ValidatorUnknownObject.ex(
-                            "catalog: " + catalog).getMessage());
+                    FarragoResource.instance().ValidatorUnknownObject.ex(
+                        "catalog: " + catalog).getMessage());
             }
             // Always assume default cat unless explicitly overridden.
             catalog = null;

@@ -993,7 +993,6 @@ public class FarragoTypeFactoryImpl
                 new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME),
                 SqlDateTimeWithoutTZ.INTERNAL_TIME_FIELD_NAME);
         } else if (
-
             // REVIEW: angel 2006-08-27 added this for interval
             // so generated java code okay for most expression
             // but shouldn't be checking expr,

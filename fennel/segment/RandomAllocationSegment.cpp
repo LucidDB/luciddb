@@ -43,11 +43,11 @@ void RandomAllocationSegment::formatPageExtents(
     ExtentNum &extentNum)
 {
     formatPageExtentsTemplate<
-            ExtentAllocationNode,
-            ExtentAllocLock,
-            PageEntry>(
-        segAllocNode,
-        extentNum);
+        ExtentAllocationNode,
+        ExtentAllocLock,
+        PageEntry>(
+            segAllocNode,
+            extentNum);
 }
 
 PageId RandomAllocationSegment::allocatePageId(PageOwnerId ownerId)
@@ -105,12 +105,12 @@ PageId RandomAllocationSegment::allocateFromNewExtent(
 {
     return
         allocateFromNewExtentTemplate<
-                ExtentAllocationNode,
-                ExtentAllocLock,
-                PageEntry>(
-            extentNum,
-            ownerId,
-            getTracingSegment());
+            ExtentAllocationNode,
+            ExtentAllocLock,
+            PageEntry>(
+                extentNum,
+                ownerId,
+                getTracingSegment());
 }
 
 PageId RandomAllocationSegment::allocateFromExtent(
@@ -119,12 +119,12 @@ PageId RandomAllocationSegment::allocateFromExtent(
 {
     return
         allocateFromExtentTemplate<
-                ExtentAllocationNode,
-                ExtentAllocLock,
-                PageEntry>(
-            extentNum,
-            ownerId,
-            getTracingSegment());
+            ExtentAllocationNode,
+            ExtentAllocLock,
+            PageEntry>(
+                extentNum,
+                ownerId,
+                getTracingSegment());
 }
 
 void RandomAllocationSegment::freePageEntry(
@@ -132,11 +132,11 @@ void RandomAllocationSegment::freePageEntry(
     BlockNum iPageInExtent)
 {
     freePageEntryTemplate<
-            ExtentAllocationNode,
-            ExtentAllocLock,
-            PageEntry>(
-        extentNum,
-        iPageInExtent);
+        ExtentAllocationNode,
+        ExtentAllocLock,
+        PageEntry>(
+            extentNum,
+            iPageInExtent);
 }
 
 PageId RandomAllocationSegment::getPageSuccessor(PageId pageId)

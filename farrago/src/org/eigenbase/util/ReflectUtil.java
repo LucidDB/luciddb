@@ -445,8 +445,8 @@ public abstract class ReflectUtil
      *
      * @return cache of methods
      */
-    public static <R extends ReflectiveVisitor, E> ReflectiveVisitDispatcher<R,
-        E> createDispatcher(
+    public static <R extends ReflectiveVisitor, E>
+    ReflectiveVisitDispatcher<R, E> createDispatcher(
         final Class<R> visitorBaseClazz,
         final Class<E> visiteeBaseClazz)
     {

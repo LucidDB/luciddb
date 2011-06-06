@@ -271,7 +271,9 @@ public class ReduceAggregatesRule
                 aggCallMapping);
         final RexNode divideRef =
             rexBuilder.makeCall(
-            SqlStdOperatorTable.divideOperator, numeratorRef, denominatorRef);
+                SqlStdOperatorTable.divideOperator,
+                numeratorRef,
+                denominatorRef);
         return rexBuilder.makeCast(
             oldCall.getType(), divideRef);
     }

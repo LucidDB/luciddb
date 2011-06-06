@@ -1768,17 +1768,14 @@ public class FarragoJdbcTest
                     stringValue,
                     resultSet.getString(BIGINT));
                 assertEquals(
-
                     /*stringValue,*/
                     "0.0",
                     resultSet.getString(REAL));
                 assertEquals(
-
                     /*stringValue,*/
                     "0.0",
                     resultSet.getString(FLOAT));
                 assertEquals(
-
                     /*stringValue,*/
                     "0.0",
                     resultSet.getString(DOUBLE));
@@ -1789,7 +1786,6 @@ public class FarragoJdbcTest
                     "0.000",
                     resultSet.getString(DECIMAL73));
                 assertEquals(
-
                     /*stringValue,*/
                     "false",
                     resultSet.getString(BOOLEAN));

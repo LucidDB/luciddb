@@ -46,7 +46,7 @@ void UncollectExecStream::prepare(UncollectExecStreamParams const &params)
 
     StandardTypeDescriptorOrdinal ordinal =
         StandardTypeDescriptorOrdinal(
-        pInAccessor->getTupleDesc()[0].pTypeDescriptor->getOrdinal());
+            pInAccessor->getTupleDesc()[0].pTypeDescriptor->getOrdinal());
     assert(ordinal == STANDARD_TYPE_VARBINARY);
     assert(1 == pInAccessor->getTupleDesc().size());
 

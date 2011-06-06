@@ -224,7 +224,7 @@ public class LcsTableMergeRule
     {
         if (!target.getPreparingStmt().getSession().getPersonality()
             .supportsFeature(
-                   EigenbaseResource.instance().PersonalitySupportsSnapshots))
+                EigenbaseResource.instance().PersonalitySupportsSnapshots))
         {
             return null;
         }

@@ -112,8 +112,8 @@ ExecStreamResult MockResourceExecStream::execute(
     outputTuple[0].pData = (PConstBuffer) &outputIndicator;
     outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
     pOutAccessor->provideBufferForConsumption(
-         outputTupleBuffer.get(),
-         outputTupleBuffer.get() + outputTupleAccessor->getCurrentByteCount());
+        outputTupleBuffer.get(),
+        outputTupleBuffer.get() + outputTupleAccessor->getCurrentByteCount());
     isDone = true;
     return EXECRC_BUF_OVERFLOW;
 }

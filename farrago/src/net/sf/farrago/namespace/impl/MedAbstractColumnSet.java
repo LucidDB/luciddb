@@ -237,7 +237,7 @@ public abstract class MedAbstractColumnSet
 
             // target field is in child
             if ((index = child.getRowType().getFieldOrdinal(
-                        targetField.getName()))
+                    targetField.getName()))
                 != -1)
             {
                 if ((type = srcMap.get(targetField.getName()))

@@ -63,10 +63,13 @@ void FlatFileExecStreamImpl::prepare(
     pBuffer.reset(
         new FlatFileBuffer(params.dataFilePath),
         ClosableObjectDestructor());
-    pParser.reset(new FlatFileParser(
-                      params.fieldDelim, params.rowDelim,
-                      params.quoteChar, params.escapeChar,
-                      params.trim));
+    pParser.reset(
+        new FlatFileParser(
+            params.fieldDelim,
+            params.rowDelim,
+            params.quoteChar,
+            params.escapeChar,
+            params.trim));
 
     numRowsScan = params.numRowsScan;
     textDesc = params.outputTupleDesc;

@@ -118,9 +118,7 @@ public class ArrayQueue<E>
      */
     public ArrayQueue(Collection<? extends E> c)
     {
-        this(Math.max(
-                DEFAULT_CAPACITY,
-                c.size()));
+        this(Math.max(DEFAULT_CAPACITY, c.size()));
 
         addAll(c);
     }
@@ -139,9 +137,7 @@ public class ArrayQueue<E>
      */
     public ArrayQueue(int capacity, Collection<? extends E> c)
     {
-        this(Math.max(
-                capacity,
-                c.size()));
+        this(Math.max(capacity, c.size()));
 
         addAll(c);
     }

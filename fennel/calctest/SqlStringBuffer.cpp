@@ -78,8 +78,8 @@ SqlStringBuffer::verify()
         return false;
     }
     if (mS.compare(
-        mLeftBump + mLeftPad + mSize + mRightPad,
-        mRightBump, verS, 0, mRightBump))
+            mLeftBump + mLeftPad + mSize + mRightPad,
+            mRightBump, verS, 0, mRightBump))
     {
         return false;
     }
@@ -212,8 +212,8 @@ SqlStringBufferUCS2::verify()
         return false;
     }
     if (mS.compare(
-        mLeftBump + mLeftPad + mSize + mRightPad,
-        mRightBump, verS, 0, mRightBump))
+            mLeftBump + mLeftPad + mSize + mRightPad,
+            mRightBump, verS, 0, mRightBump))
     {
         return false;
     }

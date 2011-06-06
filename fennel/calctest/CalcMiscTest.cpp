@@ -466,9 +466,9 @@ CalcMiscTest::testCalcContinueOnException()
 
     BOOST_CHECK(iter != end);
     BOOST_CHECK_EQUAL(
-            iter->pc, 1);
+        iter->pc, 1);
     BOOST_CHECK_EQUAL(
-            0, strcmp(iter->str, "22001"));
+        0, strcmp(iter->str, "22001"));
     iter++;
     BOOST_CHECK(iter == end);
 
@@ -488,9 +488,9 @@ CalcMiscTest::testCalcContinueOnException()
 
     BOOST_CHECK(iter != end);
     BOOST_CHECK_EQUAL(
-            iter->pc, 1);
+        iter->pc, 1);
     BOOST_CHECK_EQUAL(
-            0, strcmp(iter->str, "22001"));
+        0, strcmp(iter->str, "22001"));
     iter++;
     BOOST_CHECK(iter == end);
 

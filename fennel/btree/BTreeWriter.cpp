@@ -485,7 +485,7 @@ void BTreeWriter::grow(
     rootNodeAccessor.tupleData.back().pData =
         reinterpret_cast<PConstBuffer>(&newLeftPageId);
     uint cb = rootNodeAccessor.tupleAccessor.getByteCount(
-                        rootNodeAccessor.tupleData);
+        rootNodeAccessor.tupleData);
     PBuffer pBuffer1 = rootNodeAccessor.allocateEntry(node, 0, cb);
     rootNodeAccessor.tupleAccessor.marshal(
         rootNodeAccessor.tupleData, pBuffer1);
@@ -495,7 +495,7 @@ void BTreeWriter::grow(
     rootNodeAccessor.tupleData.back().pData =
             reinterpret_cast<PConstBuffer>(&rightPageId);
     cb = rootNodeAccessor.tupleAccessor.getByteCount(
-                rootNodeAccessor.tupleData);
+        rootNodeAccessor.tupleData);
 
     PBuffer pBuffer2 = rootNodeAccessor.allocateEntry(node, 1, cb);
     rootNodeAccessor.tupleAccessor.marshal(

@@ -160,7 +160,7 @@ void RandomAllocationSegmentBase::formatPageExtentsTemplate(
                 ExtentAllocationNodeT,
                 ExtentAllocLockT,
                 PageEntryT>(
-            extentAllocLock.getNodeForWrite());
+                    extentAllocLock.getNodeForWrite());
     }
 }
 

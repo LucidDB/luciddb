@@ -61,8 +61,8 @@ void VersionedRandomAllocationSegment::formatPageExtents(
             VersionedExtentAllocationNode,
             VersionedExtentAllocLock,
             VersionedPageEntry>(
-        segAllocNode,
-        extentNum);
+                segAllocNode,
+                extentNum);
 }
 
 PageId VersionedRandomAllocationSegment::allocatePageId(PageOwnerId ownerId)
@@ -137,9 +137,9 @@ PageId VersionedRandomAllocationSegment::allocateFromNewExtent(
                 VersionedExtentAllocationNode,
                 VersionedExtentAllocLock,
                 VersionedPageEntry>(
-            extentNum,
-            ownerId,
-            pTempSegment);
+                    extentNum,
+                    ownerId,
+                    pTempSegment);
 }
 
 PageId VersionedRandomAllocationSegment::allocateFromExtent(
@@ -151,9 +151,9 @@ PageId VersionedRandomAllocationSegment::allocateFromExtent(
                 VersionedExtentAllocationNode,
                 VersionedExtentAllocLock,
                 VersionedPageEntry>(
-            extentNum,
-            ownerId,
-            pTempSegment);
+                    extentNum,
+                    ownerId,
+                    pTempSegment);
 }
 
 void VersionedRandomAllocationSegment::deallocatePageRange(
@@ -210,8 +210,8 @@ void VersionedRandomAllocationSegment::freePageEntry(
             VersionedExtentAllocationNode,
             VersionedExtentAllocLock,
             VersionedPageEntry>(
-        extentNum,
-        iPageInExtent);
+                extentNum,
+                iPageInExtent);
 }
 
 void VersionedRandomAllocationSegment::markPageEntryUnused(
@@ -239,9 +239,9 @@ void VersionedRandomAllocationSegment::setPageSuccessor(
     setPageSuccessorTemplate<
             VersionedExtentAllocationNode,
             VersionedExtentAllocLock>(
-        pageId,
-        successorId,
-        pTempSegment);
+                pageId,
+                successorId,
+                pTempSegment);
 }
 
 bool VersionedRandomAllocationSegment::isPageIdAllocated(PageId pageId)
@@ -294,10 +294,10 @@ void VersionedRandomAllocationSegment::getPageEntryCopy(
             VersionedExtentAllocationNode,
             VersionedExtentAllocLock,
             VersionedPageEntry>(
-        pageId,
-        *pVersionedPageEntry,
-        isAllocated,
-        thisSegment);
+                pageId,
+                *pVersionedPageEntry,
+                isAllocated,
+                thisSegment);
 }
 
 void VersionedRandomAllocationSegment::getLatestPageEntryCopy(
@@ -662,8 +662,8 @@ void VersionedRandomAllocationSegment::allocateExtAllocNodes(
                 VersionedExtentAllocationNode,
                 VersionedExtentAllocLock,
                 VersionedPageEntry>(
-            segAllocNode,
-            startExtentNum);
+                    segAllocNode,
+                    startExtentNum);
     }
 }
 
@@ -1421,7 +1421,7 @@ void VersionedRandomAllocationSegment::restoreFromBackup(
         PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
 
         if (!DelegatingSegment::ensureAllocatedSize(
-            makePageNum(extentNum, nPagesPerExtent)))
+                makePageNum(extentNum, nPagesPerExtent)))
         {
             throw FennelExcn(
                 FennelResource::instance().outOfSpaceDuringRestore());
@@ -1442,7 +1442,7 @@ void VersionedRandomAllocationSegment::restoreFromBackup(
                 segAllocNode.getExtentEntry(i);
             // Make sure there's enough space in the segment for this extent
             if (!DelegatingSegment::ensureAllocatedSize(
-                makePageNum(extentNum, nPagesPerExtent)))
+                    makePageNum(extentNum, nPagesPerExtent)))
             {
                 throw FennelExcn(
                     FennelResource::instance().outOfSpaceDuringRestore());
@@ -1477,6 +1477,6 @@ void VersionedRandomAllocationSegment::checkAbort(
     }
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/segment/VersionedRandomAllocationSegment.cpp#21 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End VersionedRandomAllocationSegment.cpp

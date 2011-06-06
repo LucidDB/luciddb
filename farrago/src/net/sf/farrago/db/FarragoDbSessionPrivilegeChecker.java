@@ -117,8 +117,8 @@ public class FarragoDbSessionPrivilegeChecker
         if (requireGrantOption) {
             if (obj instanceof FemRole) {
                 // Special-case language for failed GRANT ROLE
-                assert (action.equals(
-                        PrivilegedActionEnum.INHERIT_ROLE.toString()));
+                assert action.equals(
+                    PrivilegedActionEnum.INHERIT_ROLE.toString());
                 throw FarragoResource.instance().ValidatorNoAdminOption.ex(
                     session.getRepos().getLocalizedObjectName(obj));
             } else {

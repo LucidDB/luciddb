@@ -192,8 +192,8 @@ bool LcsRowScanBaseExecStream::readColVals(
             attrAccessors[idx].loadValue(tupleData[idx], curValue);
             if (pScan->clusterCols[iCluCol].getFilters().hasResidualFilters) {
                 if (!pScan->clusterCols[iCluCol].applyFilters(
-                    projDescriptor,
-                    tupleData))
+                        projDescriptor,
+                        tupleData))
                 {
                     return false;
                 }

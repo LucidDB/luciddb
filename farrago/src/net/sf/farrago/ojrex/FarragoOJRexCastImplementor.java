@@ -458,7 +458,8 @@ public class FarragoOJRexCastImplementor
                             NullableValue.NULL_IND_MUTATOR_NAME,
                             new ExpressionList(nullTest))));
                 StatementList ifStmtList = new StatementList();
-                addStatement(new IfStatement(
+                addStatement(
+                    new IfStatement(
                         not(nullTest),
                         ifStmtList));
                 borrowStmtList(ifStmtList);

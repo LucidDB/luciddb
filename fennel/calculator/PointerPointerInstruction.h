@@ -320,8 +320,8 @@ public:
             PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult->length(0);
         } else {
             PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult->pointer(
-               PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1->pointer(),
-               PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1->length());
+                PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1->pointer(),
+                PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1->length());
         }
     }
     static const char* longName()
@@ -543,4 +543,3 @@ FENNEL_END_NAMESPACE
 #endif
 
 // End PointerPointerInstruction.h
-

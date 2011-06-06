@@ -945,7 +945,7 @@ public class FarragoDdlGenerator
         boolean skipNullable)
     {
         generateColumnsAndKeysForTable(
-                sb, table, skipDefaults, skipNullable, null);
+            sb, table, skipDefaults, skipNullable, null);
     }
 
     /**
@@ -970,20 +970,21 @@ public class FarragoDdlGenerator
         List<String> pk = imposedPrimaryKey;
 
         pk = generateColumnsAndKeysForCols(
-                sb, columns, skipDefaults, skipNullable, pk);
+            sb, columns, skipDefaults, skipNullable, pk);
         if (columns.size() > 0) {
             // add unique constraints
             List<FemUniqueKeyConstraint> uniques =
                 FarragoCatalogUtil.getUniqueKeyConstraints(table);
             // sort alphabetically
             Collections.sort(
-                    uniques, new Comparator<Object>() {
-                        public int compare(Object obj1, Object obj2) {
-                            return (
-                              (FemUniqueKeyConstraint)obj1).getName().compareTo(
-                                  ((FemUniqueKeyConstraint)obj2).getName());
-                        }
-                    });
+                uniques,
+                new Comparator<Object>() {
+                    public int compare(Object obj1, Object obj2) {
+                        return
+                            ((FemUniqueKeyConstraint)obj1).getName().compareTo(
+                                ((FemUniqueKeyConstraint)obj2).getName());
+                    }
+                });
 
             boolean firstConst = true;
             for (FemUniqueKeyConstraint constraint : uniques) {
@@ -1001,7 +1002,7 @@ public class FarragoDdlGenerator
                 sb.identifier(constraint.getName());
                 sb.append(" UNIQUE(");
                 List<CwmColumn> cols = Util.filter(
-                        constraint.getFeature(), CwmColumn.class);
+                    constraint.getFeature(), CwmColumn.class);
                 boolean firstCol = true;
                 for (CwmColumn col : cols) {
                     if (!firstCol) {
@@ -1028,7 +1029,7 @@ public class FarragoDdlGenerator
     {
         List<String> pk = imposedPrimaryKey;
         pk = generateColumnsAndKeysForCols(
-                sb, columns, skipDefaults, skipNullable, pk);
+            sb, columns, skipDefaults, skipNullable, pk);
         if (pk != null && pk.size() > 0) {
             sb.append(NL);
         }

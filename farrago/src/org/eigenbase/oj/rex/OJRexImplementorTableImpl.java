@@ -610,9 +610,9 @@ public class OJRexImplementorTableImpl
                         new FieldAccess(
                             TypeName.forOJClass(
                                 OJUtil.typeToOJClass(
-                                          agg.argTypes[0],
-                                          implementor.getTypeFactory())
-                                      .primitiveWrapper()),
+                                    agg.argTypes[0],
+                                    implementor.getTypeFactory())
+                                .primitiveWrapper()),
                             agg.isMin() ? "MAX_VALUE" : "MIN_VALUE")));
             case SqlMinMaxAggFunction.MINMAX_COMPARABLE:
 

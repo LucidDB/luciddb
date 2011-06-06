@@ -429,8 +429,8 @@ public class DiffRepository
                     if (checkOverride
                         && (baseRepos != null)
                         && (baseRepos.getTestCaseElement(
-                                testCaseName,
-                                false) != null)
+                            testCaseName,
+                            false) != null)
                         && !"true".equals(
                             testCase.getAttribute(TestCaseOverridesAttr)))
                     {
