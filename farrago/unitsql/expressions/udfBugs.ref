@@ -74,4 +74,48 @@
 > 
 > alter session implementation set default;
 > 
+> -- with bug dt-2387, a udx stalls if it has two or more parameters that are
+> -- cursors
+> create or replace function countTwoInputs(
+>   c1 cursor,
+>   c2 cursor)
+> returns table (
+>   n integer)
+> language java
+> parameter style system defined java
+> no sql
+> external name
+> 'class net.sf.farrago.test.FarragoTestUDR.countTwoInputs';
+> -- should return 3 (1 row from left, 2 rows from right)
+> select * from table(
+>   countTwoInputs(
+>     cursor(values (1)),
+>     cursor(values ('a'), ('b'))));
+'N'
+'3'
+> -- should return 1
+> select * from table(
+>   countTwoInputs(
+>     cursor(values (1)),
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options)));
+'N'
+'1'
+> -- should return 0; with bug dt-2387, this query hangs
+> select * from table(
+>   countTwoInputs(
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options),
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options)));
+'N'
+'0'
+> -- workaround to dt-2387 using a UDX rather than a view
+> select * from table(
+>   countTwoInputs(
+>     cursor(select * from table(sys_boot.mgmt.browse_connect_empty_options_udx())),
+>     cursor(select * from table(sys_boot.mgmt.browse_connect_empty_options_udx()))));
+'N'
+'0'
+> 
+> -- end udfBugs.sql
+> 
+> 
 > !quit

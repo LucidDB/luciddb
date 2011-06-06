@@ -60,6 +60,7 @@ class MedMockDataServer
     public static final String PROPVAL_JAVA = "JAVA";
     public static final String PROPVAL_FENNEL = "FENNEL";
     public static final String PROP_EXTRACT_COLUMNS = "EXTRACT_COLUMNS";
+    public static final String PROP_FOO = "FOO";
     public static final boolean DEFAULT_EXTRACT_COLUMNS = true;
 
     //~ Instance fields --------------------------------------------------------

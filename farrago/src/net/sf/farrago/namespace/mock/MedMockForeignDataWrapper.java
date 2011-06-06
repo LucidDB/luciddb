@@ -67,6 +67,29 @@ public class MedMockForeignDataWrapper
         return "Foreign data wrapper for mock tables";
     }
 
+    @Override
+    public DriverPropertyInfo[] getPluginPropertyInfo(
+        Locale locale,
+        Properties props)
+    {
+        MedPropertyInfoMap infoMap =
+            new MedPropertyInfoMap(
+                FarragoResource.instance(),
+                "MedMock",
+                props);
+        infoMap.addPropInfo(
+            MedMockDataServer.PROP_EXECUTOR_IMPL,
+            false,
+            new String[] {
+                MedMockDataServer.PROPVAL_JAVA,
+                MedMockDataServer.PROPVAL_FENNEL
+            });
+        infoMap.addPropInfo(
+            MedMockDataServer.PROP_FOO,
+            false);
+        return infoMap.toArray();
+    }
+
     // implement FarragoMedDataWrapper
     public DriverPropertyInfo [] getServerPropertyInfo(
         Locale locale,
@@ -89,6 +112,49 @@ public class MedMockForeignDataWrapper
                 MedMockDataServer.PROPVAL_JAVA,
                 MedMockDataServer.PROPVAL_FENNEL
             });
+        return infoMap.toArray();
+    }
+
+    @Override
+    public DriverPropertyInfo[] getColumnSetPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps,
+        Properties tableProps)
+    {
+        MedPropertyInfoMap infoMap =
+            new MedPropertyInfoMap(
+                FarragoResource.instance(),
+                "MedMock",
+                serverProps);
+        infoMap.addPropInfo(
+            "Prop1");
+        infoMap.addPropInfo(
+            "Prop2", true);
+        infoMap.addPropInfo(
+            "Prop3", false, new String[] { "x", "y"});
+        return infoMap.toArray();
+    }
+
+    @Override
+    public DriverPropertyInfo[] getColumnPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps,
+        Properties tableProps,
+        Properties columnProps)
+    {
+        MedPropertyInfoMap infoMap =
+            new MedPropertyInfoMap(
+                FarragoResource.instance(),
+                "MedMock",
+                serverProps);
+        infoMap.addPropInfo(
+            "ColProp1");
+        infoMap.addPropInfo(
+            "ColProp2", true);
+        infoMap.addPropInfo(
+            "ColProp3", false, new String[] { "x", null, "y"});
         return infoMap.toArray();
     }
 

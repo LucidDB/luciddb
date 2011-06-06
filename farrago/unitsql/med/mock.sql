@@ -1,6 +1,8 @@
 -- $Id$
 -- Test mock namespace plugin
 
+!set outputformat csv
+
 create server mock_foreign_server
 foreign data wrapper sys_mock_foreign;
 
@@ -10,7 +12,7 @@ local data wrapper sys_mock;
 create server mock_foreign_metadata_server
 foreign data wrapper sys_mock_foreign
 options (
-foreign_schema_name 'MOCK_SCHEMA', 
+foreign_schema_name 'MOCK_SCHEMA',
 foreign_table_name 'MOCK_TABLE',
 executor_impl 'JAVA',
 row_count '3');
@@ -18,7 +20,7 @@ row_count '3');
 create server mock_foreign_dynamic_server
 foreign data wrapper sys_mock_foreign
 options (
-foreign_schema_name 'MOCK_SCHEMA', 
+foreign_schema_name 'MOCK_SCHEMA',
 foreign_table_name 'MOCK_TABLE',
 row_count_sql 'select current_row_count from mock_schema.dynamic_row_count');
 
@@ -59,7 +61,7 @@ create foreign table mock_ramp_udx_table(
     id int not null)
 server mock_foreign_server
 options (
-    executor_impl 'JAVA', 
+    executor_impl 'JAVA',
     udx_specific_name 'mock_schema.ramp',
     row_count '3');
 
@@ -67,7 +69,7 @@ create foreign table mock_longer_ramp_udx_table(
     id int not null)
 server mock_foreign_server
 options (
-    executor_impl 'JAVA', 
+    executor_impl 'JAVA',
     udx_specific_name 'mock_schema.longer_ramp',
     row_count '3');
 
@@ -125,7 +127,6 @@ select * from mock_foreign_metadata_server.bach_schema.mock_table;
 -- should fail:  unknown table name
 select * from mock_foreign_metadata_server.mock_schema.bach_table;
 
-!set outputformat csv
 explain plan for select * from mock_fennel_table;
 
 explain plan for select * from mock_java_table;
@@ -133,7 +134,6 @@ explain plan for select * from mock_java_table;
 explain plan for select * from mock_empty_table;
 
 explain plan for insert into mock_empty_table values (5);
-!set outputformat table
 
 create schema mock_local_schema;
 
@@ -213,9 +213,25 @@ library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
 language java
 options(browse_connect_description 'Go Ask The Mock Turtle');
 
--- note that none of the system wrappers should have 
+-- note that none of the system wrappers should have
 -- browse_connect_description set, so don't need ORDER BY here
 select * from sys_boot.mgmt.browse_connect_foreign_wrappers;
+
+-- query the available options for the mock wrapper
+select * from table(
+  sys_boot.mgmt.browse_wrapper(
+    'MOCK_BROWSE',
+    cursor(table sys_boot.mgmt.browse_connect_empty_options),
+    'en_US'))
+order by option_ordinal, option_choice_ordinal;
+
+-- non-existent wrapper
+select * from table(
+  sys_boot.mgmt.browse_wrapper(
+    'BAD_WRAPPER',
+    cursor(table sys_boot.mgmt.browse_connect_empty_options),
+    'en_US'))
+order by option_ordinal, option_choice_ordinal;
 
 -- query for available options with no proposed settings (empty_view)
 select * from table(
@@ -244,6 +260,35 @@ select * from table(sys_boot.mgmt.browse_foreign_schemas(
     'SYS_MOCK_FOREIGN_DATA_SERVER'))
 order by schema_name;
 
+-- query for table options
+select * from table(sys_boot.mgmt.browse_table(
+    'MOCK_FOREIGN_DYNAMIC_SERVER',
+    cursor(table sys_boot.mgmt.browse_connect_empty_options),
+    'en_US'))
+order by option_ordinal, option_choice_ordinal;
+
+-- query for table options (non-existent server)
+select * from table(sys_boot.mgmt.browse_table(
+    'NON_EXISTENT_SERVER',
+    cursor(table sys_boot.mgmt.browse_connect_empty_options),
+    'en_US'))
+order by option_ordinal, option_choice_ordinal;
+
+-- query for column options
+select * from table(sys_boot.mgmt.browse_column(
+    'MOCK_FOREIGN_DYNAMIC_SERVER',
+    cursor(table sys_boot.mgmt.browse_connect_empty_options),
+    cursor(table sys_boot.mgmt.browse_connect_empty_options),
+    'en_US'))
+order by option_ordinal, option_choice_ordinal;
+
+-- query for table options (non-existent server)
+select * from table(sys_boot.mgmt.browse_column(
+    'NON_EXISTENT_SERVER',
+    cursor(table sys_boot.mgmt.browse_connect_empty_options),
+    cursor(table sys_boot.mgmt.browse_connect_empty_options),
+    'en_US'))
+order by option_ordinal, option_choice_ordinal;
 
 -- test create or replace niceties
 
@@ -281,7 +326,7 @@ foreign data wrapper mock_flaky;
 create server mock_no_columns_server
 foreign data wrapper sys_mock_foreign
 options (
-foreign_schema_name 'MOCK_SCHEMA', 
+foreign_schema_name 'MOCK_SCHEMA',
 foreign_table_name 'MOCK_TABLE',
 extract_columns 'false',
 executor_impl 'JAVA',
@@ -296,3 +341,4 @@ into mock_no_columns_schema;
 -- should fail:  no columns
 select * from mock_no_columns_schema.mock_table;
 
+-- End mock.sql

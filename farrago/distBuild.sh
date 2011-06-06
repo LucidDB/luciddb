@@ -157,11 +157,10 @@ cp hsqldb/lib/hsqldb.jar $LIB_DIR
 if [ -e postgresql-8.4-701.jdbc3.jar ]; then
     cp postgresql-8.4-701.jdbc3.jar $LIB_DIR
 fi
-cp commons-transaction-1.1.jar $LIB_DIR
+cp commons-transaction-1.2.jar $LIB_DIR
 cp vjdbc/lib/vjdbc.jar $LIB_DIR
 cp vjdbc/lib/vjdbc_server.jar $LIB_DIR
 cp vjdbc/lib/commons-logging-1.1.jar $LIB_DIR
-cp vjdbc/lib/commons-pool-1.3.jar $LIB_DIR
 cp vjdbc/lib/commons-dbcp-1.4.jar $LIB_DIR
 cp vjdbc/lib/commons-digester-1.7.jar $LIB_DIR
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt

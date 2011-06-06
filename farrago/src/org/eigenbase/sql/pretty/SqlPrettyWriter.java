@@ -1049,6 +1049,26 @@ public class SqlPrettyWriter
         this.lineLength = lineLength;
     }
 
+    public void setFormatOptions(SqlFormatOptions options)
+    {
+        if (options == null) {
+            return;
+        }
+        setAlwaysUseParentheses(options.isAlwaysUseParentheses());
+        setCaseClausesOnNewLines(options.isCaseClausesOnNewLines());
+        setClauseStartsLine(options.isClauseStartsLine());
+        setKeywordsLowerCase(options.isKeywordsLowercase());
+        setQuoteAllIdentifiers(options.isQuoteAllIdentifiers());
+        setSelectListItemsOnSeparateLines(
+            options.isSelectListItemsOnSeparateLines());
+        setWhereListItemsOnSeparateLines(
+            options.isWhereListItemsOnSeparateLines());
+        setWindowNewline(options.isWindowDeclarationStartsLine());
+        setWindowDeclListNewline(options.isWindowListItemsOnSeparateLines());
+        setIndentation(options.getIndentation());
+        setLineLength(options.getLineLength());
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

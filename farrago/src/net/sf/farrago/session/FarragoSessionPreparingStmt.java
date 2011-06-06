@@ -32,6 +32,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.advise.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.*;
 
@@ -208,6 +209,11 @@ public interface FarragoSessionPreparingStmt
      * @return the root statement context for this statement
      */
     public FarragoSessionStmtContext getRootStmtContext();
+
+    /**
+     * @return SqlAdvisor for this session and statement
+     */
+    public SqlAdvisor getAdvisor();
 }
 
 // End FarragoSessionPreparingStmt.java

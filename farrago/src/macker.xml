@@ -84,6 +84,7 @@
     <pattern name="jdbc.rmi" class="net.sf.farrago.jdbc.rmi.*" />
     <pattern name="jdbc.param" class="net.sf.farrago.jdbc.param.*" />
     <pattern name="server" class="net.sf.farrago.server.*" />
+    <pattern name="service" class="net.sf.farrago.service.*" />
     <pattern name="namespace.impl" class="net.sf.farrago.namespace.impl.*" />
     <pattern name="namespace.mdr" class="net.sf.farrago.namespace.mdr.*" />
     <pattern name="namespace.mock" class="net.sf.farrago.namespace.mock.*" />
@@ -135,6 +136,7 @@
       <include pattern="jdbc.rmi"/>
       <include pattern="jdbc.param"/>
       <include pattern="server"/>
+      <include pattern="service"/>
       <include pattern="namespace.impl"/>
       <include pattern="namespace.mdr"/>
       <include pattern="namespace.mock"/>
@@ -692,6 +694,22 @@
       </deny>
     </access-rule>
 
+    <pattern name="service.deps">
+      <include pattern="eigenbase" />
+      <include pattern="service" />
+    </pattern>
+
+    <access-rule>
+      <message>service dependency violation</message>
+      <deny>
+        <from pattern="service" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="service.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="namespace.impl.deps">
       <include pattern="query.deps" />
       <include pattern="namespace.impl" />
@@ -844,9 +862,11 @@
 
     <pattern name="test.deps">
       <include pattern="server.deps" />
+      <include pattern="service.deps" />
       <include pattern="jdbc.client.deps" />
       <include pattern="defimpl.deps" />
       <include pattern="namespace.mdr.deps" />
+      <include pattern="namespace.mock.deps" />
       <include pattern="fennel.tuple" />
       <include pattern="ddl.gen" />
       <include pattern="syslib" />

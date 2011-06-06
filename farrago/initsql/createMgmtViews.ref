@@ -1,7 +1,8 @@
-> -- This script creates a view schema used for database management 
->                                                                                 
+> -- $Id$
+> -- This script creates a view schema used for database management
+> 
 > !set verbose true
->                                                                                 
+> 
 > -- create views in system-owned schema sys_boot.mgmt
 > create or replace schema sys_boot.mgmt;
 > set schema 'sys_boot.mgmt';
@@ -67,12 +68,12 @@
 > create or replace function thread_stack_entries()
 > returns table(
 >     thread_id bigint, stack_level int, entry_string varchar(1024),
->     class_name varchar(128), method_name varchar(128), 
+>     class_name varchar(128), method_name varchar(128),
 >     file_name varchar(1024), line_num int, is_native boolean)
 > language java
 > parameter style system defined java
 > no sql
-> external name 
+> external name
 > 'class net.sf.farrago.syslib.FarragoManagementUDR.threadStackEntries';
 > 
 > create or replace function system_info()
@@ -86,7 +87,7 @@
 > language java
 > parameter style system defined java
 > no sql
-> external name 
+> external name
 > 'class net.sf.farrago.syslib.FarragoManagementUDR.systemInfo';
 > 
 > create or replace function performance_counters()
@@ -100,7 +101,7 @@
 > language java
 > parameter style system defined java
 > no sql
-> external name 
+> external name
 > 'class net.sf.farrago.syslib.FarragoManagementUDR.performanceCounters';
 > 
 > -- lie and say this is non-deterministic, since it's usually used
@@ -117,7 +118,7 @@
 >   language java
 >   parameter style java
 >   reads sql data
->   external name 
+>   external name
 >   'class net.sf.farrago.syslib.FarragoManagementUDR.flushCodeCache';
 > 
 > -- lets an administrator kill a running session
@@ -179,7 +180,7 @@
 >     in regex varchar(2000))
 > language java
 > contains sql
-> external name 
+> external name
 > 'class net.sf.farrago.syslib.FarragoManagementUDR.setOptRuleDescExclusionFilter';
 > 
 > -- exports the catalog to an XMI file
@@ -211,7 +212,7 @@
 > create or replace procedure export_schema_to_file(
 >   in cat varchar(128),
 >   in schma varchar(128),
->   in exclude boolean, 
+>   in exclude boolean,
 >   in tlist varchar(65535),
 >   in tpattern varchar(65535),
 >   in dir varchar(65535),
@@ -241,7 +242,7 @@
 > language java
 > parameter style system defined java
 > no sql
-> external name 
+> external name
 > 'class net.sf.farrago.syslib.FarragoManagementUDR.sessionParameters';
 > 
 > create or replace view session_parameters_view as
@@ -335,7 +336,7 @@
 > 
 > -- Statistics views
 > create or replace view page_counts_view as
->     select 
+>     select
 >         i.table_cat,
 >         i.table_schem,
 >         i.table_name,
@@ -353,18 +354,18 @@
 >         t.table_schem,
 >         t.table_name,
 >         acs."rowCount" as row_count
->     from 
+>     from
 >         sys_boot.jdbc_metadata.tables_view_internal t
 >     inner join
 >         sys_fem."SQL2003"."AbstractColumnSet" acs
 >     on
 >         t."mofId" = acs."mofId"
->     where 
+>     where
 >         acs."rowCount" is not null
 > ;
 > 
 > create or replace view histograms_view_internal as
->     select 
+>     select
 >         c.table_cat,
 >         c.table_schem,
 >         c.table_name,
@@ -378,7 +379,7 @@
 >         h."rowsLastBar" as rows_last_bar,
 >         cast(h."analyzeTime" as timestamp) as last_analyze_time,
 >         h."mofId"
->     from 
+>     from
 >         sys_boot.jdbc_metadata.columns_view_internal c
 >     inner join
 >         sys_fem.med."ColumnHistogram" h
@@ -409,7 +410,7 @@
 > ;
 > 
 > create or replace view histogram_bars_view as
->     select 
+>     select
 >         h.table_cat,
 >         h.table_schem,
 >         h.table_name,
@@ -503,7 +504,7 @@
 >   when mofclassname='LocalView' then 'LOCAL VIEW'
 >   when mofclassname='LocalTable' then 'LOCAL TABLE'
 >   when mofclassname='ForeignTable' then 'FOREIGN TABLE'
->   else cast(mofclassname as varchar(128)) 
+>   else cast(mofclassname as varchar(128))
 > end;
 > 
 > create or replace view dba_schemas_internal1 as
@@ -544,21 +545,21 @@
 > ;
 > 
 > create or replace view dba_tables_internal1 as
->   select 
+>   select
 >     cast(table_cat as varchar(128)) as catalog_name,
 >     cast(table_schem as varchar(128)) as schema_name,
 >     cast(table_name as varchar(128)) as table_name,
 >     sys_boot.mgmt.get_table_type_by_mof_class_name(t."mofClassName")
 >         as table_type,
 >     cast(ae."creationTimestamp" as timestamp) as creation_timestamp,
->     cast(ae."modificationTimestamp" as timestamp) 
+>     cast(ae."modificationTimestamp" as timestamp)
 >         as last_modification_timestamp,
 >     cast("description" as varchar(128)) as remarks,
 >     ae."mofId",
 >     ae."lineageId"
 >   from
 >     sys_boot.jdbc_metadata.tables_view_internal t
->   inner join 
+>   inner join
 >     sys_fem."SQL2003"."AnnotatedElement" ae
 >   on
 >     t."mofId" = ae."mofId"
@@ -579,7 +580,7 @@
 >   from
 >     dba_tables_internal1 dti
 >   inner join
->     sys_fem."Security"."Grant" g    
+>     sys_fem."Security"."Grant" g
 >   on
 >     dti."mofId" = g."Element"
 >   where
@@ -634,7 +635,7 @@
 >     cast(object_schema as varchar(128)) as schema_name,
 >     cast(t."name" as varchar(128)) as table_name,
 >     cast(t."creationTimestamp" as timestamp) as creation_timestamp,
->     cast(t."modificationTimestamp" as timestamp) 
+>     cast(t."modificationTimestamp" as timestamp)
 >         as last_modification_timestamp,
 >     t."lastAnalyzeRowCount" as last_analyze_row_count,
 >     cast(t."analyzeTime" as timestamp) as last_analyze_timestamp,
@@ -700,9 +701,9 @@
 >   on
 >     s."mofId" = r."namespace"
 > ;
->     
+> 
 > create or replace view dba_routines_internal2 as
->   select 
+>   select
 >     catalog_name,
 >     schema_name,
 >     invocation_name,
@@ -753,7 +754,7 @@
 > ;
 > 
 > create or replace view dba_foreign_wrappers_internal as
->   select 
+>   select
 >     cast(dw."name" as varchar(128)) as foreign_wrapper_name,
 >     cast(dw."libraryFile" as varchar(65535)) as library,
 >     cast(dw."language" as varchar(128)) as "LANGUAGE",
@@ -767,7 +768,7 @@
 >     sys_fem.med."DataWrapper" dw
 >   inner join
 >     sys_fem."Security"."Grant" g
->   on 
+>   on
 >     dw."mofId" = g."Element"
 >   where
 >     dw."foreign" = true and g."action" = 'CREATION'
@@ -866,7 +867,7 @@
 >     sys_fem.med."StorageOption" so
 >   on
 >     dw."mofId" = so."StoredElement"
->   where 
+>   where
 >     dw."foreign" = true
 >     and so."name" = 'BROWSE_CONNECT_DESCRIPTION'
 > ;
@@ -902,7 +903,7 @@
 >   language java
 >   parameter style java
 >   no sql
->   external name 
+>   external name
 >   'class net.sf.farrago.syslib.FarragoManagementUDR.createDirectory';
 > 
 > create or replace procedure delete_file_or_directory(
@@ -910,7 +911,7 @@
 >   language java
 >   parameter style java
 >   no sql
->   external name 
+>   external name
 >   'class net.sf.farrago.syslib.FarragoManagementUDR.deleteFileOrDirectory';
 > 
 > -- Tests that a connection can be established to a particular
@@ -920,7 +921,7 @@
 >   language java
 >   parameter style java
 >   no sql
->   external name 
+>   external name
 >   'class net.sf.farrago.syslib.FarragoMedUDR.testServer';
 > 
 > -- Tests that a connection can be established for all SQL/MED servers
@@ -930,15 +931,19 @@
 >   language java
 >   parameter style java
 >   no sql
->   external name 
+>   external name
 >   'class net.sf.farrago.syslib.FarragoMedUDR.testAllServersForWrapper';
 > 
-> -- Returns the set of options relevant to a given wrapper.  A partial
-> -- set of options may be passed in via the proposed_server_options
-> -- cursor parameter, which must have two columns (OPTION_NAME and
-> -- OPTION_VALUE, in that order).  This allows for an incremental
-> -- connection interaction, starting with specifying no options, then
-> -- some, then more, stopping once user and wrapper are both satisfied.
+> -- Returns the set of options relevant to a foreign server created
+> -- from a given wrapper.
+> --
+> -- A partial set of options may be passed in via the
+> -- proposed_server_options cursor parameter, which must have two
+> -- columns (OPTION_NAME and OPTION_VALUE, in that order).  This allows
+> -- for an incremental connection interaction, starting with specifying
+> -- no options, then some, then more, stopping once user and wrapper
+> -- are both satisfied.
+> --
 > -- The result set is not fully normalized, because some options
 > -- support a list of choices (e.g. for a dropdown selection UI
 > -- widget).  optional_choice_ordinal -1 represents the "current"
@@ -950,7 +955,7 @@
 >   proposed_server_options cursor)
 > returns table(
 >   option_ordinal integer,
->   option_name varchar(128), 
+>   option_name varchar(128),
 >   option_description varchar(4096),
 >   is_option_required boolean,
 >   option_choice_ordinal int,
@@ -958,14 +963,146 @@
 > language java
 > parameter style system defined java
 > no sql
-> external name 
+> external name
 > 'class net.sf.farrago.syslib.FarragoMedUDR.browseConnectServer';
+> 
+> -- Returns the set of options relevant to a given wrapper.  The
+> -- wrapper must already have been registered in the catalog.
+> --
+> -- A partial set of options may be passed in via the
+> -- proposed_wrapper_options cursor parameter, which must have two
+> -- columns (OPTION_NAME and OPTION_VALUE, in that order).  This allows
+> -- for an incremental interaction, starting with specifying no
+> -- options, then some, then more, stopping once user and wrapper are
+> -- both satisfied. Whether or not any wrapper options are passed, the
+> -- wrapper's existing options stored in the catalog are ignored.
+> --
+> -- The locale_name parameter can either be the name of the locale for
+> -- which to return descriptions (e.g. 'en_US'), or NULL to use the
+> -- server's default locale.
+> --
+> -- The result set is not fully normalized, because some options
+> -- support a list of choices (e.g. for a dropdown selection UI
+> -- widget).  optional_choice_ordinal -1 represents the "current"
+> -- choice (either proposed by the user or chosen as default by the
+> -- wrapper); other choice ordinals starting from 0 represent possible
+> -- choices (if known).
+> create or replace function browse_wrapper(
+>   wrapper_name varchar(128),
+>   proposed_wrapper_options cursor,
+>   locale_name varchar(40))
+> returns table(
+>   option_ordinal integer,
+>   option_name varchar(128),
+>   option_description varchar(4096),
+>   is_option_required boolean,
+>   option_choice_ordinal int,
+>   option_choice_value varchar(4096))
+> language java
+> parameter style system defined java
+> no sql
+> external name
+> 'class net.sf.farrago.syslib.FarragoMedUDR.browseWrapper';
+> 
+> -- Returns the set of options relevant to a table created within a
+> -- given foreign data server.  The foreign data server must have
+> -- already been created.
+> --
+> -- A partial set of options may be passed in via the
+> -- proposed_table_options cursor parameter, which must have two
+> -- columns (OPTION_NAME and OPTION_VALUE, in that order).  This allows
+> -- for an incremental interaction, starting with specifying no
+> -- options, then some, then more, stopping once user and wrapper are
+> -- both satisfied.
+> --
+> -- The locale_name parameter can either be the name of the locale for
+> -- which to return descriptions (e.g. 'en_US'), or NULL to use the
+> -- server's default locale.
+> --
+> -- The result set is not fully normalized, because some options
+> -- support a list of choices (e.g. for a dropdown selection UI
+> -- widget).  optional_choice_ordinal -1 represents the "current"
+> -- choice (either proposed by the user or chosen as default by the
+> -- wrapper); other choice ordinals starting from 0 represent possible
+> -- choices (if known).
+> create or replace function browse_table(
+>   foreign_server_name varchar(128),
+>   proposed_table_options cursor,
+>   locale_name varchar(40))
+> returns table(
+>   option_ordinal integer,
+>   option_name varchar(128),
+>   option_description varchar(4096),
+>   is_option_required boolean,
+>   option_choice_ordinal int,
+>   option_choice_value varchar(4096))
+> language java
+> parameter style system defined java
+> no sql
+> external name
+> 'class net.sf.farrago.syslib.FarragoMedUDR.browseTable';
+> 
+> -- Returns the set of options relevant to a column created in a table
+> -- within a given foreign data server.  The foreign data server must
+> -- have already been created, but it is not necessary for the table or
+> -- column to exist.
+> --
+> -- A partial set of options may be passed in via the
+> -- proposed_column_options cursor parameter, which must have two
+> -- columns (OPTION_NAME and OPTION_VALUE, in that order).  This allows
+> -- for an incremental interaction, starting with specifying no
+> -- options, then some, then more, stopping once user and wrapper are
+> -- both satisfied.
+> --
+> -- Likewise, the table_options cursor parameter contains the options
+> -- of the table.
+> --
+> -- The locale_name parameter can either be the name of the locale for
+> -- which to return descriptions (e.g. 'en_US'), or NULL to use the
+> -- server's default locale.
+> --
+> -- The result set is not fully normalized, because some options
+> -- support a list of choices (e.g. for a dropdown selection UI
+> -- widget).  optional_choice_ordinal -1 represents the "current"
+> -- choice (either proposed by the user or chosen as default by the
+> -- wrapper); other choice ordinals starting from 0 represent possible
+> -- choices (if known).
+> create or replace function browse_column(
+>   foreign_server_name varchar(128),
+>   proposed_table_options cursor,
+>   proposed_column_options cursor,
+>   locale_name varchar(40))
+> returns table(
+>   option_ordinal integer,
+>   option_name varchar(128),
+>   option_description varchar(4096),
+>   is_option_required boolean,
+>   option_choice_ordinal int,
+>   option_choice_value varchar(4096))
+> language java
+> parameter style system defined java
+> no sql
+> external name
+> 'class net.sf.farrago.syslib.FarragoMedUDR.browseColumn';
 > 
 > -- A view which can be used as the input cursor for proposed_server_options
 > -- when no options are set (initial browse).
 > create or replace view browse_connect_empty_options as
 > select '' as option_name, '' as option_value
 > from sys_boot.jdbc_metadata.empty_view;
+> 
+> -- A table function that returns same as the browse_connect_empty_options
+> -- view. Workaround for dtbug 2387, "UDX with cursor inputs hangs". Remove when
+> -- that bug is fixed.
+> create or replace function browse_connect_empty_options_udx()
+> returns table(
+>   option_name varchar(128),
+>   option_value varchar(128))
+> language java
+> parameter style system defined java
+> no sql
+> external name
+> 'class net.sf.farrago.syslib.FarragoMedUDR.browseEmptyOptions';
 > 
 > -- Returns foreign schemas accessible via a given foreign server.
 > create or replace function browse_foreign_schemas(
@@ -976,40 +1113,8 @@
 > language java
 > parameter style system defined java
 > no sql
-> external name 
+> external name
 > 'class net.sf.farrago.syslib.FarragoMedUDR.browseForeignSchemas';
-> 
-> create or replace function browse_foreign_tables(
->   foreign_server_name varchar(128),
->   schema_name varchar(128))
-> returns table(
->   table_name varchar(128),
->   description varchar(4096))
-> language java
-> parameter style system defined java
-> no sql
-> external name
-> 'class net.sf.farrago.syslib.FarragoMedUDR.browseForeignTables';
-> 
-> create or replace function browse_foreign_columns(
->   foreign_server_name varchar(128),
->   schema_name varchar(128))
-> returns table(
->   table_name varchar(128),
->   column_name varchar(128),
->   ordinal integer,
->   datatype varchar(128),
->   "PRECISION" integer,
->   dec_digits integer,
->   is_nullable boolean,
->   formatted_datatype varchar(128),
->   description varchar(4096),
->   default_value varchar(128))
-> language java
-> parameter style system defined java
-> no sql
-> external name
-> 'class net.sf.farrago.syslib.FarragoMedUDR.browseForeignColumns';
 > 
 > --
 > -- Datetime conversion functions
@@ -1072,7 +1177,7 @@
 > language java
 > parameter style system defined java
 > no sql
-> external name 
+> external name
 > 'class net.sf.farrago.syslib.FarragoPerforceUDR.getChangelists';
 > 
 > create or replace view perforce_submitters as
@@ -1089,7 +1194,7 @@
 > language java
 > parameter style system defined java
 > no sql
-> external name 
+> external name
 > 'class net.sf.farrago.syslib.FarragoManagementUDR.lobText';
 > 
 > -- returns a create statement for every item in a given schema
@@ -1330,88 +1435,101 @@
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForLabel';
 > 
 > -- variation of LucidDB session personality but with index only scans enabled
-> create or replace jar sys_boot.sys_boot.luciddb_index_only_plugin 
-> library 'class org.luciddb.session.LucidDbIndexOnlySessionFactory' 
+> create or replace jar sys_boot.sys_boot.luciddb_index_only_plugin
+> library 'class org.luciddb.session.LucidDbIndexOnlySessionFactory'
 > options(0);
 > 
-> CREATE or replace FUNCTION getPluginPropertyInfo(
->     mofId varchar(65535),
->     libraryName varchar(65535),
->     options varchar(65535),
->     wrapperProperties varchar(65535),
->     locale varchar(65535))
->     returns table(
->         name varchar(65535),
->         avalue varchar(65535),
->         description varchar(65535),
->         choices varchar(65535),
->         required boolean) 
->     language java parameter style system defined java no sql
->     external name 'class net.sf.farrago.syslib.FarragoMedInfo.getPluginPropertyInfo';
+> CREATE or replace FUNCTION get_plugin_property_info(
+>   mofId varchar(65535),
+>   libraryName varchar(65535),
+>   wrapper_options cursor,
+>   locale varchar(65535))
+> returns table(
+>   option_ordinal integer,
+>   option_name varchar(128),
+>   option_description varchar(4096),
+>   is_option_required boolean,
+>   option_choice_ordinal int,
+>   option_choice_value varchar(4096))
+> language java parameter style system defined java no sql
+> external name 'class net.sf.farrago.syslib.FarragoMedUDR.getPluginPropertyInfo';
 > 
-> CREATE or replace FUNCTION getServerPropertyInfo(
->     mofId varchar(65535),
->     libraryName varchar(65535),
->     options varchar(65535),
->     wrapperProperties varchar(65535),
->     serverProperties varchar(65535),
->     locale varchar(65535)) 
->     returns table(
->         name varchar(65535),
->         avalue varchar(65535),
->         description varchar(65535),
->         choices varchar(65535),
->         required boolean) 
->     language java parameter style system defined java no sql
->     external name 'class net.sf.farrago.syslib.FarragoMedInfo.getServerPropertyInfo';
+> CREATE or replace FUNCTION get_server_property_info(
+>   mofId varchar(65535),
+>   libraryName varchar(65535),
+>   wrapper_options cursor,
+>   proposed_server_options cursor,
+>   locale varchar(65535))
+> returns table(
+>   option_ordinal integer,
+>   option_name varchar(128),
+>   option_description varchar(4096),
+>   is_option_required boolean,
+>   option_choice_ordinal int,
+>   option_choice_value varchar(4096))
+> language java parameter style system defined java no sql
+> external name 'class net.sf.farrago.syslib.FarragoMedUDR.getServerPropertyInfo';
 > 
-> CREATE or replace FUNCTION getColumnSetPropertyInfo(
->     mofId varchar(65535),
->     libraryName varchar(65535),
->     options varchar(65535),
->     wrapperProperties varchar(65535),
->     serverProperties varchar(65535),
->     tableProperties varchar(65535),
->     locale varchar(65535)) 
->     returns table(
->         name varchar(65535),
->         avalue varchar(65535),
->         description varchar(65535),
->         choices varchar(65535),
->         required boolean) 
->     language java parameter style system defined java no sql
->     external name 'class net.sf.farrago.syslib.FarragoMedInfo.getColumnSetPropertyInfo';
+> CREATE or replace FUNCTION get_keywords()
+> returns table(
+>   keyword varchar(128))
+> language java parameter style system defined java no sql
+> external name 'class net.sf.farrago.syslib.FarragoSqlAdvisorUDR.getReservedAndKeyWords';
 > 
-> CREATE or replace FUNCTION getColumnPropertyInfo(
->     mofId varchar(65535),
->     libraryName varchar(65535),
->     options varchar(65535),
->     wrapperProperties varchar(65535),
->     serverProperties varchar(65535),
->     tableProperties varchar(65535),
->     columnProperties varchar(65535),
->     locale varchar(65535))
->     returns table(
->         name varchar(65535),
->         avalue varchar(65535),
->         description varchar(65535),
->         choices varchar(65535),
->         required boolean) 
->     language java parameter style system defined java no sql
->     external name 'class net.sf.farrago.syslib.FarragoMedInfo.getColumnPropertyInfo';
+> CREATE or replace FUNCTION validate_sql(
+>   sql_statement varchar(65535))
+> returns table(
+>   start_line_num integer,
+>   start_column_num integer,
+>   end_line_num integer,
+>   end_column_num integer,
+>   message varchar(4096))
+> language java parameter style system defined java no sql
+> external name 'class net.sf.farrago.syslib.FarragoSqlAdvisorUDR.validate';
 > 
-> CREATE or replace FUNCTION isForeign(
->     mofId varchar(65535),
->     libraryName varchar(65535),
->     options varchar(65535),
->     locale varchar(65535)) 
->     returns table(
->         name varchar(65535),
->         avalue varchar(65535),
->         description varchar(65535),
->         choices varchar(65535),
->         required boolean) 
->     language java parameter style system defined java no sql
->     external name 'class net.sf.farrago.syslib.FarragoMedInfo.isForeign';
+> CREATE or replace FUNCTION is_valid_sql(
+>   sql_statement varchar(65535))
+> returns boolean
+> language java parameter style java no sql
+> external name 'class net.sf.farrago.syslib.FarragoSqlAdvisorUDR.isValid';
+> 
+> CREATE or replace FUNCTION complete_sql(
+>   sql_statement varchar(65535),
+>   offset integer)
+> returns table(
+>   item_type varchar(16),
+>   item_name varchar(128))
+> language java parameter style system defined java no sql
+> external name 'class net.sf.farrago.syslib.FarragoSqlAdvisorUDR.complete';
+> 
+> CREATE or replace FUNCTION format_sql(
+>   sql_chunks cursor,
+>   always_use_parentheses boolean,
+>   case_clauses_on_new_lines boolean,
+>   clause_starts_line boolean,
+>   keywords_lowercase boolean,
+>   quote_all_identifiers boolean,
+>   select_list_items_on_separate_lines boolean,
+>   where_list_items_on_separate_lines boolean,
+>   window_declaration_starts_line boolean,
+>   window_list_items_on_separate_lines boolean,
+>   indentation integer,
+>   line_length integer)
+> returns table(
+>   chunk_idx integer,
+>   formatted_sql varchar(65535))
+> language java parameter style system defined java no sql
+> external name 'class net.sf.farrago.syslib.FarragoSqlAdvisorUDR.format';
+> 
+> CREATE or replace FUNCTION get_lurql_xmi(
+>   lurql_query varchar(65535))
+> returns table(
+>   chunk_idx integer,
+>   xmi_result varchar(32767))
+> language java parameter style system defined java no sql
+> external name 'class net.sf.farrago.syslib.FarragoLurqlUDR.getXMI';
+> 
+> 
+> -- End createMgmtViews.sql
 > 
 > !quit

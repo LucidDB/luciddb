@@ -26,17 +26,20 @@ import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.db.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.jdbc.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -95,8 +98,7 @@ public abstract class FarragoMedUDR
         try {
             FemDataWrapper femWrapper =
                 stmtValidator.findDataWrapper(
-                    new SqlIdentifier(wrapperName, SqlParserPos.ZERO),
-                    true);
+                    new SqlIdentifier(wrapperName, SqlParserPos.ZERO), true);
             for (FemDataServer femServer : femWrapper.getServer()) {
                 try {
                     stmtValidator.getDataWrapperCache().loadServerFromCatalog(
@@ -119,7 +121,7 @@ public abstract class FarragoMedUDR
      * @param wrapperName name of foreign data wrapper to use
      * @param serverOptions table of option NAME/VALUE pairs to use; this can be
      * empty to query for all options
-     * @param resultInserter writes result table
+     * @param resultInserter writes result data set
      */
     public static void browseConnectServer(
         String wrapperName,
@@ -128,15 +130,10 @@ public abstract class FarragoMedUDR
         throws SQLException
     {
         // Convert serverOptions into a Properties object
-        Properties serverProps = new Properties();
-        while (serverOptions.next()) {
-            String name = serverOptions.getString(1).trim();
-            String value = serverOptions.getString(2);
-            if (value != null) {
-                value = value.trim();
-            }
-            serverProps.setProperty(name, value);
-        }
+        Properties serverProps = toProperties(serverOptions);
+
+        // TODO: pass in locale name as a parameter
+        final Locale locale = Locale.getDefault();
 
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoReposTxnContext txn =
@@ -146,6 +143,7 @@ public abstract class FarragoMedUDR
         try {
             browseConnectServerImpl(
                 stmtValidator,
+                locale,
                 wrapperName,
                 serverProps,
                 resultInserter);
@@ -157,6 +155,7 @@ public abstract class FarragoMedUDR
 
     private static void browseConnectServerImpl(
         FarragoSessionStmtValidator stmtValidator,
+        Locale locale,
         String wrapperName,
         Properties serverProps,
         PreparedStatement resultInserter)
@@ -175,188 +174,18 @@ public abstract class FarragoMedUDR
             wrapperCache.loadWrapperFromCatalog(femWrapper);
         DriverPropertyInfo [] infoArray =
             medWrapper.getServerPropertyInfo(
-                Locale.getDefault(),
+                locale,
                 wrapperProps,
                 serverProps);
-        for (int iOption = 0; iOption < infoArray.length; ++iOption) {
-            DriverPropertyInfo info = infoArray[iOption];
-            browseConnectServerChoice(iOption, info, -1, resultInserter);
-            if (info.choices == null) {
-                continue;
-            }
-            for (int iChoice = 0; iChoice < info.choices.length; ++iChoice) {
-                browseConnectServerChoice(
-                    iOption,
-                    info,
-                    iChoice,
-                    resultInserter);
-            }
-        }
+        populateResult(resultInserter, infoArray);
     }
 
-    private static void browseConnectServerChoice(
-        int optionOrdinal,
-        DriverPropertyInfo info,
-        int choiceOrdinal,
-        PreparedStatement resultInserter)
-        throws SQLException
-    {
-        resultInserter.setInt(1, optionOrdinal);
-        resultInserter.setString(2, info.name);
-        resultInserter.setString(3, info.description);
-        resultInserter.setBoolean(4, info.required);
-        resultInserter.setInt(5, choiceOrdinal);
-        String value;
-        if (choiceOrdinal == -1) {
-            value = info.value;
-        } else {
-            value = info.choices[choiceOrdinal];
-        }
-        resultInserter.setString(6, value);
-        resultInserter.executeUpdate();
-    }
-
-    public static void browseForeignTables(
-            final String server,
-            final String schema,
-            final PreparedStatement resultInserter)
-        throws SQLException
-    {
-        browseForeignTablesAndColumns(server, schema, false, resultInserter);
-    }
-
-    public static void browseForeignColumns(
-            final String server,
-            final String schema,
-            final PreparedStatement resultInserter)
-        throws SQLException
-    {
-        browseForeignTablesAndColumns(server, schema, true, resultInserter);
-    }
-
-    private static void browseForeignTablesAndColumns(
-            final String server,
-            final String schema,
-            final boolean show_columns,
-            final PreparedStatement resultInserter)
-        throws SQLException
-    {
-        final FarragoSession session = FarragoUdrRuntime.getSession();
-        FarragoReposTxnContext txn =
-            new FarragoReposTxnContext(session.getRepos(), true);
-        txn.beginReadTxn();
-        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
-        try {
-            FemDataServer femServer =
-                stmtValidator.findDataServer(
-                        new SqlIdentifier(server, SqlParserPos.ZERO));
-
-            FarragoMedDataServer medServer =
-                stmtValidator.getDataWrapperCache().loadServerFromCatalog(
-                        femServer);
-            FarragoMedNameDirectory catalogDir = medServer.getNameDirectory();
-            if (catalogDir == null) {
-                return;
-            }
-            FarragoMedNameDirectory schemaDir =
-                catalogDir.lookupSubdirectory(schema);
-
-            FarragoMedMetadataQuery query = new MedMetadataQueryImpl();
-            query.getResultObjectTypes().add(FarragoMedMetadataQuery.OTN_TABLE);
-            if (show_columns) {
-                query.getResultObjectTypes().add(
-                        FarragoMedMetadataQuery.OTN_COLUMN);
-            }
-
-            FarragoMedMetadataSink sink = new MedAbstractMetadataSink(
-                    query, null)
-            {
-                // implement FarragoMedMetadataSink
-                public boolean writeObjectDescriptor(
-                        String name,
-                        String typeName,
-                        String remarks,
-                        Properties properties)
-                {
-                    if (!shouldInclude(name, typeName, false)) {
-                        return false;
-                    }
-
-                    if (properties.getProperty("SCHEMA_NAME") != null
-                            && !properties.getProperty(
-                                "SCHEMA_NAME").equals(schema))
-                    {
-                        return false;
-                    }
-
-                    if (!show_columns) {
-                        try {
-                            resultInserter.setString(1, name);
-                            resultInserter.setString(2, remarks);
-                            resultInserter.executeUpdate();
-                        } catch (SQLException ex) {
-                            throw FarragoResource.instance()
-                                    .ValidatorImportFailed.ex(
-                                        name,
-                                        server,
-                                        ex);
-                        }
-                    }
-
-                    return true;
-                }
-
-                // implement FarragoMedMetadataSink
-                public boolean writeColumnDescriptor(
-                        String tableName,
-                        String columnName,
-                        int ordinal,
-                        RelDataType type,
-                        String remarks,
-                        String defaultValue,
-                        Properties properties)
-                {
-                    try {
-                        int c = 0;
-                        resultInserter.setString(++c, tableName);
-                        resultInserter.setString(++c, columnName);
-                        resultInserter.setInt(++c, ordinal);
-                        resultInserter.setString(
-                                ++c, type.getSqlIdentifier().toString());
-                        resultInserter.setInt(++c, type.getPrecision());
-                        try {
-                            resultInserter.setInt(++c, type.getScale());
-                        } catch (AssertionError ex) {
-                            // some datatypes do not support scale
-                            resultInserter.setInt(c, 0);
-                        }
-                        resultInserter.setBoolean(++c, type.isNullable());
-                        resultInserter.setString(++c, type.toString());
-                        resultInserter.setString(++c, remarks);
-                        resultInserter.setString(++c, defaultValue);
-                        resultInserter.executeUpdate();
-                    } catch (SQLException ex) {
-                        throw
-                            FarragoResource.instance().ValidatorImportFailed.ex(
-                                    tableName,
-                                    server,
-                                    ex);
-                    }
-                    return true;
-                }
-
-                public FarragoTypeFactory getTypeFactory() {
-                    return new FarragoTypeFactoryImpl(session.getRepos());
-                }
-            };
-
-            schemaDir.queryMetadata(query, sink);
-        } finally {
-            txn.commit();
-            stmtValidator.closeAllocation();
-        }
-    }
-
+    /**
+     * Queries SQL/MED connection information for a foreign schema.
+     *
+     * @param serverName name of foreign server to use
+     * @param resultInserter writes result data set
+     */
     public static void browseForeignSchemas(
         String serverName,
         PreparedStatement resultInserter)
@@ -404,6 +233,435 @@ public abstract class FarragoMedUDR
                 serverName,
                 resultInserter);
         dir.queryMetadata(query, sink);
+    }
+
+    /**
+     * Queries SQL/MED information for a wrapper.
+     *
+     * @param wrapperName name of foreign data wrapper to use
+     * @param wrapperOptions table of option NAME/VALUE pairs to use; this can
+     *     be empty to query for all options
+     * @param localeName Name of locale (e.g. 'en-US') or NULL to use server's
+     *     default locale
+     * @param resultInserter writes result data set
+     */
+    public static void browseWrapper(
+        String wrapperName,
+        ResultSet wrapperOptions,
+        String localeName,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        Properties wrapperProps = toProperties(wrapperOptions);
+        final Locale locale = toLocale(localeName);
+
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn =
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        try {
+            browseWrapperImpl(
+                stmtValidator,
+                locale,
+                wrapperName,
+                wrapperProps,
+                resultInserter);
+        } finally {
+            txn.commit();
+            stmtValidator.closeAllocation();
+        }
+    }
+
+    private static void browseWrapperImpl(
+        FarragoSessionStmtValidator stmtValidator,
+        Locale locale,
+        String wrapperName,
+        Properties wrapperProps,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        FemDataWrapper femWrapper =
+            stmtValidator.findDataWrapper(
+                new SqlIdentifier(wrapperName, SqlParserPos.ZERO),
+                true);
+        FarragoDataWrapperCache wrapperCache =
+            stmtValidator.getDataWrapperCache();
+
+        // NOTE: By design, existing wrapper options are ignored.
+        Util.discard(
+            wrapperCache.getStorageOptionsAsProperties(
+                femWrapper));
+
+        FarragoMedDataWrapper medWrapper =
+            wrapperCache.loadWrapperFromCatalog(femWrapper);
+        DriverPropertyInfo [] infoArray =
+            medWrapper.getPluginPropertyInfo(
+                locale,
+                wrapperProps);
+        populateResult(resultInserter, infoArray);
+    }
+
+    /**
+     * Queries SQL/MED information for a table.
+     *
+     * <p>You might think that this method would take the name of the schema and
+     * table, but the table may not yet exist. The foreign
+     * server must, so the foreign server's name is passed in. Instead of the
+     * actual table, its options are passed in, and these provide
+     * sufficient information for the SQL/MED wrapper to describe what options
+     * are valid for the table.
+     *
+     * @param serverName Name of the foreign server that contains the table
+     * @param tableOptions Options for the table,
+     *     represented as a table of option NAME/VALUE pairs;
+     *     this can be empty to query for all options
+     * @param localeName Name of locale (e.g. 'en-US') or NULL to use server's
+     *     default locale
+     * @param resultInserter writes result data set
+     */
+    public static void browseTable(
+        String serverName,
+        ResultSet tableOptions,
+        String localeName,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        Properties tableProps = toProperties(tableOptions);
+        final Locale locale = toLocale(localeName);
+
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn =
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        try {
+            browseTableImpl(
+                stmtValidator,
+                locale,
+                serverName,
+                tableProps,
+                resultInserter);
+        } finally {
+            txn.commit();
+            stmtValidator.closeAllocation();
+        }
+    }
+
+    private static void browseTableImpl(
+        FarragoSessionStmtValidator stmtValidator,
+        Locale locale,
+        String serverName,
+        Properties tableProps,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        final FarragoDataWrapperCache wrapperCache =
+            stmtValidator.getDataWrapperCache();
+
+        final FemDataServer femDataServer =
+            stmtValidator.findDataServer(
+                new SqlIdentifier(serverName, SqlParserPos.ZERO));
+        final Properties serverProps =
+            wrapperCache.getStorageOptionsAsProperties(
+                femDataServer);
+
+        final FemDataWrapper femWrapper = femDataServer.getWrapper();
+        final Properties wrapperProps =
+            wrapperCache.getStorageOptionsAsProperties(
+                femWrapper);
+
+        FarragoMedDataWrapper medWrapper =
+            wrapperCache.loadWrapperFromCatalog(femWrapper);
+        DriverPropertyInfo [] infoArray =
+            medWrapper.getColumnSetPropertyInfo(
+                locale,
+                wrapperProps,
+                serverProps,
+                tableProps);
+        populateResult(resultInserter, infoArray);
+    }
+
+    /**
+     * Queries SQL/MED to find allowable properties for a column.
+     *
+     * <p>You might think that this method would take the name of the schema,
+     * table and column, but the table and column may not yet exist. The foreign
+     * server must, so the foreign server's name is passed in. Instead of the
+     * actual table and column, their options are passed in, and these provide
+     * sufficient information for the SQL/MED wrapper to describe what options
+     * are valid for the column.
+     *
+     * @param serverName Name of the foreign server that contains the table that
+     *     contains this column
+     * @param tableOptions Options for the table that contains this column,
+     *     represented as a table of option NAME/VALUE pairs;
+     *     this can be empty to query for all options
+     * @param columnOptions Options for the column,
+     *     represented as a table of of option NAME/VALUE pairs;
+     *     this can be empty to query for all options
+     * @param localeName Name of locale (e.g. 'en-US') or NULL to use server's
+     *     default locale
+     * @param resultInserter writes result data set
+     */
+    public static void browseColumn(
+        String serverName,
+        ResultSet tableOptions,
+        ResultSet columnOptions,
+        String localeName,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        Properties columnProps = toProperties(columnOptions);
+        Properties tableProps = toProperties(tableOptions);
+        final Locale locale = toLocale(localeName);
+
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn =
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        try {
+            browseColumnImpl(
+                stmtValidator, locale, serverName, tableProps, columnProps,
+                resultInserter);
+        } finally {
+            txn.commit();
+            stmtValidator.closeAllocation();
+        }
+    }
+
+    private static void browseColumnImpl(
+        FarragoSessionStmtValidator stmtValidator,
+        Locale locale,
+        String serverName,
+        Properties tableProps,
+        Properties columnProps,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        FarragoDataWrapperCache wrapperCache =
+            stmtValidator.getDataWrapperCache();
+
+        final FemDataServer femDataServer =
+            stmtValidator.findDataServer(
+                new SqlIdentifier(serverName, SqlParserPos.ZERO));
+        final Properties serverProps =
+            wrapperCache.getStorageOptionsAsProperties(
+                femDataServer);
+
+        final FemDataWrapper femWrapper = femDataServer.getWrapper();
+        final Properties wrapperProps =
+            wrapperCache.getStorageOptionsAsProperties(
+                femWrapper);
+
+        FarragoMedDataWrapper medWrapper =
+            wrapperCache.loadWrapperFromCatalog(femWrapper);
+        DriverPropertyInfo [] infoArray =
+            medWrapper.getColumnPropertyInfo(
+                locale,
+                wrapperProps,
+                serverProps,
+                tableProps,
+                columnProps);
+        populateResult(resultInserter, infoArray);
+    }
+
+    /**
+     * Converts a result set, containing name/value pairs, into a properties
+     * object.
+     *
+     * @param options Result set of name/value pairs
+     * @return Properties object
+     * @throws SQLException
+     */
+    protected static Properties toProperties(
+        ResultSet options)
+        throws SQLException
+    {
+        Properties properties = new Properties();
+        while (options.next()) {
+            String name = options.getString(1).trim();
+            String value = options.getString(2);
+            if (value != null) {
+                value = value.trim();
+            }
+            properties.setProperty(name, value);
+        }
+        return properties;
+    }
+
+    /**
+     * Populates a result set with a collection of driver properties,
+     * denormalizing if any property has more than one choice.
+     *
+     * @param resultInserter Result set
+     * @param driverProperties Driver properties
+     * @throws SQLException on error
+     */
+    protected static void populateResult(
+        PreparedStatement resultInserter,
+        DriverPropertyInfo[] driverProperties)
+        throws SQLException
+    {
+        for (int iOption = 0; iOption < driverProperties.length; ++iOption) {
+            DriverPropertyInfo info = driverProperties[iOption];
+            populateChoice(iOption, info, -1, resultInserter);
+            if (info.choices == null) {
+                continue;
+            }
+            for (int iChoice = 0; iChoice < info.choices.length; ++iChoice) {
+                populateChoice(
+                    iOption,
+                    info,
+                    iChoice,
+                    resultInserter);
+            }
+        }
+    }
+
+    private static void populateChoice(
+        int optionOrdinal,
+        DriverPropertyInfo info,
+        int choiceOrdinal,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        resultInserter.setInt(1, optionOrdinal);
+        resultInserter.setString(2, info.name);
+        resultInserter.setString(3, info.description);
+        resultInserter.setBoolean(4, info.required);
+        resultInserter.setInt(5, choiceOrdinal);
+        String value;
+        if (choiceOrdinal == -1) {
+            value = info.value;
+        } else {
+            value = info.choices[choiceOrdinal];
+        }
+        resultInserter.setString(6, value);
+        resultInserter.executeUpdate();
+    }
+
+    private static Locale toLocale(String localeName)
+    {
+        return localeName == null
+               ? Locale.getDefault()
+               : Util.parseLocale(localeName);
+    }
+
+    /**
+     * Returns the plugin property info for a given mofId and library.
+     *
+     * @param mofId The mofId to get property info for
+     * @param libraryName The library to get property info for
+     * @param wrapperOptions Wrapper options
+     * @param localeArg What locale to get properties for
+     * @param resultInserter Where the result rows are placed
+     * @throws java.sql.SQLException on repo access failure
+     */
+    public static void getPluginPropertyInfo(
+        String mofId,
+        String libraryName,
+        ResultSet wrapperOptions,
+        String localeArg,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        Locale locale = Util.parseLocale(localeArg);
+        Properties wrapperProperties = toProperties(wrapperOptions);
+        final State state = new State();
+        try {
+            FarragoMedDataWrapper dataWrapper =
+                state.getWrapper(
+                    mofId,
+                    libraryName,
+                    wrapperProperties);
+            DriverPropertyInfo[] driverPropertyInfo =
+                dataWrapper.getPluginPropertyInfo(
+                    locale,
+                    wrapperProperties);
+            populateResult(resultInserter, driverPropertyInfo);
+        } finally {
+            state.close();
+        }
+    }
+
+    /**
+     * Returns the server property info for a given mofId and library.
+     *
+     * @param mofId The mofId to get property info for
+     * @param libraryName The library to get property info for
+     * @param wrapperOptions The wrapper props to request
+     * @param serverOptions The server props to request
+     * @param localeArg What locale to get properties for
+     * @param resultInserter Where the result rows are placed
+     * @throws java.sql.SQLException on repo access failure
+     */
+    public static void getServerPropertyInfo(
+        String mofId,
+        String libraryName,
+        ResultSet wrapperOptions,
+        ResultSet serverOptions,
+        String localeArg,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        Locale locale = Util.parseLocale(localeArg);
+        Properties wrapperProperties = toProperties(wrapperOptions);
+        Properties serverProperties = toProperties(serverOptions);
+        final State state = new State();
+        try {
+            FarragoMedDataWrapperInfo dataWrapper =
+                state.getWrapper(
+                    mofId, libraryName, wrapperProperties);
+            DriverPropertyInfo[] driverPropertyInfo =
+                dataWrapper.getServerPropertyInfo(
+                    locale,
+                    wrapperProperties,
+                    serverProperties);
+            populateResult(resultInserter, driverPropertyInfo);
+        } finally {
+            state.close();
+        }
+    }
+
+    /**
+     * Returns whether a library is foreign.
+     *
+     * @param mofId The id to check
+     * @param libraryName The library to check
+     * @param options The options to pass to the data wrapper
+     * @param localeString What locale to check for
+     * @param resultInserter Where the result rows are placed
+     * @throws java.sql.SQLException on repo access failure
+     */
+    public static void isForeign(
+        String mofId,
+        String libraryName,
+        ResultSet options,
+        String localeString, // TODO Should this be removed?
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        Properties properties = toProperties(options);
+        final State state = new State();
+        try {
+            FarragoMedDataWrapper dataWrapper =
+                state.getWrapper(
+                    mofId, libraryName, properties);
+            boolean isForeign = dataWrapper.isForeign();
+            resultInserter.setBoolean(1, isForeign);
+            resultInserter.executeUpdate();
+        } finally {
+            state.close();
+        }
+    }
+
+    public static void browseEmptyOptions(
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        // insert no rows, return immediately
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -460,6 +718,57 @@ public abstract class FarragoMedUDR
             Properties properties)
         {
             return false;
+        }
+    }
+
+    /**
+     * Holds all state for a service call, and cleans it up with a
+     * {@link #close()} method.
+     */
+    private static class State {
+        private FarragoDataWrapperCache dataWrapperCache;
+
+        /**
+         * Returns a FarragoMedDataWrapper based on the data passed in.
+         *
+         * @param mofId Meta object ID of the wrapper
+         * @param libraryName Library name of the wrapper
+         * @param options Options to pass to the wrapper
+         * @return FarragoMedDataWrapper that matches the args
+         */
+        FarragoMedDataWrapper getWrapper(
+            String mofId,
+            String libraryName,
+            Properties options)
+        {
+            if (dataWrapperCache == null) {
+                FarragoDbSession session =
+                    (FarragoDbSession) FarragoUdrRuntime.getSession();
+                FarragoDatabase db = session.getDatabase();
+                FarragoObjectCache sharedCache = db.getDataWrapperCache();
+                dataWrapperCache =
+                    session.newFarragoDataWrapperCache(
+                        session,
+                        sharedCache,
+                        session.getRepos(),
+                        db.getFennelDbHandle(),
+                        null);
+            }
+            return dataWrapperCache.loadWrapper(
+                mofId,
+                libraryName,
+                options);
+        }
+
+        /**
+         * Releases all resources.
+         */
+        void close()
+        {
+            if (dataWrapperCache != null) {
+                dataWrapperCache.closeAllocation();
+                dataWrapperCache = null;
+            }
         }
     }
 }

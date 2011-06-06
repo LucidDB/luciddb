@@ -64,6 +64,8 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.advise.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.*;
@@ -350,6 +352,17 @@ public class FarragoPreparingStmt
     {
         definePackageName();
         initClassDecl();
+    }
+
+    // implement FarragoSessionPreparedStmt
+    public SqlAdvisor getAdvisor()
+    {
+        SqlValidatorWithHints validator = new SqlAdvisorValidator(
+            getSqlOperatorTable(),
+            this,
+            new SqlTypeFactoryImpl(),
+            SqlConformance.Default);
+        return new SqlAdvisor(validator);
     }
 
     protected void initClassDecl()
