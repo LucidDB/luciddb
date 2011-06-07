@@ -624,21 +624,25 @@
 > 
 > create or replace view dba_jars as
 >   select
->     cast("name" as varchar(128)) as name,
->     cast("url" as varchar(128)) as url,
+>     cast(j."name" as varchar(128)) as name,
+>     cast(j."url" as varchar(128)) as url,
 >     case
->       when "deploymentState" = 0 then 'NOT_DEPLOYED'
->       when "deploymentState" = 1 then 'DEPLOYMENT_PENDING'
->       when "deploymentState" = 2 then 'DEPLOYED'
->       when "deploymentState" = 3 then 'DEPLOYED_PARTIAL'
->       when "deploymentState" = 4 then 'UNDEPLOYMENT_PENDING'
+>       when j."deploymentState" = 0 then 'NOT_DEPLOYED'
+>       when j."deploymentState" = 1 then 'DEPLOYMENT_PENDING'
+>       when j."deploymentState" = 2 then 'DEPLOYED'
+>       when j."deploymentState" = 3 then 'DEPLOYED_PARTIAL'
+>       when j."deploymentState" = 4 then 'UNDEPLOYMENT_PENDING'
 >     end as deployment_state,
->     cast("description" as varchar(65535)) as remarks,
->     cast("creationTimestamp" as timestamp) as creation_timestamp,
->     cast("modificationTimestamp" as timestamp) as last_modified_timestamp,
->     cast("mofId" as varchar(128)) as mof_id,
->     cast("lineageId" as varchar(128)) as lineage_id
->   from sys_fem."SQL2003"."Jar";
+>     svi.object_catalog as catalog_name,
+>     svi.object_schema as schema_name,
+>     cast(j."description" as varchar(65535)) as remarks,
+>     cast(j."creationTimestamp" as timestamp) as creation_timestamp,
+>     cast(j."modificationTimestamp" as timestamp) as last_modified_timestamp,
+>     cast(j."mofId" as varchar(128)) as mof_id,
+>     cast(j."lineageId" as varchar(128)) as lineage_id
+>   from sys_fem."SQL2003"."Jar" j
+>   inner join sys_boot.jdbc_metadata.schemas_view_internal svi
+>   ON svi."mofId" = j."namespace";
 > 
 > grant select on dba_jars to dba;
 > 

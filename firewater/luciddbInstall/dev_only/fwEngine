@@ -1,0 +1,17 @@
+#!/bin/bash
+# $Id: //open/dy/dev/luciddb/sqllineEngine#2 $
+# Run the sqlline command-line SQL interpreter 
+# with an embedded LucidDB engine
+
+source ./defineFirewaterDbRuntime.sh
+
+if java ${SERVER_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
+    -u jdbc:luciddb: -d net.sf.firewater.jdbc.FirewaterLocalDriver \
+    -n sa $*;
+then
+    echo
+else
+    tset
+    echo "Terminal reset because sqlline crashed"
+fi
+

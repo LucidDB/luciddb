@@ -11,6 +11,10 @@
         <ant dir="${open.dir}/luciddb/test/sql/udr/udp" target="clean-exp"/>
       </init-hook>
 
+      <test name="createIndexes">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/createIndexes.sql" />
+      </test>
+
       <test name="crSource">
       <!-- FRG-211 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/cr_source.sql"/>

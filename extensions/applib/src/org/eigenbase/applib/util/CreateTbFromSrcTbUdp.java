@@ -96,7 +96,7 @@ public abstract class CreateTbFromSrcTbUdp
 
             // Check target table or view already exits.
             ps = conn.prepareStatement(
-                "select count(1) from SYS_ROOT.DBA_TABLES where SCHEMA_NAME=? and TABLE_NAME=?");
+                "select count(1) from LOCALDB.SYS_ROOT.DBA_TABLES where SCHEMA_NAME=? and TABLE_NAME=?");
             ps.setString(1, targetSchemaName);
             ps.setString(2, targetTableName);
             rs = ps.executeQuery();
@@ -152,7 +152,7 @@ public abstract class CreateTbFromSrcTbUdp
             // Get columns info of souce table from DBA_COLUMNS.
             select_stmt.append(
                 "select COLUMN_NAME, DATATYPE, \"PRECISION\", DEC_DIGITS, IS_NULLABLE, REMARKS ")
-            .append("from SYS_ROOT.DBA_COLUMNS ").append(
+            .append("from LOCALDB.SYS_ROOT.DBA_COLUMNS ").append(
                 "where CATALOG_NAME=? and SCHEMA_NAME=? and TABLE_NAME =? ")
             .append("order by ORDINAL_POSITION");
 

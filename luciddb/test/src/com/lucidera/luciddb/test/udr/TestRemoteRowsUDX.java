@@ -156,9 +156,16 @@ public class TestRemoteRowsUDX
         header.add("1"); // version
         
         List format = new ArrayList();
+        // KS 10-APR-2011
+        // The "Mismatch" here is on types, but the RemoteRowsUDX only checks
+        // for column count. Thus the final STRING is what triggers the
+        // mismatch as of this date.
+        // Also, the indexOf message match below was initially wrong with what
+        // the UDX produces.
         format.add("STRING"); // Mismatch
         format.add("STRING");
         format.add("BOOLEAN");
+        format.add("STRING"); // mismatched columns
         
         header.add(format);
         objOut.writeObject(header);
@@ -171,8 +178,11 @@ public class TestRemoteRowsUDX
         conn.close();
                
         String errorMsg = runner.getErrorMsg();
+        if (errorMsg == null) {
+          errorMsg = "";
+        }
         boolean test = false;
-        if(errorMsg.indexOf("Header Info was unmatched")!=-1){
+        if(errorMsg.indexOf("Header Mismatch:")!=-1){
             test = true;
         }
             

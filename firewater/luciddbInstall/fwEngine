@@ -1,0 +1,19 @@
+#!/bin/sh
+# $Id: //open/dev/farrago/dist/bin/sqllineEngine#5 $
+# Run the sqlline command-line SQL interpreter 
+# with an embedded Farrago engine
+
+BIN_DIR=$(cd `dirname $0`; pwd)
+
+. $BIN_DIR/defineFarragoRuntime.sh
+
+if ${JAVA_EXEC} ${JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
+    -u jdbc:firewater: -d net.sf.firewater.jdbc.FirewaterLocalDriver \
+    -n sa $*;
+then
+    echo
+else
+    tset
+    echo "Terminal reset because sqlline crashed"
+fi
+

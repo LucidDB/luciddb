@@ -41,6 +41,8 @@ import java.util.zip.*;
  */
 public class RemoteRowsUDX
 {
+
+    private static final String HEADER_PREFIX = "RemoteRowsUDX: Header Mismatch: ";
     //~ Methods ----------------------------------------------------------------
 
     public static void execute(
@@ -81,17 +83,9 @@ public class RemoteRowsUDX
                             getHeaderInfoFromCursor(inputSet);
                         List header_from_file = (ArrayList) entity.get(1);
 
-                        if (verifyHeaderInfo(
-                                header_from_cursor,
-                                header_from_file))
-                        {
-                            is_header = false;
-                        } else {
-                            throw new Exception(
-                                "Header Info was unmatched! Please check");
-                        }
-
+                        verifyHeaderInfo( header_from_cursor, header_from_file);
                         is_header = false;
+
                     } else {
                         int col_count = entity.size();
                         for (int i = 0; i < col_count; i++) {
@@ -134,29 +128,21 @@ public class RemoteRowsUDX
 
     protected static boolean verifyHeaderInfo(
         List header_from_cursor,
-        List header_from_file)
+        List header_from_file) throws Exception
     {
         boolean is_matched = false;
+	
 
         // 1. check column raw count
-        if (header_from_cursor.size() == header_from_file.size()) {
-            // 2. check the length of every field.
-            int col_raw_count = header_from_cursor.size();
-            for (int i = 0; i < col_raw_count; i++) {
-                String type_of_field_from_cursor =
-                    (String) header_from_cursor.get(i);
-                String type_of_field_from_file =
-                    (String) header_from_file.get(i);
-                if (type_of_field_from_cursor.equals(type_of_field_from_file)) {
-                    is_matched = true;
-                } else {
-                    is_matched = false;
-                    break;
-                }
-            }
+        if (  header_from_cursor.size() != header_from_file.size()) {
+    		throw new Exception(HEADER_PREFIX + 
+    			"Header Size Mismatch: " +
+    			"cursor = " + header_from_cursor.size() +
+    			" from source = " + header_from_file.size() );
         }
-
-        return is_matched;
+        //TODO: Check datatypes
+        
+        return true;
     }
 
     /**
@@ -176,9 +162,6 @@ public class RemoteRowsUDX
         List<String> ret = new ArrayList<String>(columnCount);
         for (int i = 0; i < columnCount; i++) {
             String type = rs_in.getMetaData().getColumnTypeName(i + 1);
-            if (type.indexOf("CHAR") != -1) {
-                type = "STRING";
-            }
             ret.add(type);
         }
         return ret;

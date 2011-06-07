@@ -84,8 +84,8 @@ public class FarragoReleaseProperties
     /**
      * Point-release version number for the product.
      */
-    public final IntegerProperty productVersionPoint =
-        new IntegerProperty(this, "product.version.point", 0);
+    public final StringProperty productVersionPoint =
+        new StringProperty(this, "product.version.point", "0");
 
     /**
      * Build number for the product.

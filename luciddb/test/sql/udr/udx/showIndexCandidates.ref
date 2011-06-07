@@ -1,0 +1,76 @@
+0: jdbc:luciddb:> create schema idx_cand_test;
+0: jdbc:luciddb:> set schema 'idx_cand_test';
+0: jdbc:luciddb:> create table t1 (
+. . . . . . . . >   c1 int,
+. . . . . . . . >   c2 int,
+. . . . . . . . >   c3 int
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t2 (
+. . . . . . . . >   cc1 char(12),
+. . . . . . . . >   cc2 float
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t2 values ('space ball22', 12.5), ('drink 7up 2L', 2.1),
+. . . . . . . . > ('space ball22', 22.3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t1 values (1, 1, 1), (2, 2, 2), (3, 3, 3), (4, 4, 3), (5, 4, 3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify udx is working
+0: jdbc:luciddb:> select * from table(applib.show_idx_candidates('IDX_CAND_TEST', 'T1', 60));
++---------------+----------------+-------------+--------------+
+| CATALOG_NAME  |  SCHEMA_NAME   | TABLE_NAME  | COLUMN_NAME  |
++---------------+----------------+-------------+--------------+
+| LOCALDB       | IDX_CAND_TEST  | T1          | C3           |
++---------------+----------------+-------------+--------------+
+0: jdbc:luciddb:> select * from table(applib.show_idx_candidates('IDX_CAND_TEST', 'T1', 80));
++---------------+----------------+-------------+--------------+
+| CATALOG_NAME  |  SCHEMA_NAME   | TABLE_NAME  | COLUMN_NAME  |
++---------------+----------------+-------------+--------------+
+| LOCALDB       | IDX_CAND_TEST  | T1          | C2           |
+| LOCALDB       | IDX_CAND_TEST  | T1          | C3           |
++---------------+----------------+-------------+--------------+
+0: jdbc:luciddb:> select * from table(applib.show_idx_candidates('LOCALDB', 'IDX_CAND_TEST', 'T1', 100));
++---------------+----------------+-------------+--------------+
+| CATALOG_NAME  |  SCHEMA_NAME   | TABLE_NAME  | COLUMN_NAME  |
++---------------+----------------+-------------+--------------+
+| LOCALDB       | IDX_CAND_TEST  | T1          | C1           |
+| LOCALDB       | IDX_CAND_TEST  | T1          | C2           |
+| LOCALDB       | IDX_CAND_TEST  | T1          | C3           |
++---------------+----------------+-------------+--------------+
+0: jdbc:luciddb:> select * from table(applib.show_idx_candidates('SYS_FEM', 'IDX_CAND_TEST', 'T1', 100));
+Error: DDL validation error near line 1, column 41: Reference to unknown table "IDX_CAND_TEST"."T1" (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(applib.show_idx_candidates('IDX_CAND_TEST', 'T2', 67));
++---------------+----------------+-------------+--------------+
+| CATALOG_NAME  |  SCHEMA_NAME   | TABLE_NAME  | COLUMN_NAME  |
++---------------+----------------+-------------+--------------+
+| LOCALDB       | IDX_CAND_TEST  | T2          | CC1          |
++---------------+----------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should reject cols with idxs already
+0: jdbc:luciddb:> create index idx_cand_c1 on idx_cand_test.t1(c1);
+0: jdbc:luciddb:> select * from table(applib.show_idx_candidates('IDX_CAND_TEST', 'T1', 100));
++---------------+----------------+-------------+--------------+
+| CATALOG_NAME  |  SCHEMA_NAME   | TABLE_NAME  | COLUMN_NAME  |
++---------------+----------------+-------------+--------------+
+| LOCALDB       | IDX_CAND_TEST  | T1          | C2           |
+| LOCALDB       | IDX_CAND_TEST  | T1          | C3           |
++---------------+----------------+-------------+--------------+
+0: jdbc:luciddb:> create index idx_cand_c2 on idx_cand_test.t1(c2);
+0: jdbc:luciddb:> select * from table(applib.show_idx_candidates('IDX_CAND_TEST', 'T1', 100));
++---------------+----------------+-------------+--------------+
+| CATALOG_NAME  |  SCHEMA_NAME   | TABLE_NAME  | COLUMN_NAME  |
++---------------+----------------+-------------+--------------+
+| LOCALDB       | IDX_CAND_TEST  | T1          | C3           |
++---------------+----------------+-------------+--------------+
+0: jdbc:luciddb:> create index idx_cand_c3 on idx_cand_test.t1(c3);
+0: jdbc:luciddb:> select * from table(applib.show_idx_candidates('IDX_CAND_TEST', 'T1', 100));
++---------------+--------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  | COLUMN_NAME  |
++---------------+--------------+-------------+--------------+
++---------------+--------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema idx_cand_test cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

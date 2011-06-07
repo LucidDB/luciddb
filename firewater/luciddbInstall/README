@@ -1,0 +1,42 @@
+DynamoBI Corporation
+Firewater->LucidDB patch installation notes
+
+The following scripts modify an existing installation of LucidDB
+into a Firewater server that can be connected to and accessed
+via LucidDB's standard JDBC driver.
+
+NOTE: This is likely FULLY destructive to the target LucidDB 
+installation.  You should do this ONLY on a fresh LucidDB 
+installation that does not have any data at all!
+NOTE: Instructions are for Linux only; should you really be using
+Firewater on Windoze?  ;)
+
+1) Install a fresh, LucidDB installation that has been compiled
+   with --with-repos-type=hsqldb/netbeans ($LDB)
+2) Copy firewater.jar and firewater-jdbc.jar to directory
+   $LDB/plugin/
+3) Copy files
+   fwServer fwEngine 
+   to 
+   $LDB/bin
+4) run $LDB/install/install.sh
+5) edit classpath.gen 
+   add entries for the following files
+   $LDB/plugin/firewater.jar
+   $LDB/plugin/firewater-jdbc.jar
+   $LDB/plugin/FarragoMedJdbc.jar
+6) Run installMetamodel.sql script using sqllineEngine
+   cat installMetamodel.sql | bin/sqllineEngine
+7) Run installSystemObjects.sql script using fwEngine
+   cat installSystemObjects.sql | bin/fwEngine
+8) Start your new Firewater server using 
+   bin/fwServer
+
+You can connect to fwServer via a regular LucidDB client (sqllineClient)
+or remote JDBC url (org.luciddb.jdbc.LucidDbClientDriver) 
+
+NOTE: You HAVE to create a FIREWATER_REPLICA catalog on each LucidDB 
+server in order for it to be used in a Firewater cluster.
+http://jira.eigenbase.org/browse/FW-10
+
+For more information: http://pub.eigenbase.org/wiki/FirewaterDocs

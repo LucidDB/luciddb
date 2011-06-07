@@ -1,0 +1,9 @@
+#!/bin/sh
+# $Id: //open/dev/farrago/dist/bin/farragoServer#4 $
+# Run Farrago as a standalone RMI server
+
+BIN_DIR=$(cd `dirname $0`; pwd)
+
+. $BIN_DIR/defineFarragoRuntime.sh
+
+${JAVA_EXEC} ${JAVA_ARGS} net.sf.firewater.session.FirewaterServer

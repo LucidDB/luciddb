@@ -1,0 +1,51 @@
+0: jdbc:luciddb:> -- tests ability to run code from file or from a string
+0: jdbc:luciddb:> select schema_name from sys_root.dba_schemas order by schema_name;
++---------------------+
+|     SCHEMA_NAME     |
++---------------------+
+| APPLIB              |
+| INFORMATION_SCHEMA  |
+| JDBC_METADATA       |
+| MGMT                |
+| SQLJ                |
+| SYS_BOOT            |
+| SYS_ROOT            |
++---------------------+
+0: jdbc:luciddb:> call applib.execute_script('js', 'importPackage(java.sql) /* There is also an importClass() function. */
+. . . . . . . . >   var conn = DriverManager.getConnection("jdbc:default:connection")
+. . . . . . . . >   var ps = conn.prepareStatement("create or replace schema boohoo")
+. . . . . . . . >   ps.execute()
+. . . . . . . . >   conn.close()
+. . . . . . . . > ');
+0: jdbc:luciddb:> select schema_name from sys_root.dba_schemas order by schema_name;
++---------------------+
+|     SCHEMA_NAME     |
++---------------------+
+| APPLIB              |
+| BOOHOO              |
+| INFORMATION_SCHEMA  |
+| JDBC_METADATA       |
+| MGMT                |
+| SQLJ                |
+| SYS_BOOT            |
+| SYS_ROOT            |
++---------------------+
+0: jdbc:luciddb:> call applib.execute_script('js', '${FARRAGO_HOME}/test/sql/scripting/execute_script.js');
+0: jdbc:luciddb:> select schema_name from sys_root.dba_schemas order by schema_name;
++---------------------+
+|     SCHEMA_NAME     |
++---------------------+
+| APPLIB              |
+| BOOHOO              |
+| BOOHOO2             |
+| INFORMATION_SCHEMA  |
+| JDBC_METADATA       |
+| MGMT                |
+| SQLJ                |
+| SYS_BOOT            |
+| SYS_ROOT            |
++---------------------+
+0: jdbc:luciddb:> drop schema boohoo;
+0: jdbc:luciddb:> drop schema boohoo2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

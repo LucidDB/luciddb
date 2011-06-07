@@ -91,11 +91,16 @@ public abstract class CreateTbFromSelectStmtUdp
                 schema =
                     FarragoUdrRuntime.getSession().getSessionVariables()
                     .schemaName;
+                // haven't called set schema before:
+                if (schema == null) {
+                  throw ApplibResource.instance().InputIsRequired.ex(
+                      "targetSchemaName");
+                }
             }
 
             // verify whehter the targe table is exsiting in specific schema.
             ps = conn.prepareStatement(
-                "select count(1) from SYS_ROOT.DBA_TABLES where SCHEMA_NAME=? and TABLE_NAME=?");
+                "select count(1) from LOCALDB.SYS_ROOT.DBA_TABLES where SCHEMA_NAME=? and TABLE_NAME=?");
             ps.setString(1, schema);
             ps.setString(2, table);
             rs = ps.executeQuery();
