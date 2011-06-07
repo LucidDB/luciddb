@@ -30,6 +30,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.*;
@@ -176,6 +177,19 @@ public class DdlMedHandler
             {
                 // convert library filename to absolute path, if necessary
                 String libraryFile = femWrapper.getLibraryFile();
+                // Support 'thisjar' replacement.
+                if (FarragoDefaultSessionPersonality.SQLJ_THISJAR.equals(
+                            libraryFile)) {
+                    String jarName = validator.getInvokingSession()
+                        .getSessionVariables()
+                        .get(FarragoDefaultSessionPersonality.SQLJ_THISJAR);
+                    FemJar jar = validator.getStmtValidator()
+                        .findJarFromLiteralName(jarName);
+                    if (jar != null) {
+                        String url = FarragoCatalogUtil.getJarUrl(jar);
+                        libraryFile = url.replaceAll("file:", "");
+                    }
+                }
 
                 String expandedLibraryFile =
                     FarragoProperties.instance().expandProperties(libraryFile);
