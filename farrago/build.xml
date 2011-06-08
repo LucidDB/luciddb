@@ -2073,7 +2073,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <entry key="product.build.number" value="${p4.change}"/>
     </propertyfile>
     <antcall target="releaseProps"/>
-    <copy file="${release.properties}" todir="${farrago.dist.dir}"/>
+    <copy file="${release.properties}" todir="${farrago.dist.dir}" force="true"/>
     <delete>
       <fileset dir="${farrago.dist.dir}">
         <include name="farrago*.bz2"/>
