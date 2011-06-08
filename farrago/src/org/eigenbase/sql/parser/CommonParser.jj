@@ -1475,6 +1475,14 @@ SqlNode TableFunctionCall(SqlParserPos pos) :
  * standard SQL syntax. The default implementation of this production is empty.
  */
 
+/*
+ * Abstract production:
+ *
+ *    SqlNode OrderItem()
+ *
+ * Parses an order item for ORDER BY clause of the SELECT query.
+ */
+
 /**
  * Parses an explicit TABLE t reference.
  */
@@ -1867,7 +1875,7 @@ SqlNodeList OrderBy(boolean accept) :
 /**
  * Parses one list item in an ORDER BY clause.
  */
-SqlNode OrderItem() :
+SqlNode OrderItemImpl() :
 {
     SqlNode e;
     SqlParserPos pos;

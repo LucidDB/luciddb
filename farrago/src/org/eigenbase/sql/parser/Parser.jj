@@ -154,6 +154,20 @@ SqlNode TableOverOpt() :
     }
 }
 
+/**
+ * Parses one list item in an ORDER BY clause.
+ */
+SqlNode OrderItem() :
+{
+    SqlNode e;
+}
+{
+    e = OrderItemImpl()
+    {
+        return e;
+    }
+}
+
 /*
  * Parses dialect-specific keywords immediately following the SELECT keyword.
  */

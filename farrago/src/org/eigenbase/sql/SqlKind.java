@@ -414,7 +414,10 @@ public enum SqlKind
     /**
      * Reinterpret operator (a reinterpret cast)
      */
-    REINTERPRET;
+    REINTERPRET,
+
+    WITHIN;
+
 
     //~ Static fields/initializers ---------------------------------------------
 

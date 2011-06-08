@@ -180,6 +180,7 @@ public class SqlAdvisorTest
     private static final List<String> ORDER_KEYWORDS =
         Arrays.asList(
             "Keyword(,)",
+            "Keyword(WITHIN)",
             "Keyword(ASC)",
             "Keyword(DESC)");
 
