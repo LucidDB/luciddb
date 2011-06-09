@@ -1094,9 +1094,10 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="dist" depends="clean-dist">
+    <p4counter property="p4.change" name="change"/>
     <property file="${release.properties.source}" />
     <property name="lucidera.release.spec"
-      value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"/>
+      value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}.${p4.change}"/>
     <property name="release.lib.dir"
       location="${dist.dir}/${lucidera.release.spec}/lib"/>
     <property name="lib.farrago.jar" 
@@ -1314,18 +1315,18 @@ ${farrago.test.jvmargs}
     <property file="${farrago.dist.dir}/FarragoRelease.properties" />
     <property
       name="farrago.release.spec"
-      value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"/>
+      value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}.${product.build.number}"/>
 
     <property
       name="lucidera.release.spec"
-      value="${lu.package.name}-${lu.product.version.major}.${lu.product.version.minor}.${lu.product.version.point}"/>
+      value="${lu.package.name}-${lu.product.version.major}.${lu.product.version.minor}.${lu.product.version.point}.${product.build.number}"/>
 
     <delete quiet="true" includeEmptyDirs="true">
       <fileset dir="${dist.dir}/${lucidera.release.spec}"/>
     </delete>
 
     <move todir="${dist.dir}/${lucidera.release.spec}">
-      <fileset dir="${dist.dir}/${farrago.release.spec}"/>
+      <fileset dir="${farrago.dist.dir}/${farrago.release.spec}"/>
     </move>
 
   </target>
