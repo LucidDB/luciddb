@@ -1171,14 +1171,18 @@ ${farrago.test.jvmargs}
         <property name="sqllineEngine" value="sqllineEngine"/>
         <property name="farragoServer" value="farragoServer"/>
         <property name="lucidDbServer" value="lucidDbServer"/>
+        <property name="installSh" value="install.sh"/>
       </then>
       <else>
         <property name="sqllineClient" value="sqllineClient.bat"/>
         <property name="sqllineEngine" value="sqllineEngine.bat"/>
         <property name="farragoServer" value="farragoServer.bat"/>
         <property name="lucidDbServer" value="lucidDbServer.bat"/>
+        <property name="installSh" value="install.bat"/>
       </else>
     </if>
+
+    <chmod file="${release.install.dir}/${installSh}" perm="u+x" />
 
     <replace file="${release.bin.dir}/${sqllineClient}">
         <replacefilter token="jdbc:farrago:http://localhost"
