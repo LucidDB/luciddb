@@ -89,13 +89,13 @@ class SfdcColumnSet
         this.rowType = rowType;
 
         if (this.object.endsWith("_LOV")) {
-            this.udxSpecificName = "sys_boot.farrago.sfdc_lov";
+            this.udxSpecificName = "sys_sfdc.sfdc_lov";
             this.object = object.substring(0, (object.length() - 4));
         } else if (this.object.endsWith("_deleted")) {
-            this.udxSpecificName = "sys_boot.farrago.sfdc_deleted";
+            this.udxSpecificName = "sys_sfdc.sfdc_deleted";
             this.object = object.substring(0, (object.length() - 8));
         } else {
-            this.udxSpecificName = "sys_boot.farrago.sfdc_query";
+            this.udxSpecificName = "sys_sfdc.sfdc_query";
         }
     }
 
@@ -110,12 +110,12 @@ class SfdcColumnSet
         RexNode [] rexNodes = null;
 
         // lov
-        if (this.udxSpecificName.equals("sys_boot.farrago.sfdc_lov")) {
+        if (this.udxSpecificName.equals("sys_sfdc.sfdc_lov")) {
             RexNode arg1 = rexBuilder.makeLiteral(this.object);
             rexNodes = new RexNode[] { arg1 };
             // deleted
         } else if (
-            this.udxSpecificName.equals("sys_boot.farrago.sfdc_deleted"))
+            this.udxSpecificName.equals("sys_sfdc.sfdc_deleted"))
         {
             RexNode arg1 = rexBuilder.makeLiteral(this.object);
             RexNode arg2 = rexBuilder.makeLiteral("");

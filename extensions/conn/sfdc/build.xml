@@ -142,7 +142,7 @@
 
   <target name="jarSfdcPlugin">
     <mkdir dir="${sfdc.plugin.dir}"/>
-    <jar destfile="${sfdc.plugin.dir}/MedSfdc.jar">
+    <jar destfile="${sfdc.plugin.dir}/conn-sfdc.jar">
       <manifest>
         <attribute
           name="DataWrapperClassName"
@@ -162,9 +162,9 @@
     </jar>
   </target>
 
-  <target name="jarSfdcPluginWithDeps">
+  <target name="jarSfdcPluginWithDeps" depends="jarSfdcPlugin">
     <mkdir dir="${sfdc.plugin.dir}"/>
-    <jar destfile="${sfdc.plugin.dir}/MedSfdcComplete.jar">
+    <jar destfile="${sfdc.plugin.dir}/conn-sfdc-complete.jar">
       <manifest>
         <attribute
           name="DataWrapperClassName"
@@ -175,7 +175,7 @@
           value="TRUE" />
 	</section>
       </manifest>
-      <zipfileset src="${sfdc.plugin.dir}/MedSfdc.jar"/>
+      <zipfileset src="${sfdc.plugin.dir}/conn-sfdc.jar"/>
       <zipfileset src="${thirdparty.dir}/axis/lib/axis.jar"/>
       <zipfileset src="${thirdparty.dir}/axis/lib/axis-ant.jar"/>
       <zipfileset src="${thirdparty.dir}/axis/lib/jaxrpc.jar"/>
@@ -186,7 +186,7 @@
     </jar>
   </target>
 
-  <target name="installSfdcPlugin" depends="jarSfdcPlugin">
+  <target name="installSfdcPlugin" depends="jarSfdcPluginWithDeps">
     <mkdir dir="${sfdc.testlog.dir}"/>
     <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
       clonevm="yes" tempdir="${sfdc.testlog.dir}" includeantruntime="no">

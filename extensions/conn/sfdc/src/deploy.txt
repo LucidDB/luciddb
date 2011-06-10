@@ -1,7 +1,13 @@
 SQLActions[ ] = {
-  "BEGIN INSTALL
+"BEGIN INSTALL
 
-create or replace function sys_boot.farrago.sfdc_query(
+create or replace schema sys_sfdc;
+
+---------------------------------------
+-- UDXes needed by SFDC_DATA_WRAPPER --
+---------------------------------------
+
+create or replace function sys_sfdc.sfdc_query(
   query varchar(10000), types varchar(10000))
 returns table(
   objects varchar(128))
@@ -11,7 +17,7 @@ dynamic_function
 no sql
 external name 'thisjar:net.sf.farrago.namespace.sfdc.SfdcUdx.query';
 
-create or replace function sys_boot.farrago.sfdc_deleted(
+create or replace function sys_sfdc.sfdc_deleted(
   objectName varchar(1024), startTime varchar(256), endTime varchar(256))
 returns table(
   objects varchar(128))
@@ -21,7 +27,7 @@ dynamic_function
 no sql
 external name 'thisjar:net.sf.farrago.namespace.sfdc.SfdcUdx.getDeleted';
 
-create or replace function sys_boot.farrago.sfdc_lov(
+create or replace function sys_sfdc.sfdc_lov(
   objectName varchar(1024))
 returns table(
   objects varchar(128))
@@ -31,11 +37,25 @@ dynamic_function
 no sql
 external name 'thisjar:net.sf.farrago.namespace.sfdc.SfdcUdx.getLov';
 
+-----------------------
+-- SFDC DATA WRAPPER --
+-----------------------
+
 create or replace foreign data wrapper SALESFORCE
-library 'class net.sf.farrago.namespace.sfdc.SfdcDataWrapper'
+library 'thisjar'
 language java
 options(
   browse_connect_description 'Salesforce.com Web Service Connection'
 );
 
-END INSTALL"}
+END INSTALL",
+"BEGIN REMOVE
+
+drop foreign data wrapper SALESFORCE;
+drop function sys_sfdc.sfdc_lov;
+drop function sys_sfdc.sfdc_deleted;
+drop function sys_sfdc.sfdc_query;
+drop schema sys_sfdc;
+
+END REMOVE"
+}
