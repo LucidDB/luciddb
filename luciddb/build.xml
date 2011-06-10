@@ -56,18 +56,6 @@ ${farrago.test.jvmargs}
   <property name="build.init.properties" location="${luciddb.dir}/build.init.properties" />
   <import file="${luciddb.dir}/properties.xml" />
 
-  <!-- farrago distribution file -->
-  <condition property="farrago.dist.file"
-    value="${farrago.dist.dir}/farrago.zip">
-    <os family="windows"/>
-  </condition>
-  <condition property="farrago.dist.file"
-    value="${farrago.dist.dir}/farrago.tar.bz2">
-    <not>
-      <os family="windows"/>
-    </not>
-  </condition>
-
   <property name="fennel.dir" location="${open.dir}/fennel"/>
 
   <property file="${farrago.dir}/initBuild.properties" />
@@ -1094,10 +1082,17 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="dist" depends="clean-dist">
-    <p4counter property="p4.change" name="change"/>
     <property file="${release.properties.source}" />
-    <property name="lucidera.release.spec"
-      value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}.${p4.change}"/>
+
+    <condition property="lucidera.release.spec"
+      value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"
+      else="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}.${product.build.number}">
+      <or>
+        <equals arg1="${product.build.number}" arg2="0"/>
+        <equals arg1="${product.build.number}" arg2="$${product.build.number}"/>
+      </or>
+    </condition>
+
     <property name="release.lib.dir"
       location="${dist.dir}/${lucidera.release.spec}/lib"/>
     <property name="lib.farrago.jar" 
@@ -1113,31 +1108,9 @@ ${farrago.test.jvmargs}
     <property name="release.properties.target"
       location="${release.lib.dir}/FarragoRelease.properties"/>
 
-    <delete dir="${dist.dir}" quiet="true"/>
-    <mkdir dir="${dist.dir}"/>
-
-    <if>
-      <equals arg1="${osfamily}" arg2="unix"/>
-      <then>
-        <exec executable="tar" spawn="false" dir="${dist.dir}">
-          <arg value="--bzip2"/>
-          <arg value="-xf"/>
-          <arg value="${farrago.dist.file}"/>
-        </exec>
-      </then>
-      <else>
-        <unzip src="${farrago.dist.file}" dest="${dist.dir}"/>
-      </else>
-    </if>
-
-    <ant target="rename-dir-to-luciddb" inheritAll="false">
-      <property name="lu.package.name" value="${package.name}"/>
-      <property name="lu.product.version.major" 
-        value="${product.version.major}"/>
-      <property name="lu.product.version.minor" 
-        value="${product.version.minor}"/>
-      <property name="lu.product.version.point" 
-        value="${product.version.point}"/>
+    <ant target="dist-dir-luciddb" inheritAll="false">
+      <property name="dist.dir" value="${dist.dir}"/>
+      <property name="lucidera.release.spec" value="${lucidera.release.spec}"/>
     </ant>
   
   	<!-- Remove RmiJdbc stuff 
@@ -1311,24 +1284,47 @@ ${farrago.test.jvmargs}
     </delete>
   </target>
 
-  <target name="rename-dir-to-luciddb">
-    <property file="${farrago.dist.dir}/FarragoRelease.properties" />
-    <property
-      name="farrago.release.spec"
-      value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}.${product.build.number}"/>
+  <target name="dist-dir-luciddb">
+    <!-- farrago distribution file -->
+    <property file="${farrago.dist.dir}/FarragoRelease.properties"/>
+    <fail unless="package.name"/>
+    <fail unless="product.version.major"/>
+    <fail unless="product.version.minor"/>
+    <fail unless="product.version.point"/>
 
-    <property
-      name="lucidera.release.spec"
-      value="${lu.package.name}-${lu.product.version.major}.${lu.product.version.minor}.${lu.product.version.point}.${product.build.number}"/>
+    <condition property="farrago.release.spec"
+      value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"
+      else="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}.${product.build.number}">
+      <equals arg1="${product.build.number}" arg2="0"/>
+    </condition>
 
-    <delete quiet="true" includeEmptyDirs="true">
-      <fileset dir="${dist.dir}/${lucidera.release.spec}"/>
-    </delete>
+    <condition property="farrago.dist.file"
+      value="${farrago.dist.dir}/${farrago.release.spec}.zip"
+      else="${farrago.dist.dir}/${farrago.release.spec}.tar.bz2">
+      <os family="windows"/>
+    </condition>
 
+    <delete dir="${dist.dir}" quiet="true"/>
+    <mkdir dir="${dist.dir}"/>
+
+    <if>
+      <equals arg1="${osfamily}" arg2="unix"/>
+      <then>
+        <exec executable="tar" spawn="false" dir="${dist.dir}">
+          <arg value="--bzip2"/>
+          <arg value="-xf"/>
+          <arg value="${farrago.dist.file}"/>
+        </exec>
+      </then>
+      <else>
+        <unzip src="${farrago.dist.file}" dest="${dist.dir}"/>
+      </else>
+    </if>
+
+    <!-- rename-dir-to-luciddb: -->
     <move todir="${dist.dir}/${lucidera.release.spec}">
-      <fileset dir="${farrago.dist.dir}/${farrago.release.spec}"/>
+      <fileset dir="${dist.dir}/${farrago.release.spec}"/>
     </move>
-
   </target>
 
   <target name="createEclipseProject">
