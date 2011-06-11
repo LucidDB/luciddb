@@ -1,3 +1,6 @@
+-- $Id$
+-- Test identity UDX.
+!set outputformat csv
 create or replace schema udftest;
 set schema 'udftest';
 set path 'udftest';
@@ -15,3 +18,4 @@ explain plan for
 select * from table(self(cursor(select * from sales.depts)));
 
 select * from table(self(cursor(select * from sales.depts)));
+-- end testSelfUdx.sql

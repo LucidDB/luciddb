@@ -1,3 +1,6 @@
+> -- $Id$
+> -- Test identity UDX.
+> !set outputformat csv
 > create or replace schema udftest;
 > set schema 'udftest';
 > set path 'udftest';
@@ -13,21 +16,16 @@
 > 
 > explain plan for
 > select * from table(self(cursor(select * from sales.depts)));
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                      column0                                                                                      |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FarragoJavaUdxRel(invocation=[CAST(SELF(CAST($0):CURSOR)):RecordType(INTEGER DEPTNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])  |
-|   FennelToIteratorConverter                                                                                                                                                       |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                  |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+'column0'
+'FarragoJavaUdxRel(invocation=[CAST(SELF(CAST($0):CURSOR)):RecordType(INTEGER DEPTNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 > 
 > select * from table(self(cursor(select * from sales.depts)));
-+---------+------------+
-| DEPTNO  |    NAME    |
-+---------+------------+
-| 10      | Sales      |
-| 20      | Marketing  |
-| 30      | Accounts   |
-+---------+------------+
+'DEPTNO','NAME'
+'10','Sales'
+'20','Marketing'
+'30','Accounts'
+> -- end testSelfUdx.sql
 > 
 > !quit

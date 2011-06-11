@@ -1,6 +1,8 @@
 -- $Id$
 -- Test flatfile namespace plugin
 
+!set outputformat csv
+
 alter system set "calcVirtualMachine"='CALCVM_AUTO';
 
 create schema flatfile_schema;
@@ -567,3 +569,4 @@ select * from mapped_server.bcp."mapped_fewer_cols";
 select * from mapped_server.bcp."missing_columns";
 
 drop schema test_schema cascade;
+-- End flatfile.sql

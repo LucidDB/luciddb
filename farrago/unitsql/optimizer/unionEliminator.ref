@@ -2,17 +2,17 @@
 > -- Test optimization rule to elimnate the use of UNION 
 > -- when a UNION call only has one input
 > 
+> !set outputformat csv
+> 
 > -- should not contain any calls to any union xo
 > explain plan for select multiset[622] from (values(true));
-+------------------------------------------------------------------------+
-|                                column0                                 |
-+------------------------------------------------------------------------+
-| IterCalcRel(expr#0..1=[{inputs}], expr#2=[$SLICE($t1)], EXPR$0=[$t2])  |
-|   FennelToIteratorConverter                                            |
-|     FennelCartesianProductRel(leftouterjoin=[false])                   |
-|       FennelValuesRel(tuples=[[{ true }]])                             |
-|       FennelPullCollectRel                                             |
-|         FennelValuesRel(tuples=[[{ 622 }]])                            |
-+------------------------------------------------------------------------+
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[$SLICE($t1)], EXPR$0=[$t2])'
+'  FennelToIteratorConverter'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      FennelValuesRel(tuples=[[{ true }]])'
+'      FennelPullCollectRel'
+'        FennelValuesRel(tuples=[[{ 622 }]])'
+> -- End unionEliminator.sql
 > 
 > !quit

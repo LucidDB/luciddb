@@ -1,6 +1,8 @@
 > -- $Id$
 > -- Test flatfile namespace plugin
 > 
+> !set outputformat csv
+> 
 > alter system set "calcVirtualMachine"='CALCVM_AUTO';
 > 
 > create schema flatfile_schema;
@@ -32,16 +34,13 @@
 > options (filename 'example');
 > 
 > select * from flatfile_explicit_table order by 3;
-+------+------------------------------------------+--------------+
-|  ID  |                   NAME                   | EXTRA_FIELD  |
-+------+------------------------------------------+--------------+
-| 123  | Jonathan Ackerman                        | A            |
-| 234  | Grady O'Neil                             | B            |
-| 456  | Susan, Peter and Dave                    | C            |
-| 789  | Amelia "meals" Maurice                   | E            |
-| 123  | "S,"                                     | F            |
-| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
-+------+------------------------------------------+--------------+
+'ID','NAME','EXTRA_FIELD'
+'123','Jonathan Ackerman','A'
+'234','Grady O'Neil','B'
+'456','Susan, Peter and Dave','C'
+'789','Amelia "meals" Maurice','E'
+'123','"S,"','F'
+'234','Peter "peg leg", Jimmy & Samantha "Sam"','G'
 > 
 > --
 > -- 1.2 Test a table whose row type is very large
@@ -56,16 +55,13 @@
 > options (filename 'example');
 > 
 > select * from flatfile_rowTypeTooBig;
-+------+------------------------------------------+----+
-|  A   |                    B                     | C  |
-+------+------------------------------------------+----+
-| 123  | "S,"                                     | F  |
-| 123  | Jonathan Ackerman                        | A  |
-| 234  | Grady O'Neil                             | B  |
-| 456  | Susan, Peter and Dave                    | C  |
-| 789  | Amelia "meals" Maurice                   | E  |
-| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G  |
-+------+------------------------------------------+----+
+'A','B','C'
+'123','"S,"','F'
+'123','Jonathan Ackerman','A'
+'234','Grady O'Neil','B'
+'456','Susan, Peter and Dave','C'
+'789','Amelia "meals" Maurice','E'
+'234','Peter "peg leg", Jimmy & Samantha "Sam"','G'
 > 
 > --
 > -- 1.3 Test a table with a missing data file
@@ -148,10 +144,7 @@ Error: Could not read header from data file unitsql/med/flatfiles/noheader.csv: 
 > 
 > -- Note: Farrago's error handler quietly swallows row errors
 > select * from flatfile_incompleteColumn;
-+-----+-------+--------------+
-| ID  | NAME  | EXTRA_FIELD  |
-+-----+-------+--------------+
-+-----+-------+--------------+
+'ID','NAME','EXTRA_FIELD'
 > 
 > --
 > -- 1.8 Test data file with too many columns
@@ -193,22 +186,16 @@ Error: Could not read header from data file unitsql/med/flatfiles/example.csv: R
 >     lenient 'no');
 > 
 > select * from flatfile_server_rowTooLong.BCP."longrow";
-+----------+-------+-------+
-| longrow  | col2  | col3  |
-+----------+-------+-------+
-| before   | 2     | 3     |
-| after    | 2     | 3     |
-+----------+-------+-------+
+'longrow','col2','col3'
+'before','2','3'
+'after','2','3'
 > 
 > -- long column quietly truncates
 > select * from flatfile_server_rowTooLong.BCP."longcol";
-+----------+-------+-------+
-| longcol  | col2  | col3  |
-+----------+-------+-------+
-| befo     | 2     | 3     |
-| xxxx     | xxxx  | xxxx  |
-| afte     | 2     | 3     |
-+----------+-------+-------+
+'longcol','col2','col3'
+'befo','2','3'
+'xxxx','xxxx','xxxx'
+'afte','2','3'
 > 
 > --
 > -- 1.11 different escape and quote characters
@@ -223,16 +210,13 @@ Error: Could not read header from data file unitsql/med/flatfiles/example.csv: R
 >     escape_char '\');
 > 
 > select * from flatfile_server_esc.BCP."example" order by 3;
-+------+------------------------------------------+--------------+
-|  ID  |                   NAME                   | EXTRA_FIELD  |
-+------+------------------------------------------+--------------+
-| 123  | Jonathan Ackerman                        | A            |
-| 234  | Grady O'Neil                             | B            |
-| 456  | Susan, Peter and Dave                    | C            |
-| 789  | Amelia "meals" Maurice                   | E            |
-| 123  | "S,"                                     | F            |
-| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
-+------+------------------------------------------+--------------+
+'ID','NAME','EXTRA_FIELD'
+'123','Jonathan Ackerman','A'
+'234','Grady O'Neil','B'
+'456','Susan, Peter and Dave','C'
+'789','Amelia "meals" Maurice','E'
+'123','"S,"','F'
+'234','Peter "peg leg", Jimmy & Samantha "Sam"','G'
 > 
 > 
 > ---------------------------------------------------------------------------
@@ -267,16 +251,13 @@ Error: Fixed position parsing, enabled by setting an empty field delimiter, requ
 >     line_delimiter '\r\n');
 > 
 > select * from flatfile_server_fixed.BCP."fixed" order by 3;
-+-------+-------------------------------------------+--------------+
-|  ID   |                   NAME                    | EXTRA_FIELD  |
-+-------+-------------------------------------------+--------------+
-| 123   | Jonathan Ackerman                         | A            |
-| 234   | Grady O'Neil                              | B            |
-| 456   | Susan, Peter and Dave                     | C            |
-| 789   | Amelia "meals" Maurice                    | E            |
-| 123   | "S,"                                      | F            |
-| 234   | Peter "peg leg", Jimmy & Samantha "Sam"   | G            |
-+-------+-------------------------------------------+--------------+
+'ID','NAME','EXTRA_FIELD'
+'123 ','Jonathan Ackerman                       ','A'
+'234 ','Grady O'Neil                            ','B'
+'456 ','Susan, Peter and Dave                   ','C'
+'789 ','Amelia "meals" Maurice                  ','E'
+'123 ','"S,"                                    ','F'
+'234 ','Peter "peg leg", Jimmy & Samantha "Sam" ','G'
 > 
 > 
 > ---------------------------------------------------------------------------
@@ -289,11 +270,8 @@ Error: Fixed position parsing, enabled by setting an empty field delimiter, requ
 > --     internal query, and should not appear in user level documentation.
 > --
 > select * from flatfile_server."DESCRIBE"."example";
-+--------------+
-| FIELD_SIZES  |
-+--------------+
-| 3 22 11      |
-+--------------+
+'FIELD_SIZES'
+'3 22 11'
 > 
 > --
 > -- 3.2 Test a sampling queries 
@@ -303,16 +281,13 @@ Error: Fixed position parsing, enabled by setting an empty field delimiter, requ
 > --         the "header line". this feature is also undocumented.)
 > --
 > select * from flatfile_server.SAMPLE."example";
-+-------+-------------------------+--------------+
-| COL1  |          COL2           |     COL3     |
-+-------+-------------------------+--------------+
-| ID    | NAME                    | EXTRA_FIELD  |
-| 123   | "S,"                    | F            |
-| 123   | Jonathan Ackerman       | A            |
-| 234   | Grady O'Neil            | B            |
-| 456   | Susan, Peter and Dave   | C            |
-| 789   | Amelia "meals" Maurice  | E            |
-+-------+-------------------------+--------------+
+'COL1','COL2','COL3'
+'ID','NAME','EXTRA_FIELD'
+'123','"S,"','F'
+'123','Jonathan Ackerman','A'
+'234','Grady O'Neil','B'
+'456','Susan, Peter and Dave','C'
+'789','Amelia "meals" Maurice','E'
 > 
 > --
 > -- 3.3 Test sampling of missing file
@@ -358,13 +333,10 @@ Error: Cannot derive column types for file unitsql/med/flatfiles/nullheader.txt 
 > -- 3.8 Test sampling of a file with nulls in data
 > --
 > select * from flatfile_server_empty.BCP."nulldata";
-+---------+------+--------+----------+
-| header  |  no  | nulls  |    ok    |
-+---------+------+--------+----------+
-| but     |      | nulls  |          |
-|         | in   | data   |          |
-|         | too  | many   | columns  |
-+---------+------+--------+----------+
+'header','no','nulls','ok'
+'but','','nulls',''
+'','in','data',''
+'','too','many','columns'
 > 
 > --
 > -- 3.9 Select when BCP file is empty
@@ -402,65 +374,47 @@ Error: Invalid row 5 in control file unitsql/med/flatfiles/invalidbcpcolumns.bcp
 > -- 3.12 test column header names which include spaces
 > --
 > select * from flatfile_server.BCP."headerswithwhitespace";
-+------------+------------------+---------------------+
-| ONE SPACE  | TWO SPACES HERE  | ONE TWO THREE FOUR  |
-+------------+------------------+---------------------+
-| 1 1        | 2 2              | 3 3                 |
-| a          |                  |                     |
-|            |                  |                     |
-| 3          | 2                | 1                   |
-+------------+------------------+---------------------+
+'ONE SPACE','TWO SPACES HERE','ONE TWO THREE FOUR'
+'1 1  ','2 2  ','3 3  '
+'a    ','     ',''
+'','     ',''
+'3    ','2    ','1    '
 > 
 > select "ONE SPACE" from flatfile_server.BCP."headerswithwhitespace";
-+------------+
-| ONE SPACE  |
-+------------+
-| 1 1        |
-| a          |
-|            |
-| 3          |
-+------------+
+'ONE SPACE'
+'1 1  '
+'a    '
+''
+'3    '
 > 
 > -- generating bcp file
 > select * from flatfile_server.BCP."headerswithwhitespacenobcp";
-+------------+------------------+------------------------------+
-| one space  | two spaces here  |    un-trimmed whitespaces    |
-+------------+------------------+------------------------------+
-| 1 1        | 2 2              | 3 3                          |
-| a          |                  |                              |
-|            |                  |                              |
-| 3          | 2                | 1                            |
-+------------+------------------+------------------------------+
+'one space','two spaces here','   un-trimmed whitespaces  '
+'1 1','2 2','3 3'
+'a','',''
+'','',''
+'3','2','1'
 > 
 > --
 > -- 3.13 test estimating row count of a file
 > --
 > explain plan including all attributes without implementation for
 > select * from flatfile_server.BCP."decimal";
-+------------------------------------------------------------------------------------------------------------+
-|                                                  column0                                                   |
-+------------------------------------------------------------------------------------------------------------+
-| ProjectRel(F1=[$0], F2=[$1], F3=[$2], F4=[$3], F5=[$4], F6=[$5]): rowcount = 35.0, cumulative cost = 70.0  |
-|   TableAccessRel(table=[[FLATFILE_SERVER, BCP, decimal]]): rowcount = 35.0, cumulative cost = 35.0         |
-+------------------------------------------------------------------------------------------------------------+
+'column0'
+'ProjectRel(F1=[$0], F2=[$1], F3=[$2], F4=[$3], F5=[$4], F6=[$5]): rowcount = 35.0, cumulative cost = 70.0'
+'  TableAccessRel(table=[[FLATFILE_SERVER, BCP, decimal]]): rowcount = 35.0, cumulative cost = 35.0'
 > 
 > explain plan including all attributes without implementation for
 > select * from flatfile_server.BCP."example";
-+-----------------------------------------------------------------------------------------------------+
-|                                               column0                                               |
-+-----------------------------------------------------------------------------------------------------+
-| ProjectRel(ID=[$0], NAME=[$1], EXTRA_FIELD=[$2]): rowcount = 10.0, cumulative cost = 20.0           |
-|   TableAccessRel(table=[[FLATFILE_SERVER, BCP, example]]): rowcount = 10.0, cumulative cost = 10.0  |
-+-----------------------------------------------------------------------------------------------------+
+'column0'
+'ProjectRel(ID=[$0], NAME=[$1], EXTRA_FIELD=[$2]): rowcount = 10.0, cumulative cost = 20.0'
+'  TableAccessRel(table=[[FLATFILE_SERVER, BCP, example]]): rowcount = 10.0, cumulative cost = 10.0'
 > 
 > explain plan including all attributes without implementation for
 > select * from flatfile_server_empty.BCP."empty";
-+-----------------------------------------------------------------------------------------------------------+
-|                                                  column0                                                  |
-+-----------------------------------------------------------------------------------------------------------+
-| ProjectRel(ID=[$0], NAME=[$1], EXTRA_FIELD=[$2]): rowcount = 100.0, cumulative cost = 200.0               |
-|   TableAccessRel(table=[[FLATFILE_SERVER_EMPTY, BCP, empty]]): rowcount = 100.0, cumulative cost = 100.0  |
-+-----------------------------------------------------------------------------------------------------------+
+'column0'
+'ProjectRel(ID=[$0], NAME=[$1], EXTRA_FIELD=[$2]): rowcount = 100.0, cumulative cost = 200.0'
+'  TableAccessRel(table=[[FLATFILE_SERVER_EMPTY, BCP, empty]]): rowcount = 100.0, cumulative cost = 100.0'
 > 
 > 
 > ---------------------------------------------------------------------------
@@ -498,16 +452,13 @@ Error: From line 1, column 15 to line 1, column 39: Table 'FLATFILE_SCHEMA.examp
 > options (filename 'example');
 > 
 > select * from flatfile_implicit_table order by 3;
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-| 123      | Jonathan Ackerman                                                                                     | A                         |
-| 234      | Grady O'Neil                                                                                          | B                         |
-| 456      | Susan, Peter and Dave                                                                                 | C                         |
-| 789      | Amelia "meals" Maurice                                                                                | E                         |
-| 123      | "S,"                                                                                                  | F                         |
-| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+'ID','NAME','EXTRA_FIELD'
+'123    ','Jonathan Ackerman                                                                                   ','A                       '
+'234    ','Grady O'Neil                                                                                        ','B                       '
+'456    ','Susan, Peter and Dave                                                                               ','C                       '
+'789    ','Amelia "meals" Maurice                                                                              ','E                       '
+'123    ','"S,"                                                                                                ','F                       '
+'234    ','Peter "peg leg", Jimmy & Samantha "Sam"                                                             ','G                       '
 > 
 > -- test import schemas with/without bcp files
 > create schema flatfiledir_schema;
@@ -526,16 +477,13 @@ Error: From line 1, column 15 to line 1, column 39: Table 'FLATFILE_SCHEMA.examp
 > into flatfiledir_schema;
 > 
 > select * from flatfiledir_schema."example2" order by 3;
-+------+------------------------------------------+--------------+
-|  ID  |                   NAME                   | EXTRA_FIELD  |
-+------+------------------------------------------+--------------+
-| 123  | Jonathan Ackerman                        | A            |
-| 234  | Grady O'Neil                             | B            |
-| 456  | Susan, Peter and Dave                    | C            |
-| 789  | Amelia "meals" Maurice                   | E            |
-| 123  | "S,"                                     | F            |
-| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
-+------+------------------------------------------+--------------+
+'ID','NAME','EXTRA_FIELD'
+'123','Jonathan Ackerman','A'
+'234','Grady O'Neil','B'
+'456','Susan, Peter and Dave','C'
+'789','Amelia "meals" Maurice','E'
+'123','"S,"','F'
+'234','Peter "peg leg", Jimmy & Samantha "Sam"','G'
 > 
 > drop schema flatfiledir_schema cascade;
 > create schema flatfiledir_schema;
@@ -546,16 +494,13 @@ Error: From line 1, column 15 to line 1, column 39: Table 'FLATFILE_SCHEMA.examp
 > into flatfiledir_schema;
 > 
 > select * from flatfiledir_schema."example2" order by 3;
-+------+------------------------------------------+--------------+
-|  ID  |                   NAME                   | EXTRA_FIELD  |
-+------+------------------------------------------+--------------+
-| 123  | Jonathan Ackerman                        | A            |
-| 234  | Grady O'Neil                             | B            |
-| 456  | Susan, Peter and Dave                    | C            |
-| 789  | Amelia "meals" Maurice                   | E            |
-| 123  | "S,"                                     | F            |
-| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
-+------+------------------------------------------+--------------+
+'ID','NAME','EXTRA_FIELD'
+'123','Jonathan Ackerman','A'
+'234','Grady O'Neil','B'
+'456','Susan, Peter and Dave','C'
+'789','Amelia "meals" Maurice','E'
+'123','"S,"','F'
+'234','Peter "peg leg", Jimmy & Samantha "Sam"','G'
 > drop table flatfiledir_schema."example2";
 > drop table flatfiledir_schema."example";
 > 
@@ -579,16 +524,13 @@ Error: One or more tables not found while importing foreign schema "BCP":  [no_t
 > into flatfiledir_schema;
 > 
 > select * from flatfiledir_schema."example" order by 3;
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-| 123      | Jonathan Ackerman                                                                                     | A                         |
-| 234      | Grady O'Neil                                                                                          | B                         |
-| 456      | Susan, Peter and Dave                                                                                 | C                         |
-| 789      | Amelia "meals" Maurice                                                                                | E                         |
-| 123      | "S,"                                                                                                  | F                         |
-| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+'ID','NAME','EXTRA_FIELD'
+'123    ','Jonathan Ackerman                                                                                   ','A                       '
+'234    ','Grady O'Neil                                                                                        ','B                       '
+'456    ','Susan, Peter and Dave                                                                               ','C                       '
+'789    ','Amelia "meals" Maurice                                                                              ','E                       '
+'123    ','"S,"                                                                                                ','F                       '
+'234    ','Peter "peg leg", Jimmy & Samantha "Sam"                                                             ','G                       '
 > 
 > -- test: not imported. fail
 > select * from flatfiledir_schema."example2" order by 3;
@@ -601,30 +543,24 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 > into flatfiledir_schema;
 > 
 > select * from flatfiledir_schema."example" order by 3;
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-| 123      | Jonathan Ackerman                                                                                     | A                         |
-| 234      | Grady O'Neil                                                                                          | B                         |
-| 456      | Susan, Peter and Dave                                                                                 | C                         |
-| 789      | Amelia "meals" Maurice                                                                                | E                         |
-| 123      | "S,"                                                                                                  | F                         |
-| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+'ID','NAME','EXTRA_FIELD'
+'123    ','Jonathan Ackerman                                                                                   ','A                       '
+'234    ','Grady O'Neil                                                                                        ','B                       '
+'456    ','Susan, Peter and Dave                                                                               ','C                       '
+'789    ','Amelia "meals" Maurice                                                                              ','E                       '
+'123    ','"S,"                                                                                                ','F                       '
+'234    ','Peter "peg leg", Jimmy & Samantha "Sam"                                                             ','G                       '
 > drop table flatfiledir_schema."example";
 > 
 > -- test: uses generated bcp
 > select * from flatfiledir_server.bcp."example2" order by 3;
-+------+------------------------------------------+--------------+
-|  ID  |                   NAME                   | EXTRA_FIELD  |
-+------+------------------------------------------+--------------+
-| 123  | Jonathan Ackerman                        | A            |
-| 234  | Grady O'Neil                             | B            |
-| 456  | Susan, Peter and Dave                    | C            |
-| 789  | Amelia "meals" Maurice                   | E            |
-| 123  | "S,"                                     | F            |
-| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
-+------+------------------------------------------+--------------+
+'ID','NAME','EXTRA_FIELD'
+'123','Jonathan Ackerman','A'
+'234','Grady O'Neil','B'
+'456','Susan, Peter and Dave','C'
+'789','Amelia "meals" Maurice','E'
+'123','"S,"','F'
+'234','Peter "peg leg", Jimmy & Samantha "Sam"','G'
 > 
 > 
 > -- test: browse connect functionality
@@ -636,11 +572,8 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 > );
 > 
 > select * from sys_boot.mgmt.browse_connect_foreign_wrappers order by 1;
-+-----------------------+-----------------------------+
-| FOREIGN_WRAPPER_NAME  | BROWSE_CONNECT_DESCRIPTION  |
-+-----------------------+-----------------------------+
-| LOCAL_FILE_WRAPPER    | My Flat Files Wrapper       |
-+-----------------------+-----------------------------+
+'FOREIGN_WRAPPER_NAME','BROWSE_CONNECT_DESCRIPTION'
+'LOCAL_FILE_WRAPPER','My Flat Files Wrapper'
 > 
 > -- query for available connection options
 > select * from table(
@@ -650,40 +583,37 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 > select '' as option_name, '' as option_value
 > from sys_boot.jdbc_metadata.empty_view)))
 > order by option_ordinal, option_choice_ordinal;
-+-----------------+-------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+------------------------+----------------------+
-| OPTION_ORDINAL  |       OPTION_NAME       |                                                                                                                                    OPTION_DESCRIPTION                                                                                                                                    | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
-+-----------------+-------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+------------------------+----------------------+
-| 0               | DIRECTORY               | OS directory path containing flat files                                                                                                                                                                                                                                                  | true                | -1                     |                      |
-| 1               | FILE_EXTENSION          | File name extension                                                                                                                                                                                                                                                                      | true                | -1                     | txt                  |
-| 1               | FILE_EXTENSION          | File name extension                                                                                                                                                                                                                                                                      | true                | 0                      | txt                  |
-| 2               | CONTROL_FILE_EXTENSION  | Control file extension                                                                                                                                                                                                                                                                   | true                | -1                     | bcp                  |
-| 2               | CONTROL_FILE_EXTENSION  | Control file extension                                                                                                                                                                                                                                                                   | true                | 0                      | bcp                  |
-| 3               | FIELD_DELIMITER         | Field delimiter character                                                                                                                                                                                                                                                                | true                | -1                     | ,                    |
-| 3               | FIELD_DELIMITER         | Field delimiter character                                                                                                                                                                                                                                                                | true                | 0                      | ,                    |
-| 4               | LINE_DELIMITER          | Line delimiter character                                                                                                                                                                                                                                                                 | true                | -1                     | \n                   |
-| 4               | LINE_DELIMITER          | Line delimiter character                                                                                                                                                                                                                                                                 | true                | 0                      | \n                   |
-| 5               | QUOTE_CHAR              | Character used to quote                                                                                                                                                                                                                                                                  | true                | -1                     | "                    |
-| 5               | QUOTE_CHAR              | Character used to quote                                                                                                                                                                                                                                                                  | true                | 0                      | "                    |
-| 6               | ESCAPE_CHAR             | Character used to escape the special characters                                                                                                                                                                                                                                          | true                | -1                     | "                    |
-| 6               | ESCAPE_CHAR             | Character used to escape the special characters                                                                                                                                                                                                                                          | true                | 0                      | "                    |
-| 7               | WITH_HEADER             | Whether the files include a header                                                                                                                                                                                                                                                       | true                | -1                     | TRUE                 |
-| 7               | WITH_HEADER             | Whether the files include a header                                                                                                                                                                                                                                                       | true                | 0                      | TRUE                 |
-| 7               | WITH_HEADER             | Whether the files include a header                                                                                                                                                                                                                                                       | true                | 1                      | FALSE                |
-| 8               | NUM_ROWS_SCAN           | The number of rows to scan to deduce the data type of columns                                                                                                                                                                                                                            | true                | -1                     | 5                    |
-| 8               | NUM_ROWS_SCAN           | The number of rows to scan to deduce the data type of columns                                                                                                                                                                                                                            | true                | 0                      | 5                    |
-| 9               | TRIM                    | Whether to trim column values                                                                                                                                                                                                                                                            | true                | -1                     | TRUE                 |
-| 9               | TRIM                    | Whether to trim column values                                                                                                                                                                                                                                                            | true                | 0                      | TRUE                 |
-| 9               | TRIM                    | Whether to trim column values                                                                                                                                                                                                                                                            | true                | 1                      | FALSE                |
-| 10              | LENIENT                 | Whether to fill in missing columns at the end of rows with null and discard extra columns                                                                                                                                                                                                | true                | -1                     | TRUE                 |
-| 10              | LENIENT                 | Whether to fill in missing columns at the end of rows with null and discard extra columns                                                                                                                                                                                                | true                | 0                      | TRUE                 |
-| 10              | LENIENT                 | Whether to fill in missing columns at the end of rows with null and discard extra columns                                                                                                                                                                                                | true                | 1                      | FALSE                |
-| 11              | MAPPED                  | Whether to match source columns in a data file with target columns specified by a control file or foreign table definition. If true, then the data file must have a header and the server must be lenient. Any target columns that are not in a data file will be filled in with nulls.  | true                | -1                     | FALSE                |
-| 11              | MAPPED                  | Whether to match source columns in a data file with target columns specified by a control file or foreign table definition. If true, then the data file must have a header and the server must be lenient. Any target columns that are not in a data file will be filled in with nulls.  | true                | 0                      | FALSE                |
-| 11              | MAPPED                  | Whether to match source columns in a data file with target columns specified by a control file or foreign table definition. If true, then the data file must have a header and the server must be lenient. Any target columns that are not in a data file will be filled in with nulls.  | true                | 1                      | TRUE                 |
-| 12              | DATE_FORMAT             | A custom datetime format for date columns                                                                                                                                                                                                                                                | false               | -1                     |                      |
-| 13              | TIME_FORMAT             | A custom datetime format for time columns                                                                                                                                                                                                                                                | false               | -1                     |                      |
-| 14              | TIMESTAMP_FORMAT        | A custom datetime format for timestamp columns                                                                                                                                                                                                                                           | false               | -1                     |                      |
-+-----------------+-------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+------------------------+----------------------+
+'OPTION_ORDINAL','OPTION_NAME','OPTION_DESCRIPTION','IS_OPTION_REQUIRED','OPTION_CHOICE_ORDINAL','OPTION_CHOICE_VALUE'
+'0','DIRECTORY','OS directory path containing flat files','true','-1',''
+'1','FILE_EXTENSION','File name extension','true','-1','txt'
+'1','FILE_EXTENSION','File name extension','true','0','txt'
+'2','CONTROL_FILE_EXTENSION','Control file extension','true','-1','bcp'
+'2','CONTROL_FILE_EXTENSION','Control file extension','true','0','bcp'
+'3','FIELD_DELIMITER','Field delimiter character','true','-1',','
+'3','FIELD_DELIMITER','Field delimiter character','true','0',','
+'4','LINE_DELIMITER','Line delimiter character','true','-1','\n'
+'4','LINE_DELIMITER','Line delimiter character','true','0','\n'
+'5','QUOTE_CHAR','Character used to quote','true','-1','"'
+'5','QUOTE_CHAR','Character used to quote','true','0','"'
+'6','ESCAPE_CHAR','Character used to escape the special characters','true','-1','"'
+'6','ESCAPE_CHAR','Character used to escape the special characters','true','0','"'
+'7','WITH_HEADER','Whether the files include a header','true','-1','TRUE'
+'7','WITH_HEADER','Whether the files include a header','true','0','TRUE'
+'7','WITH_HEADER','Whether the files include a header','true','1','FALSE'
+'8','NUM_ROWS_SCAN','The number of rows to scan to deduce the data type of columns','true','-1','5'
+'8','NUM_ROWS_SCAN','The number of rows to scan to deduce the data type of columns','true','0','5'
+'9','TRIM','Whether to trim column values','true','-1','TRUE'
+'9','TRIM','Whether to trim column values','true','0','TRUE'
+'9','TRIM','Whether to trim column values','true','1','FALSE'
+'10','LENIENT','Whether to fill in missing columns at the end of rows with null and discard extra columns','true','-1','TRUE'
+'10','LENIENT','Whether to fill in missing columns at the end of rows with null and discard extra columns','true','0','TRUE'
+'10','LENIENT','Whether to fill in missing columns at the end of rows with null and discard extra columns','true','1','FALSE'
+'11','MAPPED','Whether to match source columns in a data file with target columns specified by a control file or foreign table definition. If true, then the data file must have a header and the server must be lenient. Any target columns that are not in a data file will be filled in with nulls.','true','-1','FALSE'
+'11','MAPPED','Whether to match source columns in a data file with target columns specified by a control file or foreign table definition. If true, then the data file must have a header and the server must be lenient. Any target columns that are not in a data file will be filled in with nulls.','true','0','FALSE'
+'11','MAPPED','Whether to match source columns in a data file with target columns specified by a control file or foreign table definition. If true, then the data file must have a header and the server must be lenient. Any target columns that are not in a data file will be filled in with nulls.','true','1','TRUE'
+'12','DATE_FORMAT','A custom datetime format for date columns','false','-1',''
+'13','TIME_FORMAT','A custom datetime format for time columns','false','-1',''
+'14','TIMESTAMP_FORMAT','A custom datetime format for timestamp columns','false','-1',''
 > 
 > -- query for available connection options, with specified set values
 > select option_name, option_choice_ordinal, option_choice_value from table(
@@ -693,40 +623,37 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 > values ('CONTROL_FILE_EXTENSION', 'txt2'),
 >        ('NUM_ROWS_SCAN', '100'))))
 > order by option_ordinal, option_choice_ordinal;
-+-------------------------+------------------------+----------------------+
-|       OPTION_NAME       | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
-+-------------------------+------------------------+----------------------+
-| DIRECTORY               | -1                     |                      |
-| FILE_EXTENSION          | -1                     | txt                  |
-| FILE_EXTENSION          | 0                      | txt                  |
-| CONTROL_FILE_EXTENSION  | -1                     | txt2                 |
-| CONTROL_FILE_EXTENSION  | 0                      | bcp                  |
-| FIELD_DELIMITER         | -1                     | ,                    |
-| FIELD_DELIMITER         | 0                      | ,                    |
-| LINE_DELIMITER          | -1                     | \n                   |
-| LINE_DELIMITER          | 0                      | \n                   |
-| QUOTE_CHAR              | -1                     | "                    |
-| QUOTE_CHAR              | 0                      | "                    |
-| ESCAPE_CHAR             | -1                     | "                    |
-| ESCAPE_CHAR             | 0                      | "                    |
-| WITH_HEADER             | -1                     | TRUE                 |
-| WITH_HEADER             | 0                      | TRUE                 |
-| WITH_HEADER             | 1                      | FALSE                |
-| NUM_ROWS_SCAN           | -1                     | 100                  |
-| NUM_ROWS_SCAN           | 0                      | 5                    |
-| TRIM                    | -1                     | TRUE                 |
-| TRIM                    | 0                      | TRUE                 |
-| TRIM                    | 1                      | FALSE                |
-| LENIENT                 | -1                     | TRUE                 |
-| LENIENT                 | 0                      | TRUE                 |
-| LENIENT                 | 1                      | FALSE                |
-| MAPPED                  | -1                     | FALSE                |
-| MAPPED                  | 0                      | FALSE                |
-| MAPPED                  | 1                      | TRUE                 |
-| DATE_FORMAT             | -1                     |                      |
-| TIME_FORMAT             | -1                     |                      |
-| TIMESTAMP_FORMAT        | -1                     |                      |
-+-------------------------+------------------------+----------------------+
+'OPTION_NAME','OPTION_CHOICE_ORDINAL','OPTION_CHOICE_VALUE'
+'DIRECTORY','-1',''
+'FILE_EXTENSION','-1','txt'
+'FILE_EXTENSION','0','txt'
+'CONTROL_FILE_EXTENSION','-1','txt2'
+'CONTROL_FILE_EXTENSION','0','bcp'
+'FIELD_DELIMITER','-1',','
+'FIELD_DELIMITER','0',','
+'LINE_DELIMITER','-1','\n'
+'LINE_DELIMITER','0','\n'
+'QUOTE_CHAR','-1','"'
+'QUOTE_CHAR','0','"'
+'ESCAPE_CHAR','-1','"'
+'ESCAPE_CHAR','0','"'
+'WITH_HEADER','-1','TRUE'
+'WITH_HEADER','0','TRUE'
+'WITH_HEADER','1','FALSE'
+'NUM_ROWS_SCAN','-1','100'
+'NUM_ROWS_SCAN','0','5'
+'TRIM','-1','TRUE'
+'TRIM','0','TRUE'
+'TRIM','1','FALSE'
+'LENIENT','-1','TRUE'
+'LENIENT','0','TRUE'
+'LENIENT','1','FALSE'
+'MAPPED','-1','FALSE'
+'MAPPED','0','FALSE'
+'MAPPED','1','TRUE'
+'DATE_FORMAT','-1',''
+'TIME_FORMAT','-1',''
+'TIMESTAMP_FORMAT','-1',''
 > 
 > create server ff_server
 > foreign data wrapper local_file_wrapper
@@ -738,11 +665,8 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 > -- query for available schemas
 > select * from table(sys_boot.mgmt.browse_foreign_schemas('FF_SERVER'))
 > order by schema_name;
-+--------------+--------------+
-| SCHEMA_NAME  | DESCRIPTION  |
-+--------------+--------------+
-| BCP          |              |
-+--------------+--------------+
+'SCHEMA_NAME','DESCRIPTION'
+'BCP',''
 > 
 > 
 > ---------------------------------------------------------------------------
@@ -785,14 +709,11 @@ Error: error while fetching from cursor (state=,code=0)
 > -- but we can allow errors by setting this parameter
 > alter session set "errorMax" = 100;
 > select * from buggy order by 1;
-+--------------------------------+------------------------------------------------+--------+
-|             AUTHOR             |                     TITLE                      |  COST  |
-+--------------------------------+------------------------------------------------+--------+
-| Henry Gray F.R.S.              | Gray's Anatomy, 1901 ed.                       | 8.95   |
-| Robert M. Pirsig               | (too long) Zen and the Art of Motorcycle Main  | 0.30   |
-| Rusmore, Spangle, and Crowder  | Peninsula Trails                               | 14.95  |
-| Steve Jones                    | (leading spaces) Darwin's Ghost                | 15.00  |
-+--------------------------------+------------------------------------------------+--------+
+'AUTHOR','TITLE','COST'
+'Henry Gray F.R.S.','Gray's Anatomy, 1901 ed.','8.95'
+'Robert M. Pirsig','(too long) Zen and the Art of Motorcycle Main','0.30'
+'Rusmore, Spangle, and Crowder','Peninsula Trails','14.95'
+'Steve Jones','(leading spaces) Darwin's Ghost','15.00'
 Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > 
 > -- we can select the errors from the log directory
@@ -812,12 +733,9 @@ Warning: Statement execution encountered recoverable exceptions; errors: 2; warn
 > from log_server.bcp."Summary"
 > where cast(process_id as varchar(100))='101'
 > order by error_count;
-+-------------+--------------+--------------+---------------------------------+
-| PROCESS_ID  |  ACTION_ID   | ERROR_COUNT  |               SQL               |
-+-------------+--------------+--------------+---------------------------------+
-| 101         | SelectBuggy  | 1            | select * from buggy order by 1  |
-| 101         | SelectBuggy  | 2            | select * from buggy order by 1  |
-+-------------+--------------+--------------+---------------------------------+
+'PROCESS_ID','ACTION_ID','ERROR_COUNT','SQL'
+'101','SelectBuggy','1','select * from buggy order by 1'
+'101','SelectBuggy','2','select * from buggy order by 1'
 > 
 > -- make sure we receive a warning for DML
 > !set showwarnings true
@@ -853,41 +771,32 @@ Error: Mapping source columns in data files to target columns specified by contr
 > -- test decimals from long values and overflows
 > alter session set "errorMax" = 25;
 > select * from flatfile_server.bcp."decimal";
-+-----+-----------------------+------------------------+-------------------+--------------------+----------------+
-| F1  |          F2           |           F3           |        F4         |         F5         |       F6       |
-+-----+-----------------------+------------------------+-------------------+--------------------+----------------+
-| 0   | 15                    | 25.00                  | 35                | 45.00              | typical data   |
-| 1   | 9223372036854775807   | 0.00                   | 0                 | 0.00               | max dec(19.0)  |
-| 3   | -9223372036854775808  | 0.00                   | 0                 | 0.00               | min dec(19.0)  |
-| 5   | 0                     | 92233720368547758.00   | 0                 | 0.00               | max dec(19.2)  |
-| 7   | 0                     | -92233720368547758.00  | 0                 | 0.00               | min dec(19.2)  |
-| 9   | 0                     | 92233720368547758.07   | 0                 | 0.00               | max dec(19.2)  |
-| 11  | 0                     | -92233720368547758.08  | 0                 | 0.00               | min dec(19.2)  |
-| 13  | 0                     | 0.00                   | 999999999999999   | 0.00               | max dec(15.0)  |
-| 15  | 0                     | 0.00                   | -999999999999999  | 0.00               | min dec(15.0)  |
-| 17  | 0                     | 0.00                   | 0                 | 9999999999999.00   | max dec(15.2)  |
-| 19  | 0                     | 0.00                   | 0                 | -9999999999999.00  | min dec(15.2)  |
-| 21  | 0                     | 0.00                   | 0                 | 9999999999999.99   | max dec(15.2)  |
-| 23  | 0                     | 0.00                   | 0                 | -9999999999999.99  | min dec(15.2)  |
-+-----+-----------------------+------------------------+-------------------+--------------------+----------------+
+'F1','F2','F3','F4','F5','F6'
+'0','15','25.00','35','45.00','typical data'
+'1','9223372036854775807','0.00','0','0.00','max dec(19.0)'
+'3','-9223372036854775808','0.00','0','0.00','min dec(19.0)'
+'5','0','92233720368547758.00','0','0.00','max dec(19.2)'
+'7','0','-92233720368547758.00','0','0.00','min dec(19.2)'
+'9','0','92233720368547758.07','0','0.00','max dec(19.2)'
+'11','0','-92233720368547758.08','0','0.00','min dec(19.2)'
+'13','0','0.00','999999999999999','0.00','max dec(15.0)'
+'15','0','0.00','-999999999999999','0.00','min dec(15.0)'
+'17','0','0.00','0','9999999999999.00','max dec(15.2)'
+'19','0','0.00','0','-9999999999999.00','min dec(15.2)'
+'21','0','0.00','0','9999999999999.99','max dec(15.2)'
+'23','0','0.00','0','-9999999999999.99','min dec(15.2)'
 Warning: Statement execution encountered recoverable exceptions; errors: 12; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > 
 > -- test "DEFAULT" schema name
 > select count(*) from flatfile_server."DEFAULT"."example";
-+---------+
-| EXPR$0  |
-+---------+
-| 6       |
-+---------+
+'EXPR$0'
+'6'
 > 
 > create schema test_schema;
 > import foreign schema "DEFAULT" from server flatfile_server into test_schema;
 > select count(*) from test_schema."example";
-+---------+
-| EXPR$0  |
-+---------+
-| 6       |
-+---------+
+'EXPR$0'
+'6'
 > 
 > -- this should fail
 > select * from flatfile_server.""."example";
@@ -907,32 +816,24 @@ Was expecting one of:
 >     mapped 'yes');
 > 
 > select * from mapped_server.bcp."mapped_extra_cols";
-+--------+--------+--------+
-|  COL1  |  COL2  |  COL3  |
-+--------+--------+--------+
-| 3      | 5      | 6      |
-| 8      | 10     | 11     |
-| 13     | 15     | 16     |
-| 18     | 20     | 21     |
-+--------+--------+--------+
+'COL1','COL2','COL3'
+'3    ','5    ','6    '
+'8    ','10   ','11   '
+'13   ','15   ','16   '
+'18   ','20   ','21   '
 > select * from mapped_server.bcp."mapped_fewer_cols";
-+--------+-------+--------+
-|  COL1  | COL2  |  COL3  |
-+--------+-------+--------+
-| 2      |       | 1      |
-| 4      |       | 3      |
-| 6      |       | 5      |
-+--------+-------+--------+
+'COL1','COL2','COL3'
+'2    ','','1    '
+'4    ','','3    '
+'6    ','','5    '
 > 
 > -- LER-8712 -- bcp contains fewer columns than the csv file with the
 > -- missing columns specified as null in the csv header row
 > select * from mapped_server.bcp."missing_columns";
-+------+------+------+
-|  A   |  C   |  E   |
-+------+------+------+
-| abc  | def  | ghi  |
-+------+------+------+
+'A','C','E'
+'abc','def','ghi'
 > 
 > drop schema test_schema cascade;
+> -- End flatfile.sql
 > 
 > !quit
