@@ -381,7 +381,7 @@ public class FarragoJdbcTest
         // test more "reasonable" cancellation intervals
         rand.setSeed(seed);
         for (int i = 0; i < 10; i++) {
-            int millis = (int) (rand.nextDouble() * 4000);
+            int millis = (int) (rand.nextDouble() * 3000);
             queryCancel(millis, "JAVA", false);
         }
     }
