@@ -180,7 +180,6 @@ public class SqlAdvisorTest
     private static final List<String> ORDER_KEYWORDS =
         Arrays.asList(
             "Keyword(,)",
-            "Keyword(WITHIN)",
             "Keyword(ASC)",
             "Keyword(DESC)");
 
@@ -302,6 +301,11 @@ public class SqlAdvisorTest
     protected List<String> getJoinKeywords()
     {
         return JOIN_KEYWORDS;
+    }
+
+    protected List<String> getOrderKeywords()
+    {
+        return ORDER_KEYWORDS;
     }
 
     private void assertTokenizesTo(String sql, String expected)
@@ -749,7 +753,7 @@ public class SqlAdvisorTest
 
         sql =
             "select emp.empno from sales.emp where empno=1 order by empno ^, deptno";
-//        assertComplete(sql, PREDICATE_KEYWORDS, ORDER_KEYWORDS);
+        assertComplete(sql, PREDICATE_KEYWORDS, getOrderKeywords());
     }
 
     public void testSubQuery()
