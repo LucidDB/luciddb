@@ -215,8 +215,10 @@ EOF
 cd $OPEN_DIR/farrago
 ./initBuild.sh --with-fennel --with-optimization --without-debug
 ./distBuild.sh --skip-init-build
-mv ../farrago/dist/farrago.$ARCHIVE_SUFFIX \
-    $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
+# farrago builds default with change-release in addition to normal specs.
+P4_CHANGE=`p4 counter change`
+cp ../farrago/dist/$BINARY_RELEASE.$P4_CHANGE.$ARCHIVE_SUFFIX \
+    $DIST_DIR/$BINARY_RELEASE.$P4_CHANGE.$ARCHIVE_SUFFIX
 
 cd $OPEN_DIR/luciddb
 ./initBuild.sh --without-farrago-build --with-optimization --without-debug
