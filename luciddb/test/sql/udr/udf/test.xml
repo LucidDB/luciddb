@@ -78,6 +78,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/date_internal.sql"/>
       </test>-->
 
+      <test name="timestamp_util">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/timestamp_util.sql"/>
+      </test>
+
       <test name="dayInYear" requiresRun="cr_source">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/day_in_year.sql"/>
       </test>

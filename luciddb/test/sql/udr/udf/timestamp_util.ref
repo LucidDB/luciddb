@@ -1,0 +1,170 @@
+0: jdbc:luciddb:> -- $Id$
+0: jdbc:luciddb:> -- Tests for TimestampUtilUdf
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- truncate_timestamp tests
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values(applib.truncate_timestamp(timestamp'2011-6-15 16:52:13', 'HOURLY'));
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-15 16:00:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.truncate_timestamp(timestamp'2011-6-15 16:52:13', 'DAILY'));
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-15 00:00:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.truncate_timestamp(timestamp'2011-6-15 16:52:13', 'WEEKLY'));
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-13 00:00:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.truncate_timestamp(timestamp'2011-6-15 16:52:13', 'MONTHLY'));
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-01 00:00:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.truncate_timestamp(timestamp'2011-6-15 16:52:13', 'YEARLY'));
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-01-01 00:00:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.truncate_timestamp(cast(null as timestamp), 'HOURLY'));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- extract_timestamp tests
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-15 16:52:13', 'SECOND'));
++---------+
+| EXPR$0  |
++---------+
+| 13      |
++---------+
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-15 16:52:13', 'MINUTE'));
++---------+
+| EXPR$0  |
++---------+
+| 52      |
++---------+
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-15 16:52:13', 'HOUR'));
++---------+
+| EXPR$0  |
++---------+
+| 16      |
++---------+
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-15 16:52:13', 'DAY'));
++---------+
+| EXPR$0  |
++---------+
+| 15      |
++---------+
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-15 16:52:13', 'DOW'));
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-13 16:52:13', 'DOW'));
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-12 16:52:13', 'DOW'));
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-15 16:52:13', 'WEEK'));
++---------+
+| EXPR$0  |
++---------+
+| 25      |
++---------+
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-15 16:52:13', 'MONTH'));
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-15 16:52:13', 'YEAR'));
++---------+
+| EXPR$0  |
++---------+
+| 2011    |
++---------+
+0: jdbc:luciddb:> values(applib.extract_timestamp(timestamp'2011-6-15 16:52:13', 'HOW'));
++---------+
+| EXPR$0  |
++---------+
+| 88      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- adjust_timestamp tests
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values(applib.adjust_timestamp(timestamp'2011-6-15 22:15:00', '1:3', 2)); 
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-15 23:18:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.adjust_timestamp(timestamp'2011-6-15 22:15:00', '+1:3', 2)); 
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-15 23:18:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.adjust_timestamp(timestamp'2011-6-15 22:15:00', '-1:3', 2)); 
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-15 21:12:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.adjust_timestamp(timestamp'2011-6-15 22:15:00', '+-1:3', 2)); 
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-15 21:12:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.adjust_timestamp(timestamp'2011-6-15 22:15:00', '-+1:3', 2)); 
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-15 23:18:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.adjust_timestamp(timestamp'2011-6-15 22:15:00', '', 2)); 
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-16 00:15:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.adjust_timestamp(timestamp'2011-6-15 22:15:00', '1', 2)); 
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-15 23:15:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.adjust_timestamp(timestamp'2011-6-15 22:15:00', '1:', 2)); 
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-15 23:15:00  |
++----------------------+
+0: jdbc:luciddb:> values(applib.adjust_timestamp(timestamp'2011-6-15 22:15:00', '0110', 2)); 
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2011-06-15 23:25:00  |
++----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

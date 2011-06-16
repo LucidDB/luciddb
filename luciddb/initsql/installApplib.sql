@@ -109,6 +109,40 @@ no sql
 returns null on null input
 external name 'applib.applibJar:org.eigenbase.applib.contrib.InternalDateUdf.execute';
 
+-- define truncate_timestamp
+create or replace function applib.truncate_timestamp(
+  stamp timestamp,
+  period varchar(128))
+returns timestamp
+language java
+deterministic
+no sql
+returns null on null input
+external name 'applib.applibJar:org.eigenbase.applib.contrib.TimestampUtilUdf.truncateTimestamp';
+
+-- define extract_timestamp
+create or replace function applib.extract_timestamp(
+  stamp timestamp,
+  field varchar(128))
+returns int
+language java
+deterministic
+no sql
+returns null on null input
+external name 'applib.applibJar:org.eigenbase.applib.contrib.TimestampUtilUdf.extractTimestamp';
+
+-- define adjust_timestamp
+create or replace function applib.adjust_timestamp(
+  stamp timestamp,
+  timezone varchar(128),
+  gmt_offset int)
+returns timestamp
+language java
+deterministic
+no sql
+returns null on null input
+external name 'applib.applibJar:org.eigenbase.applib.contrib.TimestampUtilUdf.adjustTimestamp';
+
 -- define DAYINYEAR function
 create or replace function applib.day_in_year(dt date)
 returns integer
