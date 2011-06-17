@@ -219,7 +219,6 @@ ${farrago.test.jvmargs}
     <pathelement location="${farrago.src.dir}"/>
     <pathelement location="${sqlline.dir}/src"/>
     <pathelement location="${junit.dir}/src.jar"/>
-    <pathelement location="${rmijdbc.dir}/src"/>
     <pathelement location="${open.dir}/thirdparty/netbeans/mdr/src"/>
     <pathelement
       location="${open.dir}/thirdparty/netbeans/mdr/extras/jdbcstorage/src"/>
@@ -280,18 +279,7 @@ ${farrago.test.jvmargs}
   <!-- Targets -->
 
   <!-- default target:  assumes catalog has already been created -->
-  <target name="all"
-    depends="compile, rmi, buildJdbcPlugin"/>
-
-  <!-- create rmi stubs and skeletons -->
-  <target name="rmi" depends="compile">
-    <rmic base="${farrago.classes.dir}" compiler="xnew"
-      classpathref="farrago.build.classpath">
-      <include name="**/server/FarragoRJConnectionServer.class" />
-      <include name="**/server/FarragoRJMedDataWrapperServer.class" />
-      <include name="**/server/FarragoRJDriverServer.class" />
-    </rmic>
-  </target>
+  <target name="all" depends="compile, buildJdbcPlugin"/>
 
   <target name="compile"
     depends="generateResources,sqlParser,ddlParser,lurqlParser">
@@ -306,7 +294,6 @@ ${farrago.test.jvmargs}
       <include name="net/sf/farrago/jdbc/*.java" />
       <include name="net/sf/farrago/jdbc/client/**/*.java" />
       <include name="net/sf/farrago/jdbc/param/**/*.java" />
-      <include name="net/sf/farrago/jdbc/rmi/**/*.java" />
     </farrago.javaCompileClient>
     <!-- have to fork and bump up the heap because Farrago's getting fat! -->
     <farrago.javaCompile
@@ -504,14 +491,10 @@ ${farrago.test.jvmargs}
         </copy>
         <copy file="${farrago.dir}/jdbc4/Unwrappable14.java"
           tofile="${farrago.jdbc4.gen.dir}/Unwrappable.java"/>
-        <copy file="${farrago.dir}/jdbc4/UnwrappableRJConnection14.java"
-          tofile="${farrago.jdbc4.gen.dir}/UnwrappableRJConnection.java"/>
       </then>
       <else>
         <copy file="${farrago.dir}/jdbc4/Unwrappable16.java"
           tofile="${farrago.jdbc4.gen.dir}/Unwrappable.java"/>
-        <copy file="${farrago.dir}/jdbc4/UnwrappableRJConnection16.java"
-          tofile="${farrago.jdbc4.gen.dir}/UnwrappableRJConnection.java"/>
       </else>
     </ac:if>
   </target>
@@ -1183,6 +1166,9 @@ ${farrago.test.jvmargs}
           <exclude name="**/test/regression/*Test.class"/>
           <exclude name="**/test/concurrent/*Test.class"/>
           <include name="**/*Test.class"/>
+
+          <!-- this test is now an abstract base class -->
+          <exclude name="net/sf/farrago/test/FarragoServerTest.class"/>
         </fileset>
       </testfileset>
       <junitargs>
