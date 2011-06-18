@@ -35,4 +35,43 @@
 | !       |
 +---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test one-arg func
+0: jdbc:luciddb:> values(applib.execute_function('js', 'function echo(arg) { return arg; }',
+. . . . . . . . >     'echo', 'Hello World'));
++--------------+
+|    EXPR$0    |
++--------------+
+| Hello World  |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test two-arg func
+0: jdbc:luciddb:> create schema regex;
+0: jdbc:luciddb:> create table regex.countries(name varchar(128));
+0: jdbc:luciddb:> insert into regex.countries
+. . . . . . . . > values
+. . . . . . . . > ('Uruguay'),
+. . . . . . . . > ('Paraguay'),
+. . . . . . . . > ('Chile'),
+. . . . . . . . > ('Argentina'),
+. . . . . . . . > ('Venezuela');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from regex.countries where cast(
+. . . . . . . . >   applib.execute_function('js',
+. . . . . . . . >     'function execute(input, pattern) {
+. . . . . . . . >       return new RegExp(pattern).test(input)
+. . . . . . . . >     }',
+. . . . . . . . >     'execute',
+. . . . . . . . >     name,
+. . . . . . . . >     '(A|U).*')
+. . . . . . . . >   AS boolean);
++------------+
+|    NAME    |
++------------+
+| Uruguay    |
+| Argentina  |
++------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema regex cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -1228,6 +1228,33 @@
 > modifies sql data
 > external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdf';
 > 
+> -- one-param function
+> create or replace function applib.execute_function(
+>   engine_name varchar(255),
+>   script varchar(65535),
+>   func_name varchar(255),
+>   arg varchar(65535))
+> returns varchar(65535)
+> language java
+> specific execute_function3
+> parameter style system defined java
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdf';
+> 
+> -- two-params function
+> create or replace function applib.execute_function(
+>   engine_name varchar(255),
+>   script varchar(65535),
+>   func_name varchar(255),
+>   arg varchar(65535),
+>   arg2 varchar(65535))
+> returns varchar(65535)
+> language java
+> specific execute_function4
+> parameter style system defined java
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdf';
+> 
 > -- executes an object/class method with no params, returns String
 > create or replace function applib.execute_method(
 >     engine_name varchar(255), 
@@ -1238,7 +1265,7 @@
 > language java
 > parameter style system defined java
 > modifies sql data
-> external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdf';
+> external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdfMethod';
 > 
 > -- procedure to create other execute_function-style methods in applib
 > create or replace procedure applib.make_script_udf(func_name varchar(255),

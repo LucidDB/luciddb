@@ -93,7 +93,7 @@ public abstract class ExecuteScriptUdr
    * @param methodName - method to call.
    * @return Returns the result of the method call as a String.
    */
-  public static String executeUdf(
+  public static String executeUdfMethod(
       String engineName,
       String script,
       String objName,
@@ -122,13 +122,13 @@ public abstract class ExecuteScriptUdr
       String engineName,
       String script,
       String funcName,
-      String ...args)
+      Object ...args)
     throws SQLException, FileNotFoundException, ScriptException,
                     NoSuchMethodException
   {
     ScriptEngine engine = getEngineAndEval(engineName, script);
     Invocable inv = (Invocable) engine;
-    Object result = inv.invokeFunction(funcName, (Object)args);
+    Object result = inv.invokeFunction(funcName, args);
     return (result == null) ? "" : result.toString();
   }
 
@@ -140,13 +140,42 @@ public abstract class ExecuteScriptUdr
       String engineName,
       String script,
       String funcName,
-      java.util.List<String> args)
+      java.util.List<Object> args)
     throws SQLException, FileNotFoundException, ScriptException,
                     NoSuchMethodException
   {
     return executeGeneralUdf(
-        engineName, script, funcName, args.toArray(new String[args.size()]));
+        engineName, script, funcName, args.toArray(new Object[args.size()]));
   }
+
+  /**
+   * The following two methods are for calling UDFs with either one or two
+   * arguments, since we cannot on the client side make a general
+   * variable-argument function, and one or two argument calls are common and
+   * useful.
+   */
+  public static String executeUdf(
+      String engineName,
+      String script,
+      String funcName,
+      String arg1)
+    throws SQLException, FileNotFoundException, ScriptException,
+                    NoSuchMethodException
+  {
+    return executeGeneralUdf(engineName, script, funcName, arg1);
+  }
+  public static String executeUdf(
+      String engineName,
+      String script,
+      String funcName,
+      String arg1,
+      String arg2)
+    throws SQLException, FileNotFoundException, ScriptException,
+                    NoSuchMethodException
+  {
+    return executeGeneralUdf(engineName, script, funcName, arg1, arg2);
+  }
+
 
   /**
    * Executes a script as a UDX, making the two variables inputSet and
