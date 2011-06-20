@@ -101,17 +101,17 @@ public abstract class ShowIndexCandidatesUdx
 
             // get candidate columns:
             sb.append(
-                    "select st.column_name from sys_root.dba_column_stats st " +
-                    "where st.column_name not in (" +
-                        "select ic.column_name from " +
-                        "sys_root.dba_unclustered_indexes ui " +
-                        "inner join sys_boot.mgmt.dba_index_columns_internal " +
-                        "ic ON ui.mof_id = ic.mof_id " +
-                        "where ui.catalog_name=? and ui.schema_name=? and " +
-                        "ui.table_name=?) " +
-                    "and st.catalog_name=? and st.schema_name=? and " +
-                    "st.table_name=? and " +
-                    "100.0 * st.distinct_value_count / st.sample_size <=?");
+                    "select st.column_name from sys_root.dba_column_stats st "
+                    + "where st.column_name not in ("
+                    +   "select ic.column_name from "
+                    +   "sys_root.dba_unclustered_indexes ui "
+                    +   "inner join sys_boot.mgmt.dba_index_columns_internal "
+                    +   "ic ON ui.mof_id = ic.mof_id "
+                    +   "where ui.catalog_name=? and ui.schema_name=? and "
+                    +   "ui.table_name=?) "
+                    + "and st.catalog_name=? and st.schema_name=? and "
+                    + "st.table_name=? and "
+                    + "100.0 * st.distinct_value_count / st.sample_size <=?");
             ps = conn.prepareStatement(sb.getSqlAndClear());
             int c = 0;
             for (int i = 0; i < 2; i++) {

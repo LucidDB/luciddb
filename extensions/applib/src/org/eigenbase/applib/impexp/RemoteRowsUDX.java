@@ -42,7 +42,8 @@ import java.util.zip.*;
 public class RemoteRowsUDX
 {
 
-    private static final String HEADER_PREFIX = "RemoteRowsUDX: Header Mismatch: ";
+    private static final String HEADER_PREFIX =
+        "RemoteRowsUDX: Header Mismatch: ";
     //~ Methods ----------------------------------------------------------------
 
     public static void execute(
@@ -135,13 +136,14 @@ public class RemoteRowsUDX
 
         // 1. check column raw count
         if (  header_from_cursor.size() != header_from_file.size()) {
-    		throw new Exception(HEADER_PREFIX + 
-    			"Header Size Mismatch: " +
-    			"cursor = " + header_from_cursor.size() +
-    			" from source = " + header_from_file.size() );
+    		throw new Exception(
+                HEADER_PREFIX
+    			+ "Header Size Mismatch: "
+    			+ "cursor = " + header_from_cursor.size()
+    			+ " from source = " + header_from_file.size() );
         }
         //TODO: Check datatypes
-        
+
         return true;
     }
 

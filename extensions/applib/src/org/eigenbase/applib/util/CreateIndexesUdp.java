@@ -44,7 +44,7 @@ public abstract class CreateIndexesUdp
      * Expects a given SQL query as a string that will return a table
      * containing a catalog, schema name, table name, and column name,
      * and will create an index on each column.
-     * 
+     *
      * @param sql - SQL String will be executed and used to create indexes.
      */
     public static void execute(String sql)
@@ -52,11 +52,10 @@ public abstract class CreateIndexesUdp
     {
         StringBuilder errors = new StringBuilder();
         try {
-            Connection conn = 
+            Connection conn =
                 DriverManager.getConnection("jdbc:default:connection");
             Statement stmt = conn.createStatement();
 
-            
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
