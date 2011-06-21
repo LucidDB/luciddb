@@ -139,13 +139,6 @@ ${farrago.test.jvmargs}
     <include name="**/*.sql"/>
     <exclude name="runner/**/*.sql"/>
 
-    <!-- TODO doesn't work with NetBeans -->
-    <exclude name="ddl/sqldeploymentdescriptor.sql"/>
-    <!-- TODO issue with DDL gen -->
-    <exclude name="syslib/mgmt.sql"/>
-    <!-- TODO issue with unicode character in test -->
-    <exclude name="ddl/ddlgen.sql"/>
-
     <exclude name="med/scott.sql" unless="oracle.test"/>
   </fileset>
   <pathconvert property="fileset.unitsql" refid="fileset.unitsql"
