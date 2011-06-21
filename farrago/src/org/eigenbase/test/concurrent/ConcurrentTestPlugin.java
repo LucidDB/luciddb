@@ -23,6 +23,8 @@ package org.eigenbase.test.concurrent;
 
 import java.util.ArrayList;
 
+import org.eigenbase.test.concurrent.ConcurrentTestCommandScript.CS;
+
 /**
  * Used to extend functionality of mtsql.
  *
@@ -42,10 +44,27 @@ public abstract class ConcurrentTestPlugin
     }
 
     /**
+     * What commands are supported by this plugin in a given state.
+     * Commands should start with '@'.
+     *
+     * @param state State for evaluating command.
+     * @return List of supported commands for this state.
+     */
+    public Iterable<String> getSupportedCommands(CS state) {
+        if (state.isThread()) {
+            return getSupportedThreadCommands();
+        } else if (state == CS.PRE_SETUP_STATE) {
+            return getSupportedPreSetupCommands();
+        }
+        return new ArrayList<String>();
+    }
+
+    /**
      * What commands are supported by this plugin within
      * a thread or repeat section. Commands should start with '@'.
      *
      * @return List of supported commands
+     * @deprecated Use getSupportedCommands
      */
     public Iterable<String> getSupportedThreadCommands() {
         return new ArrayList<String>();
@@ -56,6 +75,7 @@ public abstract class ConcurrentTestPlugin
      * the setup section. Commands should start with '@'.
      *
      * @return List of supported commands
+     * @deprecated Use getSupportedCommands
      */
     public Iterable<String> getSupportedPreSetupCommands() {
         return new ArrayList<String>();
@@ -71,9 +91,24 @@ public abstract class ConcurrentTestPlugin
         String name, String params);
 
     /**
+     *  Do action for given state, command and parameters.
+     *  @param state State of execution.
+     * @param name Name of command plugin
+     * @param params parameters for command.
+     */
+    public void doNonThreadActionFor(
+        CS state, String name, String params)
+    {
+        if (state == CS.PRE_SETUP_STATE) {
+            preSetupFor(name, params);
+        }
+    }
+
+    /**
      *  Do pre-setup action for given command and parameters.
      * @param name Name of command plugin
      * @param params parameters for command.
+     * @deprecated Use doNonThreadActionFor
      */
     public void preSetupFor(String name, String params) {
     }

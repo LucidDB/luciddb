@@ -59,16 +59,40 @@ public class ConcurrentTestCommandScript
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final String PRE_SETUP_STATE = "pre-setup";
-    private static final String SETUP_STATE = "setup";
-    private static final String POST_SETUP_STATE = "post-setup";
-    private static final String CLEANUP_STATE = "cleanup";
-    private static final String POST_CLEANUP_STATE = "post-cleanup";
-    private static final String THREAD_STATE = "thread";
-    private static final String REPEAT_STATE = "repeat";
-    private static final String SQL_STATE = "sql";
-    private static final String POST_THREAD_STATE = "post-thread";
-    private static final String EOF_STATE = "eof";
+    public enum CS {
+        PRE_SETUP_STATE,
+        SETUP_STATE,
+        POST_SETUP_STATE,
+        CLEANUP_STATE,
+        POST_CLEANUP_STATE,
+        THREAD_STATE(true),
+        REPEAT_STATE(true),
+        SQL_STATE,
+        POST_THREAD_STATE,
+        EOF_STATE;
+
+        boolean isThread;
+
+        CS(boolean isThread) {
+            this.isThread = isThread;
+        }
+        CS() {
+            this(false);
+        }
+        public boolean isThread() {
+            return isThread;
+        }
+    }
+//    private static final String PRE_SETUP_STATE = "pre-setup";
+//    private static final String SETUP_STATE = "setup";
+//    private static final String POST_SETUP_STATE = "post-setup";
+//    private static final String CLEANUP_STATE = "cleanup";
+//    private static final String POST_CLEANUP_STATE = "post-cleanup";
+//    private static final String THREAD_STATE = "thread";
+//    private static final String REPEAT_STATE = "repeat";
+//    private static final String SQL_STATE = "sql";
+//    private static final String POST_THREAD_STATE = "post-thread";
+//    private static final String EOF_STATE = "eof";
 
     private static final String VAR = "@var";
     private static final String LOCKSTEP = "@lockstep";
@@ -100,90 +124,90 @@ public class ConcurrentTestCommandScript
     private static final StateAction [] STATE_TABLE =
     {
         new StateAction(
-            PRE_SETUP_STATE,
+            CS.PRE_SETUP_STATE,
             new StateDatum[] {
-                new StateDatum(VAR, PRE_SETUP_STATE),
-                new StateDatum(LOCKSTEP, PRE_SETUP_STATE),
-                new StateDatum(NOLOCKSTEP, PRE_SETUP_STATE),
-                new StateDatum(ENABLED, PRE_SETUP_STATE),
-                new StateDatum(DISABLED, PRE_SETUP_STATE),
-                new StateDatum(PLUGIN, PRE_SETUP_STATE),
-                new StateDatum(SETUP, SETUP_STATE),
-                new StateDatum(CLEANUP, CLEANUP_STATE),
-                new StateDatum(THREAD, THREAD_STATE)
+                new StateDatum(VAR, CS.PRE_SETUP_STATE),
+                new StateDatum(LOCKSTEP, CS.PRE_SETUP_STATE),
+                new StateDatum(NOLOCKSTEP, CS.PRE_SETUP_STATE),
+                new StateDatum(ENABLED, CS.PRE_SETUP_STATE),
+                new StateDatum(DISABLED, CS.PRE_SETUP_STATE),
+                new StateDatum(PLUGIN, CS.PRE_SETUP_STATE),
+                new StateDatum(SETUP, CS.SETUP_STATE),
+                new StateDatum(CLEANUP, CS.CLEANUP_STATE),
+                new StateDatum(THREAD, CS.THREAD_STATE)
             }),
 
         new StateAction(
-            SETUP_STATE,
+            CS.SETUP_STATE,
             new StateDatum[] {
-                new StateDatum(END, POST_SETUP_STATE),
-                new StateDatum(SQL, SETUP_STATE),
-                new StateDatum(INCLUDE, SETUP_STATE),
+                new StateDatum(END, CS.POST_SETUP_STATE),
+                new StateDatum(SQL, CS.SETUP_STATE),
+                new StateDatum(INCLUDE, CS.SETUP_STATE),
             }),
 
         new StateAction(
-            POST_SETUP_STATE,
+            CS.POST_SETUP_STATE,
             new StateDatum[] {
-                new StateDatum(CLEANUP, CLEANUP_STATE),
-                new StateDatum(THREAD, THREAD_STATE)
+                new StateDatum(CLEANUP, CS.CLEANUP_STATE),
+                new StateDatum(THREAD, CS.THREAD_STATE)
             }),
 
         new StateAction(
-            CLEANUP_STATE,
+            CS.CLEANUP_STATE,
             new StateDatum[] {
-                new StateDatum(END, POST_CLEANUP_STATE),
-                new StateDatum(SQL, CLEANUP_STATE),
-                new StateDatum(INCLUDE, CLEANUP_STATE),
+                new StateDatum(END, CS.POST_CLEANUP_STATE),
+                new StateDatum(SQL, CS.CLEANUP_STATE),
+                new StateDatum(INCLUDE, CS.CLEANUP_STATE),
             }),
 
         new StateAction(
-            POST_CLEANUP_STATE,
+            CS.POST_CLEANUP_STATE,
             new StateDatum[] {
-                new StateDatum(THREAD, THREAD_STATE)
+                new StateDatum(THREAD, CS.THREAD_STATE)
             }),
 
         new StateAction(
-            THREAD_STATE,
+            CS.THREAD_STATE,
             new StateDatum[] {
-                new StateDatum(REPEAT, REPEAT_STATE),
-                new StateDatum(SYNC, THREAD_STATE),
-                new StateDatum(TIMEOUT, THREAD_STATE),
-                new StateDatum(ROWLIMIT, THREAD_STATE),
-                new StateDatum(PREPARE, THREAD_STATE),
-                new StateDatum(PRINT, THREAD_STATE),
-                new StateDatum(FETCH, THREAD_STATE),
-                new StateDatum(CLOSE, THREAD_STATE),
-                new StateDatum(SLEEP, THREAD_STATE),
-                new StateDatum(SQL, THREAD_STATE),
-                new StateDatum(ECHO, THREAD_STATE),
-                new StateDatum(ERR, THREAD_STATE),
-                new StateDatum(SHELL, THREAD_STATE),
-                new StateDatum(END, POST_THREAD_STATE)
+                new StateDatum(REPEAT, CS.REPEAT_STATE),
+                new StateDatum(SYNC, CS.THREAD_STATE),
+                new StateDatum(TIMEOUT, CS.THREAD_STATE),
+                new StateDatum(ROWLIMIT, CS.THREAD_STATE),
+                new StateDatum(PREPARE, CS.THREAD_STATE),
+                new StateDatum(PRINT, CS.THREAD_STATE),
+                new StateDatum(FETCH, CS.THREAD_STATE),
+                new StateDatum(CLOSE, CS.THREAD_STATE),
+                new StateDatum(SLEEP, CS.THREAD_STATE),
+                new StateDatum(SQL, CS.THREAD_STATE),
+                new StateDatum(ECHO, CS.THREAD_STATE),
+                new StateDatum(ERR, CS.THREAD_STATE),
+                new StateDatum(SHELL, CS.THREAD_STATE),
+                new StateDatum(END, CS.POST_THREAD_STATE)
             }),
 
         new StateAction(
-            REPEAT_STATE,
+            CS.REPEAT_STATE,
             new StateDatum[] {
-                new StateDatum(SYNC, REPEAT_STATE),
-                new StateDatum(TIMEOUT, REPEAT_STATE),
-                new StateDatum(ROWLIMIT, REPEAT_STATE),
-                new StateDatum(PREPARE, REPEAT_STATE),
-                new StateDatum(PRINT, REPEAT_STATE),
-                new StateDatum(FETCH, REPEAT_STATE),
-                new StateDatum(CLOSE, REPEAT_STATE),
-                new StateDatum(SLEEP, REPEAT_STATE),
-                new StateDatum(SQL, REPEAT_STATE),
-                new StateDatum(ECHO, REPEAT_STATE),
-                new StateDatum(ERR, REPEAT_STATE),
-                new StateDatum(SHELL, REPEAT_STATE),
-                new StateDatum(END, THREAD_STATE)
+                new StateDatum(SYNC, CS.REPEAT_STATE),
+                new StateDatum(TIMEOUT, CS.REPEAT_STATE),
+                new StateDatum(ROWLIMIT, CS.REPEAT_STATE),
+                new StateDatum(PREPARE, CS.REPEAT_STATE),
+                new StateDatum(PRINT, CS.REPEAT_STATE),
+                new StateDatum(FETCH, CS.REPEAT_STATE),
+                new StateDatum(CLOSE, CS.REPEAT_STATE),
+                new StateDatum(SLEEP, CS.REPEAT_STATE),
+                new StateDatum(SQL, CS.REPEAT_STATE),
+                new StateDatum(ECHO, CS.REPEAT_STATE),
+                new StateDatum(ERR, CS.REPEAT_STATE),
+                new StateDatum(SHELL, CS.REPEAT_STATE),
+                new StateDatum(END, CS.THREAD_STATE)
             }),
 
         new StateAction(
-            POST_THREAD_STATE,
+            CS.POST_THREAD_STATE,
             new StateDatum[] {
-                new StateDatum(THREAD, THREAD_STATE),
-                new StateDatum(EOF, EOF_STATE)
+                new StateDatum(THREAD, CS.THREAD_STATE),
+                new StateDatum(EOF, CS.EOF_STATE)
             })
     };
 
@@ -234,11 +258,11 @@ public class ConcurrentTestCommandScript
     private File scriptDirectory;
     private long scriptStartTime = 0;
 
+    private final Set<String> allPluginCommands =
+        new HashSet<String>();
     private final List<ConcurrentTestPlugin> plugins =
         new ArrayList<ConcurrentTestPlugin>();
     private final Map<String, ConcurrentTestPlugin> pluginForCommand =
-        new HashMap<String, ConcurrentTestPlugin>();
-    private final Map<String, ConcurrentTestPlugin> preSetupPluginForCommand =
         new HashMap<String, ConcurrentTestPlugin>();
     private List<String> setupCommands = new ArrayList<String>();
     private List<String> cleanupCommands = new ArrayList<String>();
@@ -683,10 +707,10 @@ public class ConcurrentTestCommandScript
 
     private static class StateAction
     {
-        final String state;
+        final CS state;
         final StateDatum [] stateData;
 
-        StateAction(String state, StateDatum [] stateData)
+        StateAction(CS state, StateDatum [] stateData)
         {
             this.state = state;
             this.stateData = stateData;
@@ -696,9 +720,9 @@ public class ConcurrentTestCommandScript
     private static class StateDatum
     {
         final String x;
-        final String y;
+        final CS y;
 
-        StateDatum(String x, String y)
+        StateDatum(String x, CS y)
         {
             this.x = x;
             this.y = y;
@@ -808,7 +832,7 @@ public class ConcurrentTestCommandScript
         // \1 is VAR, \2 is VAL
 
         // parser state
-        private String state;
+        private CS state;
         private int threadId;
         private int nextThreadId;
         private int order;
@@ -837,7 +861,7 @@ public class ConcurrentTestCommandScript
         private List<Binding> deferredBindings = new ArrayList<Binding>();
 
         public CommandParser() {
-            state  = PRE_SETUP_STATE;
+            state  = CS.PRE_SETUP_STATE;
             threadId =  nextThreadId = 1;
             order = 1;
             repeatCount = 0;
@@ -892,7 +916,7 @@ public class ConcurrentTestCommandScript
                 String line;
                 while ((line = in.readLine()) != null) {
                     line = line.trim();
-                    Map<String, String> commandStateMap = lookupState(state);
+                    Map<String, CS> commandStateMap = lookupState(state);
                     String command = null;
                     boolean isSql = false;
                     if (line.equals("") || line.startsWith("--")) {
@@ -917,9 +941,9 @@ public class ConcurrentTestCommandScript
                         changeState = loadCommand(command, line, in);
                     }
                     if (changeState) {
-                        String nextState = commandStateMap.get(command);
+                        CS nextState = commandStateMap.get(command);
                         assert (nextState != null);
-                        if (! nextState.equals(state)) {
+                        if (nextState != state) {
                             doEndOfState(state);
                         }
                         state = nextState;
@@ -941,15 +965,13 @@ public class ConcurrentTestCommandScript
         }
 
         private void loadSql(String sql) {
-            if (SETUP_STATE.equals(state)) {
+            if (state == CS.SETUP_STATE) {
                 trace("@setup", sql);
                 setupCommands.add(sql);
-            } else if (CLEANUP_STATE.equals(state)) {
+            } else if (state == CS.CLEANUP_STATE) {
                 trace("@cleanup", sql);
                 cleanupCommands.add(sql);
-            } else if (
-                THREAD_STATE.equals(state) || REPEAT_STATE.equals(state))
-            {
+            } else if (state.isThread()) {
                 boolean isSelect = isSelect(sql);
                 trace(sql);
                 for (int i = threadId; i < nextThreadId; i++) {
@@ -1030,13 +1052,13 @@ public class ConcurrentTestCommandScript
                 in.mark(REPEAT_READ_AHEAD_LIMIT);
 
             } else if (END.equals(command)) {
-                if (SETUP_STATE.equals(state)) {
+                if (state == CS.SETUP_STATE) {
                     trace("end @setup");
-                } else if (CLEANUP_STATE.equals(state)) {
+                } else if (state == CS.CLEANUP_STATE) {
                     trace("end @cleanup");
-                } else if (THREAD_STATE.equals(state)) {
+                } else if (state == CS.THREAD_STATE) {
                     threadId = nextThreadId;
-                } else if (REPEAT_STATE.equals(state)) {
+                } else if (state == CS.REPEAT_STATE) {
                     trace("repeating");
                     repeatCount--;
                     if (repeatCount > 0) {
@@ -1122,29 +1144,25 @@ public class ConcurrentTestCommandScript
                 trace("@plugin", pluginName);
                 plugin(pluginName);
 
-            } else if (pluginForCommand.containsKey(command)) {
+            } else if (allPluginCommands.contains(command)) {
                 String cmd = line.substring(command.length())
                     .trim();
                 cmd = readLine(cmd, in);
                 trace("@" + command, cmd);
-                for (int i = threadId; i < nextThreadId; i++) {
-                    addCommand(
-                        i,
-                        order,
-                        new PluginCommand(
-                            command, cmd));
+                if (state.isThread()) {
+                    for (int i = threadId; i < nextThreadId; i++) {
+                        addCommand(
+                            i,
+                            order,
+                            new PluginCommand(
+                                command, cmd));
+                    }
+                    order++;
+                } else {
+                    ConcurrentTestPlugin plugin =
+                        pluginForCommand.get(command);
+                    plugin.doNonThreadActionFor(state, command, cmd);
                 }
-                order++;
-
-            } else if (preSetupPluginForCommand.containsKey(command)) {
-                String cmd = line.substring(command.length()) .trim();
-                cmd = readLine(cmd, in);
-                trace("@" + command, cmd);
-                ConcurrentTestPlugin plugin =
-                    preSetupPluginForCommand.get(command);
-                plugin.preSetupFor(command, cmd);
-
-
             } else if (SHELL.equals(command)) {
                 String cmd = line.substring(SHELL_LEN).trim();
                 cmd = readLine(cmd, in);
@@ -1219,9 +1237,9 @@ public class ConcurrentTestCommandScript
             return true;                // normally, advance the state
         }
 
-        private void doEndOfState(String state)
+        private void doEndOfState(CS state)
         {
-            if (state.equals(PRE_SETUP_STATE)) {
+            if (state == CS.PRE_SETUP_STATE) {
                 applyVariableRebindings();
             }
         }
@@ -1250,36 +1268,32 @@ public class ConcurrentTestCommandScript
                 ConcurrentTestPlugin plugin =
                     (ConcurrentTestPlugin) pluginClass.newInstance();
                 plugins.add(plugin);
-                addExtraCommands(
-                    plugin.getSupportedThreadCommands(), THREAD_STATE);
-                addExtraCommands(
-                    plugin.getSupportedThreadCommands(), REPEAT_STATE);
-                for (String commandName : plugin.getSupportedThreadCommands()) {
-                    pluginForCommand.put(commandName, plugin);
-                }
-                addExtraCommands(
-                    plugin.getSupportedPreSetupCommands(), PRE_SETUP_STATE);
-                for (String commandName : plugin.getSupportedPreSetupCommands())
-                {
-                    preSetupPluginForCommand.put(commandName, plugin);
+                for (CS state : CS.values()) {
+                    Iterable<String> extraCommands =
+                        plugin.getSupportedCommands(state);
+                    if (extraCommands != null) {
+                        for (String commandName : extraCommands) {
+                            allPluginCommands.add(commandName);
+                            pluginForCommand.put(commandName, plugin);
+                            addExtraCommand(commandName, state);
+                        }
+                    }
                 }
             } catch (Exception e) {
                 throw new IOException(e.toString());
             }
         }
 
-        private void addExtraCommands(Iterable<String> commands, String state)
+        private void addExtraCommand(String cmd, CS state)
         {
             assert (state != null);
 
             for (int i = 0, n = STATE_TABLE.length; i < n; i++) {
-                if (state.equals(STATE_TABLE[i].state)) {
+                if (state == STATE_TABLE[i].state) {
                     StateDatum[] stateData = STATE_TABLE[i].stateData;
                     ArrayList<StateDatum> stateDataList =
                         new ArrayList<StateDatum>(Arrays.asList(stateData));
-                    for (String cmd : commands) {
-                        stateDataList.add(new StateDatum(cmd, state));
-                    }
+                    stateDataList.add(new StateDatum(cmd, state));
                     STATE_TABLE[i] =
                         new StateAction(
                             state, stateDataList.toArray(stateData));
@@ -1293,15 +1307,15 @@ public class ConcurrentTestCommandScript
          * commands (e.g. @sync), and map values are the state to switch to open
          * seeing the command.
          */
-        private Map<String, String> lookupState(String state)
+        private Map<String, CS> lookupState(CS state)
         {
             assert (state != null);
 
             for (int i = 0, n = STATE_TABLE.length; i < n; i++) {
-                if (state.equals(STATE_TABLE[i].state)) {
+                if (state == STATE_TABLE[i].state) {
                     StateDatum [] stateData = STATE_TABLE[i].stateData;
 
-                    Map<String, String> result = new HashMap<String, String>();
+                    Map<String, CS> result = new HashMap<String, CS>();
                     for (int j = 0, m = stateData.length; j < m; j++) {
                         result.put(stateData[j].x, stateData[j].y);
                     }
