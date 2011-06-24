@@ -412,6 +412,335 @@ public class FarragoMedService
                 Collections.<String, String>emptyMap());
         assert props != null;
     }
+
+    /**
+     * Returns the set of schemas visible in a foreign server connector.
+     *
+     * @param serverName Name of MED server
+     * @return List of name and description of each schema.
+     */
+    public List<ForeignSchemaInfo> browseForeignSchemas(String serverName)
+        throws SQLException
+    {
+        final String methodName = "browse_foreign_schemas";
+        final SqlBuilder selectSqlBuilder = createSqlBuilder();
+        selectSqlBuilder
+            .append("select * from table(sys_boot.mgmt.")
+            .append(methodName)
+            .append("(")
+            .literal(serverName)
+            .append("))");
+        final String sql = selectSqlBuilder.getSql();
+        Connection connection = dataSource.getConnection();
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        assert resultSet.getMetaData().getColumnCount() == 2;
+        List<ForeignSchemaInfo> schemaInfo = new ArrayList<ForeignSchemaInfo>();
+        while (resultSet.next()) {
+            String schema = resultSet.getString(1);
+            String desc = resultSet.getString(2);
+            ForeignSchemaInfo info = new ForeignSchemaInfo(schema, desc);
+            schemaInfo.add(info);
+        }
+
+        try {
+            if (statement != null) {
+                statement.close();
+            }
+        } catch (SQLException exception) {
+            // Give up
+        }
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException exception) {
+            // Tried to close, now we give up
+        }
+
+        return schemaInfo;
+    }
+
+    /**
+     * Returns the set of tables visible in a foreign server connector's
+     * foreign schema.
+     *
+     * @param serverName Name of MED server
+     * @param schemaName Name of foreign schema to look in for tables.
+     * @return List of name and description of each table in the schema.
+     */
+    public List<ForeignSchemaTableAndColumnInfo> browseForeignSchemaTables(
+            String serverName,
+            String schemaName)
+        throws SQLException
+    {
+        final String methodName = "browse_foreign_schema_tables";
+        final SqlBuilder selectSqlBuilder = createSqlBuilder();
+        selectSqlBuilder
+            .append("select * from table(sys_boot.mgmt.")
+            .append(methodName)
+            .append("(")
+            .literal(serverName)
+            .append(",")
+            .literal(schemaName)
+            .append("))");
+        final String sql = selectSqlBuilder.getSql();
+        Connection connection = dataSource.getConnection();
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        assert resultSet.getMetaData().getColumnCount() == 2;
+        List<ForeignSchemaTableAndColumnInfo> tableInfo =
+            new ArrayList<ForeignSchemaTableAndColumnInfo>();
+        while (resultSet.next()) {
+            String table = resultSet.getString(1);
+            String desc = resultSet.getString(2);
+            ForeignSchemaTableAndColumnInfo info =
+                new ForeignSchemaTableAndColumnInfo(table, desc);
+            tableInfo.add(info);
+        }
+
+        try {
+            if (statement != null) {
+                statement.close();
+            }
+        } catch (SQLException exception) {
+            // Give up
+        }
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException exception) {
+            // Tried to close, now we give up
+        }
+
+        return tableInfo;
+    }
+
+    /**
+     * Returns the set of columns and their table that are visible in a
+     * foreign server connector's foreign schema.
+     *
+     * @param serverName Name of MED server
+     * @param schemaName Name of foreign schema to look in for tables.
+     * @return List of name and description of each table in the schema.
+     */
+    public List<ForeignSchemaTableAndColumnInfo> browseForeignSchemaColumns(
+            String serverName,
+            String schemaName)
+        throws SQLException
+    {
+        final String methodName = "browse_foreign_schema_columns";
+        final SqlBuilder selectSqlBuilder = createSqlBuilder();
+        selectSqlBuilder
+            .append("select * from table(sys_boot.mgmt.")
+            .append(methodName)
+            .append("(")
+            .literal(serverName)
+            .append(",")
+            .literal(schemaName)
+            .append("))");
+        final String sql = selectSqlBuilder.getSql();
+        Connection connection = dataSource.getConnection();
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        assert resultSet.getMetaData().getColumnCount() == 10;
+        List<ForeignSchemaTableAndColumnInfo> colInfo =
+            new ArrayList<ForeignSchemaTableAndColumnInfo>();
+        while (resultSet.next()) {
+            ForeignSchemaTableAndColumnInfo info =
+                new ForeignSchemaTableAndColumnInfo(
+                        resultSet.getString(1),
+                        resultSet.getString(2),
+                        resultSet.getInt(3),
+                        resultSet.getString(4),
+                        resultSet.getInt(5),
+                        resultSet.getInt(6),
+                        resultSet.getBoolean(7),
+                        resultSet.getString(8),
+                        resultSet.getString(9),
+                        resultSet.getString(10));
+            colInfo.add(info);
+        }
+
+        try {
+            if (statement != null) {
+                statement.close();
+            }
+        } catch (SQLException exception) {
+            // Give up
+        }
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException exception) {
+            // Tried to close, now we give up
+        }
+
+        return colInfo;
+    }
+
+    /**
+     * Data structure for relaying information about browsed foreign schemas.
+     */
+    public class ForeignSchemaInfo
+    {
+        private String schemaName;
+        private String description;
+
+        public ForeignSchemaInfo(String schemaName, String description)
+        {
+            this.schemaName = schemaName;
+            this.description = description;
+        }
+
+        public String getSchemaName()
+        {
+            return schemaName;
+        }
+
+        public String getDescription()
+        {
+            return description;
+        }
+
+        public String toString()
+        {
+            return "ForeignSchemaInfo(schemaName: " + schemaName
+                + ", description: " + description + ")";
+        }
+    }
+
+    /**
+     * Data structure used for relaying information about tables and
+     * table columns browsed in a foreign schema.
+     */
+    public class ForeignSchemaTableAndColumnInfo
+    {
+        private String tableName;
+        private String description;
+        private String columnName;
+        private int ordinal;
+        private String dataType;
+        private int precision;
+        private int decDigits;
+        private boolean isNullable;
+        private String formattedDataType;
+        private String defaultValue;
+
+        // if false, this represents table+column info:
+        private boolean justTable;
+
+        public ForeignSchemaTableAndColumnInfo(
+                String tableName,
+                String description)
+        {
+            this.tableName = tableName;
+            this.description = description;
+            this.justTable = true;
+        }
+
+        public ForeignSchemaTableAndColumnInfo(
+                String tableName,
+                String columnName,
+                int ordinal,
+                String dataType,
+                int precision,
+                int decDigits,
+                boolean isNullable,
+                String formattedDataType,
+                String description,
+                String defaultValue)
+        {
+            this.tableName = tableName;
+            this.columnName = columnName;
+            this.ordinal = ordinal;
+            this.dataType = dataType;
+            this.precision = precision;
+            this.decDigits = decDigits;
+            this.isNullable = isNullable;
+            this.formattedDataType = formattedDataType;
+            this.description = description;
+            this.defaultValue = defaultValue;
+            this.justTable = false;
+        }
+
+        public boolean getJustTable()
+        {
+            return justTable;
+        }
+
+        public String getTableName()
+        {
+            return tableName;
+        }
+
+        public String getColumnName()
+        {
+            return columnName;
+        }
+
+        public int getOrdinal()
+        {
+            return ordinal;
+        }
+
+        public String getDataType()
+        {
+            return dataType;
+        }
+
+        public int getPrecision()
+        {
+            return precision;
+        }
+
+        public int getDecDigits()
+        {
+            return decDigits;
+        }
+
+        public boolean getIsNullable()
+        {
+            return isNullable;
+        }
+
+        public String getFormattedDataType()
+        {
+            return formattedDataType;
+        }
+
+        public String getDescription()
+        {
+            return description;
+        }
+
+        public String getDefaultValue()
+        {
+            return defaultValue;
+        }
+
+        public String toString()
+        {
+            if (justTable) {
+                return "ForeignSchemaTableAndColumnInfo(tableName: "
+                    + tableName + ", description: " + description + ")";
+            }
+            return "ForeignSchemaTableAndColumnInfo("
+                + "tableName: " + tableName + ", "
+                + "columnName: " + columnName + ", "
+                + "ordinal: " + ordinal + ", "
+                + "dataType: " + dataType + ", "
+                + "precision: " + precision + ", "
+                + "decDigits: " + decDigits + ", "
+                + "isNullable: " + isNullable + ", "
+                + "formattedDataType: " + formattedDataType + ", "
+                + "description: " + description + ", "
+                + "defaultValue: " + defaultValue + ")";
+        }
+
+    }
 }
 
 // End FarragoMedService.java
