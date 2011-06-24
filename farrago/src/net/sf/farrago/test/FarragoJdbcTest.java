@@ -620,6 +620,7 @@ public class FarragoJdbcTest
     private void executeAndCancel(String sql, int waitMillis)
         throws SQLException
     {
+        tracer.info("testing cancel with " + waitMillis + "ms delay");
         boolean executed = false;
         if (waitMillis == 0) {
             // execute and cancel immediately
@@ -667,6 +668,9 @@ public class FarragoJdbcTest
                 }
             }
         } catch (SQLException ex) {
+            if (!checkCancelException(ex)) {
+                tracer.log(java.util.logging.Level.INFO, ex.getMessage(), ex);
+            }
             // expected
             Assert.assertTrue(
                 "Expected statement cancelled message but got '"
