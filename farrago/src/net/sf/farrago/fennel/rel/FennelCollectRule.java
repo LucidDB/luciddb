@@ -67,10 +67,9 @@ public class FennelCollectRule
         CollectRel collectRel = (CollectRel) call.rels[0];
         RelNode relInput = collectRel.getChild();
         RelNode fennelInput =
-            mergeTraitsAndConvert(
-                collectRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                relInput);
+            convert(
+                relInput,
+                collectRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelInput == null) {
             return;
         }

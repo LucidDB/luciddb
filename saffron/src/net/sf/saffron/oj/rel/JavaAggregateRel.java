@@ -97,7 +97,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
         java.util.List<AggregateCall> aggCalls)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.JAVA), child,
+            cluster, CallingConvention.JAVA.singletonSet, child,
             groupCount, aggCalls);
     }
 

@@ -51,7 +51,7 @@ public class JavaProjectRel
         int flags)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.JAVA), child, exps,
+            cluster, CallingConvention.JAVA.singletonSet, child, exps,
             rowType, flags, RelCollationImpl.createSingleton(0));
         assert (child.getConvention() == CallingConvention.JAVA);
     }

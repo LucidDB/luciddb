@@ -81,7 +81,7 @@ public class MergeProjectOntoCalcRule
             CalcRel projectAsCalc =
                 new CalcRel(
                     project.getCluster(),
-                    project.cloneTraits(),
+                    project.getTraits(),
                     calc,
                     project.getRowType(),
                     program,
@@ -114,7 +114,7 @@ public class MergeProjectOntoCalcRule
         final CalcRel newCalc =
             new CalcRel(
                 calc.getCluster(),
-                RelOptUtil.clone(calc.getTraits()),
+                calc.getTraits(),
                 calc.getChild(),
                 project.getRowType(),
                 mergedProgram,

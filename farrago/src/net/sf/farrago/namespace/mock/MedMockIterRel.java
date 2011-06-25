@@ -59,7 +59,7 @@ class MedMockIterRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.ITERATOR),
+            CallingConvention.ITERATOR.singletonSet,
             columnSet,
             connection);
         this.columnSet = columnSet;

@@ -66,7 +66,7 @@ public class FarragoIndexBuilderRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             child);
         this.table = table;
         this.index = index;

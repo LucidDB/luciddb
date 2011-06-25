@@ -47,7 +47,7 @@ public final class IntersectRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             inputs,
             all);
     }

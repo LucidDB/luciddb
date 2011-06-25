@@ -220,10 +220,9 @@ public class LcsIndexSemiJoinRule
                 castExps,
                 fieldNames);
         RelNode distInput =
-            mergeTraitsAndConvert(
-                semiJoin.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                projectRel);
+            convert(
+                projectRel,
+                semiJoin.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
 
         // Create a distinct agg on top of the project to remove duplicate
         // keys, unless they're already unique.  Note that we can ignore

@@ -77,7 +77,7 @@ class FtrsTableModificationRel
     {
         super(
             cluster,
-            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
+            FennelRel.FENNEL_EXEC_CONVENTION.singletonSet,
             ftrsTable,
             connection,
             child,

@@ -76,10 +76,10 @@ public class FennelUnionRule
         RelNode [] newInputs = new RelNode[unionRel.getInputs().length];
         for (int i = 0; i < newInputs.length; i++) {
             newInputs[i] =
-                mergeTraitsAndConvert(
-                    unionRel.getTraits(),
-                    FennelRel.FENNEL_EXEC_CONVENTION,
-                    unionRel.getInput(i));
+                convert(
+                    unionRel.getInput(i),
+                    unionRel.getTraits().plus(
+                        FennelRel.FENNEL_EXEC_CONVENTION));
             if (newInputs[i] == null) {
                 return null; // cannot convert this input
             }

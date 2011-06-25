@@ -385,17 +385,12 @@ public class VolcanoPlanner
                 continue;
             }
 
-            RelTraitSet stepTraits = RelOptUtil.clone(fromTraits);
-            stepTraits.setTrait(
-                toTrait.getTraitDef(),
-                toTrait);
-
             converter =
                 new AbstractConverter(
                     converter.getCluster(),
                     converter,
                     toTrait.getTraitDef(),
-                    stepTraits);
+                    fromTraits.plus(toTrait));
         }
 
         // REVIEW: SWZ: 3/5/2005: Why is (was) this only done for abstract
@@ -855,18 +850,12 @@ SUBSET_LOOP:
                     allowInfiniteCostConverters);
 
             if ((rel == null) && allowAbstractConverters) {
-                RelTraitSet stepTraits =
-                    RelOptUtil.clone(converted.getTraits());
-                stepTraits.setTrait(
-                    toTrait.getTraitDef(),
-                    toTrait);
-
                 rel =
                     new AbstractConverter(
                         converted.getCluster(),
                         converted,
                         toTrait.getTraitDef(),
-                        stepTraits);
+                        converted.getTraits().plus(toTrait));
             }
 
             converted = rel;

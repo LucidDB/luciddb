@@ -119,7 +119,7 @@ public final class JoinRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             left,
             right,
             condition,

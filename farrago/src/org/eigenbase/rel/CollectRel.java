@@ -67,7 +67,7 @@ public final class CollectRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             child);
         this.fieldName = fieldName;
     }

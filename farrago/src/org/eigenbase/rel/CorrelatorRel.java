@@ -71,7 +71,7 @@ public final class CorrelatorRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             left,
             right,
             joinCond,

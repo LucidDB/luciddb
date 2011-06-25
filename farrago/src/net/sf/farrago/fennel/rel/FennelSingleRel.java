@@ -55,7 +55,7 @@ public abstract class FennelSingleRel
     {
         super(
             cluster,
-            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
+            FennelRel.FENNEL_EXEC_CONVENTION.singletonSet,
             child);
     }
 

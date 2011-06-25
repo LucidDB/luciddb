@@ -73,7 +73,7 @@ public class AbstractConverter
             getCluster(),
             getChild(),
             traitDef,
-            cloneTraits());
+            getTraits());
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

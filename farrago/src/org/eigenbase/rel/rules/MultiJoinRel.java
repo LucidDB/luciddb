@@ -89,7 +89,7 @@ public final class MultiJoinRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE));
+            CallingConvention.NONE.singletonSet);
         this.inputs = inputs;
         this.joinFilter = joinFilter;
         this.rowType = rowType;

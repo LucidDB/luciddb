@@ -89,10 +89,9 @@ public class LhxAggRule
         RelNode fennelInput;
 
         fennelInput =
-            mergeTraitsAndConvert(
-                aggRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                relInput);
+            convert(
+                relInput,
+                aggRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelInput == null) {
             return;
         }

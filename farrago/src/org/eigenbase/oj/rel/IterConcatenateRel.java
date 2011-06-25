@@ -48,7 +48,7 @@ public class IterConcatenateRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.ITERATOR),
+            CallingConvention.ITERATOR.singletonSet,
             inputs,
             true /*all*/);
     }

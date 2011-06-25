@@ -67,10 +67,10 @@ public class FennelUncollectRule
         UncollectRel uncollectRel = (UncollectRel) call.rels[0];
         RelNode relInput = uncollectRel.getChild();
         RelNode fennelInput =
-            mergeTraitsAndConvert(
-                uncollectRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                relInput);
+            convert(
+                relInput,
+                uncollectRel.getTraits().plus(
+                    FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelInput == null) {
             return;
         }

@@ -24,11 +24,11 @@ package org.eigenbase.relopt;
 
 import java.util.*;
 
-import org.eigenbase.util.*;
-
-
 /**
  * RelTraitSet represents an ordered set of {@link RelTrait}s.
+ *
+ * <p>A trait set is immutable. To create a trait set from an existing one,
+ * use methods such as {@link #plus} and {@link #plusAll(RelTraitSet)}.</p>
  *
  * @author Stephan Zuercher
  * @version $Id$
@@ -37,25 +37,62 @@ public class RelTraitSet
 {
     //~ Instance fields --------------------------------------------------------
 
-    private RelTrait [] traits;
+    private final RelTrait [] traits;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a RelTraitSet with the given set of RelTraits.
      *
+     * @see org.eigenbase.util.Util#deprecated(Object, boolean) ever null?
+     *
      * @param traits Traits
      */
     public RelTraitSet(RelTrait ... traits)
     {
-        this.traits = new RelTrait[traits.length];
+        this(traits.clone(), false);
+    }
 
-        for (int i = 0; i < traits.length; i++) {
-            this.traits[i] = canonize(traits[i]);
-        }
+    /**
+     * Internal constructor. Does not clone.
+     */
+    private RelTraitSet(RelTrait[] traits, boolean b)
+    {
+        this.traits = traits;
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Checks that a trait set is valid.
+     *
+     * @param fail Whether to throw if set is invalid
+     * @return Whether set is valid
+     */
+    public boolean isValid(boolean fail)
+    {
+        for (int i = 0; i < traits.length; i++) {
+            RelTrait trait = traits[i];
+            if (trait == null) {
+                assert !fail : "null trait in " + this;
+                return false;
+            }
+            if (trait != trait.getTraitDef().canonize(trait)) {
+                assert !fail
+                    : "trait " + trait + " in " + this + " is not canonical";
+                return false;
+            }
+            for (int j = 0; j < i; j++) {
+                final RelTrait trait2 = traits[j];
+                if (trait2.getTraitDef() == trait.getTraitDef()) {
+                    assert !fail
+                        : "traitDefs are not distinct in " + this;
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
     /**
      * Retrieves a RelTrait from the set.
@@ -90,67 +127,6 @@ public class RelTraitSet
     }
 
     /**
-     * Replaces an existing RelTrait in the set. This method <b>must not</b> be
-     * used to modify the traits of a {@link org.eigenbase.rel.RelNode} that has
-     * already been registered with a {@link RelOptPlanner}.
-     *
-     * @param index 0-based index into ordered RelTraitSet
-     * @param trait the new RelTrait
-     *
-     * @return the old RelTrait at the index
-     */
-    public RelTrait setTrait(int index, RelTrait trait)
-    {
-        RelTrait oldTrait = traits[index];
-
-        assert oldTrait.getTraitDef() == trait.getTraitDef()
-            : "RelTrait has different RelTraitDef than replacement";
-
-        traits[index] = canonize(trait);
-
-        return oldTrait;
-    }
-
-    /**
-     * Replaces an existing RelTrait in the set. This method <b>must not</b> be
-     * used to modify the traits of a {@link org.eigenbase.rel.RelNode} that has
-     * already been registered with a {@link RelOptPlanner}.
-     *
-     * @param traitDef the type of RelTrait to replace
-     *
-     * @return the RelTrait at the index
-     */
-    public RelTrait setTrait(RelTraitDef traitDef, RelTrait trait)
-    {
-        assert (trait.getTraitDef() == traitDef);
-
-        int index = findIndex(traitDef);
-        Util.permAssert(index >= 0, "Could not find RelTraitDef");
-
-        return setTrait(index, trait);
-    }
-
-    /**
-     * Adds a new RelTrait to the set. This method <b>must not</b> be used to
-     * modify the traits of a {@link org.eigenbase.rel.RelNode} that has already
-     * been registered with a {@link RelOptPlanner}.
-     *
-     * @param trait the new RelTrait
-     */
-    public void addTrait(RelTrait trait)
-    {
-        int len = traits.length;
-        RelTrait [] newTraits = new RelTrait[len + 1];
-        for (int i = 0; i < traits.length; i++) {
-            newTraits[i] = traits[i];
-        }
-
-        newTraits[len] = canonize(trait);
-
-        traits = newTraits;
-    }
-
-    /**
      * Returns the size of the RelTraitSet.
      *
      * @return the size of the RelTraitSet.
@@ -161,21 +137,78 @@ public class RelTraitSet
     }
 
     /**
-     * Converts a trait to canonical form.
+     * Returns a trait set with one trait modified.
      *
-     * <p>After canonization, t1.equals(t2) if and only if t1 == t2.
+     * <p>Never modifies this trait set.
      *
-     * @param trait Trait
+     * <p>For now, always returns a new trait set, because some code relies upon
+     * this behavior. In future, when RelTraitSet is immutable, this method will
+     * return this trait set if the trait is already correct.
      *
-     * @return Trait in canonical form
+     * @param trait Trait to add
+     * @return Trait set that is the same as this except for the given trait
      */
-    private RelTrait canonize(RelTrait trait)
+    public RelTraitSet plus(RelTrait trait)
     {
-        if (trait == null) {
-            return null;
+        final int index = findIndex(trait.getTraitDef());
+        if (index >= 0) {
+            if (traits[index] == trait) {
+                return this;
+            } else {
+                final RelTrait[] newTraits = traits.clone();
+                newTraits[index] = trait;
+                return new RelTraitSet(newTraits, false);
+            }
+        } else {
+            final RelTrait[] newTraits =
+                Arrays.copyOf(traits, traits.length + 1);
+            newTraits[newTraits.length - 1] = trait;
+            return new RelTraitSet(newTraits, false);
         }
+    }
 
-        return trait.getTraitDef().canonize(trait);
+
+    /**
+     * Creates a copy of this trait set, assigning all traits from the
+     * other trait set.
+     *
+     * <p>This trait set is not modified.</p>
+     *
+     * @param traits Other traits
+     * @return Copy of this trait set overwritten with other traits
+     */
+    public RelTraitSet plusAll(RelTraitSet traits)
+    {
+        RelTraitSet result = this;
+        for (int i = 0; i < traits.size(); i++) {
+            final RelTrait trait = traits.getTrait(i);
+            result = result.plus(trait);
+        }
+        return result;
+    }
+
+    /**
+     * Creates a copy of this trait set, assigning all traits from the
+     * other trait set except those of a given type.
+     *
+     * <p>This trait set is not modified.</p>
+     *
+     * @param traits Other traits
+     * @param traitDef Trait definition to preserve in copied trait set
+     * @return Copy of this trait set overwritten in all except one type
+     */
+    public RelTraitSet plusAllExcept(
+        RelTraitSet traits,
+        RelTraitDef traitDef)
+    {
+        RelTraitSet result = this;
+        for (int i = 0; i < traits.size(); i++) {
+            RelTrait trait = traits.getTrait(i);
+            if (trait.getTraitDef() != traitDef) {
+                result = result.plus(trait);
+            }
+        }
+        return result;
     }
 
     /**
@@ -192,6 +225,29 @@ public class RelTraitSet
             return Arrays.equals(traits, other.traits);
         }
         return false;
+    }
+
+    /**
+     * Compares two RelTraitSet objects for equality. Both must have the same
+     * traits, but not necessarily in the same order.
+     *
+     * @param that RelTraitSet to compare with
+     *
+     * @return true if traits are equal, not necessarily in the same order
+     */
+    public boolean equalsUnordered(RelTraitSet that)
+    {
+        if (this.size() != that.size()) {
+            return false;
+        }
+        for (int i = 0; i < this.size(); i++) {
+            RelTrait thisTrait = traits[i];
+            RelTrait thatTrait = that.getTrait(thisTrait.getTraitDef());
+            if (thisTrait != thatTrait) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -270,11 +326,6 @@ public class RelTraitSet
             }
         }
         return s.toString();
-    }
-
-    public RelTraitSet clone()
-    {
-        return new RelTraitSet(traits);
     }
 
     /**

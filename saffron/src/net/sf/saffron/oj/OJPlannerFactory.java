@@ -218,7 +218,8 @@ public class OJPlannerFactory
     {
         public AggregateToJavaRule()
         {
-            super(AggregateRel.class, CallingConvention.NONE,
+            super(
+                AggregateRel.class, CallingConvention.NONE,
                 CallingConvention.JAVA, "AggregateToJavaRule");
         }
 
@@ -226,9 +227,9 @@ public class OJPlannerFactory
         {
             final AggregateRel aggregate = (AggregateRel) rel;
             final RelNode javaChild =
-                mergeTraitsAndConvert(
-                    aggregate.getTraits(), CallingConvention.JAVA,
-                    aggregate.getChild());
+                convert(
+                    aggregate.getChild(),
+                    aggregate.getTraits().plus(CallingConvention.JAVA));
             if (javaChild == null) {
                 return null;
             }
@@ -283,9 +284,9 @@ public class OJPlannerFactory
                 return null;
             }
             final RelNode javaChild =
-                mergeTraitsAndConvert(
-                    distinct.getTraits(), CallingConvention.JAVA,
-                    distinct.getChild());
+                convert(
+                    distinct.getChild(),
+                    distinct.getTraits().plus(CallingConvention.JAVA));
             if (javaChild == null) {
                 return null;
             }
@@ -299,7 +300,8 @@ public class OJPlannerFactory
     {
         public FilterToJavaRule()
         {
-            super(FilterRel.class, CallingConvention.NONE,
+            super(
+                FilterRel.class, CallingConvention.NONE,
                 CallingConvention.JAVA, "FilterToJavaRule");
         }
 
@@ -307,9 +309,9 @@ public class OJPlannerFactory
         {
             final FilterRel filter = (FilterRel) rel;
             final RelNode javaChild =
-                mergeTraitsAndConvert(
-                    filter.getTraits(), CallingConvention.JAVA,
-                    filter.getChild());
+                convert(
+                    filter.getChild(),
+                    filter.getTraits().plus(CallingConvention.JAVA));
             if (javaChild == null) {
                 return null;
             }
@@ -324,7 +326,8 @@ public class OJPlannerFactory
     {
         public JoinToJavaRule()
         {
-            super(JoinRel.class, CallingConvention.NONE,
+            super(
+                JoinRel.class, CallingConvention.NONE,
                 CallingConvention.JAVA, "JoinToJavaRule");
         }
 
@@ -342,18 +345,13 @@ public class OJPlannerFactory
                 // possible)
                 return null;
             }
-            final RelNode convertedLeft = mergeTraitsAndConvert(
-                    join.getTraits(),
-                    convention,
-                    join.getLeft());
+            final RelNode convertedLeft =
+                convert(join.getLeft(), join.getTraits().plus(convention));
             if (convertedLeft == null) {
                 return null;
             }
             final RelNode convertedRight =
-                mergeTraitsAndConvert(
-                    join.getTraits(),
-                    convention,
-                    join.getRight());
+                convert(join.getRight(), join.getTraits().plus(convention));
             if (convertedRight == null) {
                 return null;
             }
@@ -375,7 +373,8 @@ public class OJPlannerFactory
     {
         public OneRowToJavaRule()
         {
-            super(OneRowRel.class, CallingConvention.NONE,
+            super(
+                OneRowRel.class, CallingConvention.NONE,
                 CallingConvention.JAVA, "OneRowToJavaRule");
         }
 
@@ -396,7 +395,8 @@ public class OJPlannerFactory
     {
         public ProjectToJavaRule()
         {
-            super(ProjectRel.class, CallingConvention.NONE,
+            super(
+                ProjectRel.class, CallingConvention.NONE,
                 CallingConvention.JAVA, "ProjectToJavaRule");
         }
 
@@ -404,9 +404,9 @@ public class OJPlannerFactory
         {
             final ProjectRel project = (ProjectRel) rel;
             final RelNode javaChild =
-                mergeTraitsAndConvert(
-                    project.getTraits(), CallingConvention.JAVA,
-                    project.getChild());
+                convert(
+                    project.getChild(),
+                    project.getTraits().plus(CallingConvention.JAVA));
             if (javaChild == null) {
                 return null;
             }
@@ -427,7 +427,8 @@ public class OJPlannerFactory
     {
         public TableAccessToJavaRule()
         {
-            super(TableAccessRel.class, CallingConvention.NONE,
+            super(
+                TableAccessRel.class, CallingConvention.NONE,
                 CallingConvention.JAVA, "TableAccessToJavaRule");
         }
 
@@ -452,7 +453,8 @@ public class OJPlannerFactory
     {
         public UnionToJavaRule()
         {
-            super(UnionRel.class, CallingConvention.NONE,
+            super(
+                UnionRel.class, CallingConvention.NONE,
                 CallingConvention.JAVA, "UnionToJavaRule");
         }
 
@@ -465,9 +467,9 @@ public class OJPlannerFactory
             RelNode [] newInputs = new RelNode[union.getInputs().length];
             for (int i = 0; i < newInputs.length; i++) {
                 newInputs[i] =
-                    mergeTraitsAndConvert(
-                        union.getTraits(), CallingConvention.JAVA,
-                        union.getInputs()[i]);
+                    convert(
+                        union.getInputs()[i],
+                        union.getTraits().plus(CallingConvention.JAVA));
                 if (newInputs[i] == null) {
                     return null; // cannot convert this input
                 }

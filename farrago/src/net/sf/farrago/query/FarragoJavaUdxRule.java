@@ -67,27 +67,10 @@ public class FarragoJavaUdxRule
         final RelNode [] inputs = callRel.getInputs().clone();
 
         for (int i = 0; i < inputs.length; i++) {
-            RelNode input = inputs[i];
-            final RelTraitSet traits = RelOptUtil.clone(input.getTraits());
-
-            // copy over other traits
-            for (int j = 0; j < callRel.getTraits().size(); j++) {
-                RelTrait trait = callRel.getTraits().getTrait(j);
-                if (trait.getTraitDef()
-                    != CallingConventionTraitDef.instance)
-                {
-                    if (traits.getTrait(trait.getTraitDef()) != null) {
-                        traits.setTrait(trait.getTraitDef(), trait);
-                    } else {
-                        traits.addTrait(trait);
-                    }
-                }
-            }
             inputs[i] =
-                mergeTraitsAndConvert(
-                    traits,
-                    CallingConvention.ITERATOR,
-                    input);
+                convert(
+                    inputs[i],
+                    inputs[i].getTraits().plus(CallingConvention.ITERATOR));
         }
         FarragoJavaUdxRel javaTableFunctionRel =
             new FarragoJavaUdxRel(

@@ -69,7 +69,7 @@ public class ExtentRel extends AbstractRelNode
         RelDataType rowType,
         RelOptTable table)
     {
-        super(cluster, new RelTraitSet(CallingConvention.NONE));
+        super(cluster, CallingConvention.NONE.singletonSet);
         assert (rowType != null);
         assert (table != null);
         this.rowType = rowType;

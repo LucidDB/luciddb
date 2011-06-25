@@ -82,7 +82,7 @@ public class FennelRenameRel
             getCluster(),
             getChild().clone(),
             fieldNames,
-            cloneTraits());
+            getTraits());
     }
 
     // implement RelNode

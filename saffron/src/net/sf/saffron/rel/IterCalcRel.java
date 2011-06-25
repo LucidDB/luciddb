@@ -71,7 +71,7 @@ public class IterCalcRel extends SingleRel implements JavaRel
         RexProgram program,
         int flags)
     {
-        super(cluster, new RelTraitSet(CallingConvention.ITERATOR), child);
+        super(cluster, CallingConvention.ITERATOR.singletonSet, child);
         assert child.getConvention() == CallingConvention.ITERATOR;
         this.flags = flags;
         this.program = program;

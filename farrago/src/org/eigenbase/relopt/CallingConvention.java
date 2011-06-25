@@ -172,6 +172,8 @@ public class CallingConvention
      */
     private final Class interfaze;
 
+    public final RelTraitSet singletonSet;
+
     //~ Constructors -----------------------------------------------------------
 
     public CallingConvention(
@@ -188,6 +190,7 @@ public class CallingConvention
             RelNode.class.isAssignableFrom(interfaze),
             "RelNode.class.isAssignableFrom(interfaze)");
         maxOrdinal = Math.max(ordinal, maxOrdinal);
+        singletonSet = new RelTraitSet(this);
     }
 
     //~ Methods ----------------------------------------------------------------

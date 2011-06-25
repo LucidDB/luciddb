@@ -225,7 +225,10 @@ public class FennelNestedLoopJoinRule
         int nInputs = (indexCols.isEmpty()) ? 2 : 3;
         RelNode [] inputs = new RelNode[nInputs];
 
-        leftRel = convertInput(origJoinRel.getTraits(), leftRel);
+        leftRel =
+            convert(
+                leftRel,
+                origJoinRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (leftRel == null) {
             return null;
         }
@@ -259,7 +262,10 @@ public class FennelNestedLoopJoinRule
 
         // Create the second input into the nested loop join -- the input
         // that does the index lookup and any other additional filtering
-        rightRel = convertInput(origJoinRel.getTraits(), rightRel);
+        rightRel =
+            convert(
+                rightRel,
+                origJoinRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (rightRel == null) {
             return null;
         }
@@ -517,22 +523,6 @@ public class FennelNestedLoopJoinRule
     }
 
     /**
-     * Converts an input so its traits include FENNEL_EXEC_CONVENTION
-     *
-     * @param origTraits traits of the original input
-     * @param inputRel the input
-     *
-     * @return a new RelNode with the merged traits
-     */
-    private RelNode convertInput(RelTraitSet origTraits, RelNode inputRel)
-    {
-        return mergeTraitsAndConvert(
-            origTraits,
-            FennelRel.FENNEL_EXEC_CONVENTION,
-            inputRel);
-    }
-
-    /**
      * Creates a new dynamic parameter for each new join key encountered
      *
      * @param implementor FennelRelImplementor
@@ -681,7 +671,11 @@ public class FennelNestedLoopJoinRule
                     residualCondition,
                     rightRel,
                     residualRefMap);
-            secondInput = convertInput(secondInput.getTraits(), secondInput);
+            secondInput =
+                convert(
+                    secondInput,
+                    secondInput.getTraits().plus(
+                        FennelRel.FENNEL_EXEC_CONVENTION));
         }
 
         return secondInput;

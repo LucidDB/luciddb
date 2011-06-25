@@ -105,10 +105,10 @@ public class VolcanoPlannerTraitTest
         RelOptCluster cluster = VolcanoPlannerTest.newCluster(planner);
 
         NoneLeafRel noneLeafRel = new NoneLeafRel(cluster, "noneLeafRel");
-        noneLeafRel.getTraits().addTrait(ALT_TRAIT);
+        noneLeafRel.setTraits(noneLeafRel.getTraits().plus(ALT_TRAIT));
 
         NoneSingleRel noneRel = new NoneSingleRel(cluster, noneLeafRel);
-        noneRel.getTraits().addTrait(ALT_TRAIT2);
+        noneRel.setTraits(noneRel.getTraits().plus(ALT_TRAIT2));
 
         RelNode convertedRel =
             planner.changeTraits(
@@ -159,17 +159,15 @@ public class VolcanoPlannerTraitTest
         RelOptCluster cluster = VolcanoPlannerTest.newCluster(planner);
 
         NoneLeafRel noneLeafRel = new NoneLeafRel(cluster, "noneLeafRel");
-        noneLeafRel.getTraits().addTrait(ALT_TRAIT);
+        noneLeafRel.setTraits(noneLeafRel.getTraits().plus(ALT_TRAIT));
 
         NoneSingleRel noneRel = new NoneSingleRel(cluster, noneLeafRel);
-        noneRel.getTraits().addTrait(ALT_TRAIT2);
+        noneRel.setTraits(noneRel.getTraits().plus(ALT_TRAIT2));
 
         RelNode convertedRel =
             planner.changeTraits(
                 noneRel,
-                new RelTraitSet(
-                    CallingConvention.ITERATOR,
-                    ALT_TRAIT2));
+                new RelTraitSet(CallingConvention.ITERATOR, ALT_TRAIT2));
 
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
@@ -390,7 +388,7 @@ public class VolcanoPlannerTraitTest
         {
             super(
                 cluster,
-                new RelTraitSet(CallingConvention.NONE),
+                CallingConvention.NONE.singletonSet,
                 label);
         }
     }
@@ -404,7 +402,7 @@ public class VolcanoPlannerTraitTest
         {
             super(
                 cluster,
-                new RelTraitSet(PHYS_CALLING_CONVENTION),
+                PHYS_CALLING_CONVENTION.singletonSet,
                 label);
         }
 
@@ -452,7 +450,7 @@ public class VolcanoPlannerTraitTest
         {
             super(
                 cluster,
-                new RelTraitSet(CallingConvention.NONE),
+                CallingConvention.NONE.singletonSet,
                 child);
         }
 
@@ -476,7 +474,7 @@ public class VolcanoPlannerTraitTest
         {
             super(
                 cluster,
-                new RelTraitSet(CallingConvention.ITERATOR),
+                CallingConvention.ITERATOR.singletonSet,
                 child);
         }
 
@@ -552,10 +550,9 @@ public class VolcanoPlannerTraitTest
             NoneSingleRel rel = (NoneSingleRel) call.rels[0];
 
             RelNode converted =
-                mergeTraitsAndConvert(
-                    rel.getTraits(),
-                    getOutTrait(),
-                    rel.getInput(0));
+                convert(
+                    rel.getInput(0),
+                    rel.getTraits().plus(getOutTrait()));
 
             call.transformTo(
                 new IterSingleRel(
@@ -589,10 +586,9 @@ public class VolcanoPlannerTraitTest
             NoneSingleRel rel = (NoneSingleRel) call.rels[0];
 
             RelNode converted =
-                mergeTraitsAndConvert(
-                    rel.getTraits(),
-                    getOutTrait(),
-                    rel.getInput(0));
+                convert(
+                    rel.getInput(0),
+                    rel.getTraits().plus(getOutTrait()));
 
             IterSingleRel child =
                 new IterSingleRel(
@@ -652,9 +648,7 @@ public class VolcanoPlannerTraitTest
             super(
                 cluster,
                 toTrait.getTraitDef(),
-                convertTraits(
-                    child.getTraits(),
-                    toTrait),
+                child.getTraits().plus(toTrait),
                 child);
 
             this.toTrait = toTrait;
@@ -703,9 +697,7 @@ public class VolcanoPlannerTraitTest
             super(
                 cluster,
                 CallingConventionTraitDef.instance,
-                convertTraits(
-                    child.getTraits(),
-                    CallingConvention.ITERATOR),
+                child.getTraits().plus(CallingConvention.ITERATOR),
                 child);
         }
 

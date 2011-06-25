@@ -47,7 +47,7 @@ public class NoneConverterRel
         super(
             cluster,
             CallingConventionTraitDef.instance,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             child);
     }
 

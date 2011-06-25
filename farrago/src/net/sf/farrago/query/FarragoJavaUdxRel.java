@@ -81,7 +81,7 @@ public class FarragoJavaUdxRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.ITERATOR),
+            CallingConvention.ITERATOR.singletonSet,
             rexCall,
             rowType,
             inputs);

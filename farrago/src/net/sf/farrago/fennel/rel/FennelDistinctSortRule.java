@@ -78,10 +78,9 @@ public class FennelDistinctSortRule
         }
 
         RelNode fennelInput =
-            mergeTraitsAndConvert(
-                agg.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                relInput);
+            convert(
+                relInput,
+                agg.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelInput == null) {
             return;
         }

@@ -102,10 +102,10 @@ public class LcsTableDeleteRule
                 fieldNames);
 
         RelNode fennelInput =
-            mergeTraitsAndConvert(
-                call.rels[0].getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                projRel);
+            convert(
+                projRel,
+                call.rels[0].getTraits().plus(
+                    FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelInput == null) {
             return;
         }

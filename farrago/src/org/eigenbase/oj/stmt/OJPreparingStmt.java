@@ -379,11 +379,7 @@ public abstract class OJPreparingStmt
     protected RelTraitSet getDesiredRootTraitSet(RelNode rootRel)
     {
         // Make sure non-CallingConvention traits, if any, are preserved
-        RelTraitSet desiredTraits = RelOptUtil.clone(rootRel.getTraits());
-        desiredTraits.setTrait(
-            CallingConventionTraitDef.instance,
-            resultCallingConvention);
-        return desiredTraits;
+        return rootRel.getTraits().plus(resultCallingConvention);
     }
 
     /**

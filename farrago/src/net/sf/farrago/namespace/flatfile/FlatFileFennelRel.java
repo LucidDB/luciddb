@@ -74,7 +74,7 @@ public class FlatFileFennelRel
     {
         super(
             cluster,
-            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            FENNEL_EXEC_CONVENTION.singletonSet,
             columnSet,
             connection);
         this.columnSet = columnSet;

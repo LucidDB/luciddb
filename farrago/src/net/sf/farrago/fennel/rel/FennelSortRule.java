@@ -66,10 +66,9 @@ public class FennelSortRule
         SortRel sortRel = (SortRel) call.rels[0];
         RelNode relInput = sortRel.getChild();
         RelNode fennelInput =
-            mergeTraitsAndConvert(
-                sortRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                relInput);
+            convert(
+                relInput,
+                sortRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelInput == null) {
             return;
         }

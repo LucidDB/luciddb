@@ -67,7 +67,7 @@ public abstract class FennelMultipleRel
     {
         super(
             cluster,
-            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION));
+            FennelRel.FENNEL_EXEC_CONVENTION.singletonSet);
         this.inputs = inputs;
         assert inputs != null;
         for (int i = 0; i < inputs.length; i++) {

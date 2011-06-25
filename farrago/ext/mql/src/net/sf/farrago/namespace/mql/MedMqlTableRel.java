@@ -40,7 +40,7 @@ class MedMqlTableRel extends TableAccessRelBase
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             table,
             connection);
     }

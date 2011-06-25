@@ -45,7 +45,7 @@ public final class UnionRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             inputs,
             all);
     }

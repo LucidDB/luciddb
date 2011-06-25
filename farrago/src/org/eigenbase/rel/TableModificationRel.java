@@ -51,7 +51,7 @@ public final class TableModificationRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             table,
             connection,
             child,

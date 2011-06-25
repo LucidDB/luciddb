@@ -48,7 +48,7 @@ public class IterOneRowRel extends OneRowRelBase implements JavaRel
 
     public IterOneRowRel(RelOptCluster cluster)
     {
-        super(cluster, new RelTraitSet(CallingConvention.ITERATOR));
+        super(cluster, CallingConvention.ITERATOR.singletonSet);
     }
 
     //~ Methods ---------------------------------------------------------------

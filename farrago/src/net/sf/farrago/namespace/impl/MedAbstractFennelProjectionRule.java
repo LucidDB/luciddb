@@ -201,10 +201,8 @@ public abstract class MedAbstractFennelProjectionRule
         RelNode scanRel;
         if (needRename) {
             // Replace calling convention with FENNEL_EXEC_CONVENTION
-            RelTraitSet traits = RelOptUtil.clone(origProject.getTraits());
-            traits.setTrait(
-                CallingConventionTraitDef.instance,
-                FennelRel.FENNEL_EXEC_CONVENTION);
+            RelTraitSet traits =
+                origProject.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION);
             if (!traits.equals(projectedScan.getTraits())) {
                 RelNode mergedProjectedScan = convert(projectedScan, traits);
                 RelOptPlanner planner =

@@ -103,29 +103,6 @@ public abstract class ConverterRelImpl
         return traitDef;
     }
 
-    /**
-     * Returns a new trait set based on <code>traits</code>, with a different
-     * trait for a given type of trait. Clones <code>traits</code>, and then
-     * replaces the existing trait matching <code>trait.getTraitDef()</code>
-     * with <code>trait</code>.
-     *
-     * @param traits the set of traits to convert
-     * @param trait the converted trait
-     *
-     * @return a new RelTraitSet
-     */
-    protected static RelTraitSet convertTraits(
-        RelTraitSet traits,
-        RelTrait trait)
-    {
-        RelTraitSet converted = RelOptUtil.clone(traits);
-
-        converted.setTrait(
-            trait.getTraitDef(),
-            trait);
-
-        return converted;
-    }
 }
 
 // End ConverterRelImpl.java

@@ -52,7 +52,7 @@ public class ForTerminatorRel extends SingleRel implements TerminatorRel,
         StatementList body,
         String label)
     {
-        super(cluster, new RelTraitSet(CallingConvention.JAVA), child);
+        super(cluster, CallingConvention.JAVA.singletonSet, child);
         assert (child.getConvention() == CallingConvention.JAVA);
         this.variable = variable;
         this.body = body;

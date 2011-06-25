@@ -230,21 +230,18 @@ public abstract class FennelWindowRule
     {
         assert winAggRel != null;
         final RelOptCluster cluster = winAggRel.getCluster();
-        RelTraitSet traits = null;
+        RelTraitSet traits;
         if (child.getInputs().length > 0) {
-            traits = RelOptUtil.clone(child.getInput(0).getTraits());
+            traits = child.getInput(0).getTraits();
         } else {
-            traits = RelOptUtil.clone(child.getTraits());
+            traits = child.getTraits();
         }
-        traits.setTrait(
-            CallingConventionTraitDef.instance,
-            FennelRel.FENNEL_EXEC_CONVENTION);
+        traits = traits.plus(FennelRel.FENNEL_EXEC_CONVENTION);
         RelNode fennelInput = child;
         if (!child.getTraits().equals(traits)) {
-            fennelInput = mergeTraitsAndConvert(
-                child.getTraits(),
-                traits,
-                child);
+            fennelInput =
+                convert(
+                    child, child.getTraits().plusAll(traits));
             if (fennelInput == null) {
                 return;
             }
@@ -506,22 +503,20 @@ public abstract class FennelWindowRule
                     new FennelWindowRel.Window[windowList.size()]),
                 inputProgram,
                 outputProgram);
-        RelTraitSet outTraits = fennelCalcRel.getTraits().clone();
-        // copy over other traits from the child
-        for (i = 0; i < traits.size(); i++) {
-            RelTrait trait = traits.getTrait(i);
-            if (trait.getTraitDef() != CallingConventionTraitDef.instance) {
-                outTraits.addTrait(trait);
-            }
-        }
+
         // convert to the traits of the calling rel to which we are equivalent
         // and thus must have the same traits
-        RelNode mergedFennelCalcRel = fennelCalcRel;
+        RelTraitSet outTraits =
+            fennelCalcRel.getTraits().plusAllExcept(
+                traits, CallingConventionTraitDef.instance);
+        RelNode mergedFennelCalcRel;
         if (!fennelCalcRel.getTraits().equals(outTraits)) {
-            mergedFennelCalcRel = mergeTraitsAndConvert(
-                fennelCalcRel.getTraits(),
-                outTraits,
-                fennelCalcRel);
+            mergedFennelCalcRel =
+                convert(
+                    fennelCalcRel,
+                    fennelCalcRel.getTraits().plusAll(outTraits));
+        } else {
+             mergedFennelCalcRel = fennelCalcRel;
         }
         call.transformTo(mergedFennelCalcRel);
     }

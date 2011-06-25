@@ -125,19 +125,17 @@ class MedMdrJoinRule
          altogether, but a warning of some kind would // be friendlier return; }
          */
         RelNode iterLeft =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                CallingConvention.ITERATOR,
-                leftRel);
+            convert(
+                leftRel,
+                joinRel.getTraits().plus(CallingConvention.ITERATOR));
         if (iterLeft == null) {
             return;
         }
 
         RelNode iterRight =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                CallingConvention.ITERATOR,
-                rightRel);
+            convert(
+                rightRel,
+                joinRel.getTraits().plus(CallingConvention.ITERATOR));
         if (iterRight == null) {
             return;
         }

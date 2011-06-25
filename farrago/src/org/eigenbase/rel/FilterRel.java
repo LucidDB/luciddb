@@ -52,7 +52,7 @@ public final class FilterRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             child,
             condition);
     }

@@ -250,10 +250,9 @@ class FtrsScanToSearchRule
                 sargExpr);
 
         RelNode keyInput =
-            mergeTraitsAndConvert(
-                callTraits,
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                sargRel);
+            convert(
+                sargRel,
+                callTraits.plus(FennelRel.FENNEL_EXEC_CONVENTION));
         assert (keyInput != null);
 
         // Set up projections for the search directive and key.

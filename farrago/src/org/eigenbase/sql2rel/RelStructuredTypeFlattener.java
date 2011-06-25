@@ -537,7 +537,7 @@ public class RelStructuredTypeFlattener
         CalcRel newRel =
             new CalcRel(
                 cluster,
-                rel.cloneTraits(),
+                rel.getTraits(),
                 newChild,
                 newProgram.getOutputRowType(),
                 newProgram,

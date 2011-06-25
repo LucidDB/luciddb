@@ -50,7 +50,7 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
         RelNode [] inputs)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.ITERATOR), inputs,
+            cluster, CallingConvention.ITERATOR.singletonSet, inputs,
             true /*all*/);
     }
 

@@ -73,7 +73,7 @@ public final class TableAccessRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             table,
             connection);
     }

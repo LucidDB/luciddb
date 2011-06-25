@@ -59,7 +59,7 @@ public class JavaNestedLoopJoinRel
         Set<String> variablesStopped)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.JAVA), left, right,
+            cluster, CallingConvention.JAVA.singletonSet, left, right,
             condition, joinType, variablesStopped);
     }
 

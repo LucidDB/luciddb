@@ -43,7 +43,7 @@ public class JavaTableAccessRel
         ImplementableTable table,
         RelOptConnection connection)
     {
-        super(cluster, new RelTraitSet(CallingConvention.JAVA), table, connection);
+        super(cluster, CallingConvention.JAVA.singletonSet, table, connection);
     }
 
     public JavaTableAccessRel clone()

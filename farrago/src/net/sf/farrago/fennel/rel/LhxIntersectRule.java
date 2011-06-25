@@ -101,21 +101,20 @@ public class LhxIntersectRule
             assert (leftRel.getRowType() == rightRel.getRowType());
 
             RelNode fennelLeft =
-                mergeTraitsAndConvert(
-                    intersectRel.getTraits(),
-                    FennelRel.FENNEL_EXEC_CONVENTION,
-                    leftRel);
+                convert(
+                    leftRel,
+                    intersectRel.getTraits().plus(
+                        FennelRel.FENNEL_EXEC_CONVENTION));
 
             if (fennelLeft == null) {
                 return;
             }
 
             RelNode fennelRight =
-                mergeTraitsAndConvert(
-                    intersectRel.getTraits(),
-                    FennelRel.FENNEL_EXEC_CONVENTION,
-                    rightRel);
-
+                convert(
+                    rightRel,
+                    intersectRel.getTraits().plus(
+                        FennelRel.FENNEL_EXEC_CONVENTION));
             if (fennelRight == null) {
                 return;
             }

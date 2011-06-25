@@ -64,7 +64,7 @@ class MedMdrJoinRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.ITERATOR),
+            CallingConvention.ITERATOR.singletonSet,
             left,
             right,
             condition,

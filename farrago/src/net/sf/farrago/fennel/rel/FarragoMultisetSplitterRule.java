@@ -207,7 +207,7 @@ public class FarragoMultisetSplitterRule
         CalcRel newCalc =
             new CalcRel(
                 calc.getCluster(),
-                calc.cloneTraits(),
+                calc.getTraits(),
                 correlatorRel,
                 calc.getRowType(),
                 newProgram,

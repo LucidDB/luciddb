@@ -58,7 +58,7 @@ public final class UncollectRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             child);
         assert deriveRowType() != null : "invalid child rowtype";
     }

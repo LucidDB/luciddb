@@ -48,7 +48,7 @@ public class IterOneRowRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.ITERATOR));
+            CallingConvention.ITERATOR.singletonSet);
     }
 
     //~ Methods ----------------------------------------------------------------

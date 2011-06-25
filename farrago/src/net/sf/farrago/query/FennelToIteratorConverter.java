@@ -133,7 +133,7 @@ public class FennelToIteratorConverter
         super(
             cluster,
             CallingConventionTraitDef.instance,
-            new RelTraitSet(CallingConvention.ITERATOR),
+            CallingConvention.ITERATOR.singletonSet,
             child);
     }
 

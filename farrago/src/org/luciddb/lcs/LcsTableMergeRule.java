@@ -169,10 +169,10 @@ public class LcsTableMergeRule
         }
 
         RelNode fennelInput =
-            mergeTraitsAndConvert(
-                call.rels[0].getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                mergeSource);
+            convert(
+                mergeSource,
+                call.rels[0].getTraits().plus(
+                    FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelInput == null) {
             return;
         }

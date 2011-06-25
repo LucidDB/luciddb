@@ -98,7 +98,7 @@ public class IterCalcRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.ITERATOR),
+            CallingConvention.ITERATOR.singletonSet,
             child);
         this.flags = flags;
         this.program = program;

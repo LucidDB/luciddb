@@ -69,7 +69,7 @@ public class FennelPullCollectRel
     {
         super(
             cluster,
-            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            FENNEL_EXEC_CONVENTION.singletonSet,
             child);
         this.fieldName = fieldName;
     }

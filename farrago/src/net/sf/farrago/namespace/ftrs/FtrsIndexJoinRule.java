@@ -213,10 +213,9 @@ class FtrsIndexJoinRule
         }
 
         RelNode fennelInput =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                castRel);
+            convert(
+                castRel,
+                joinRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
 
         // tell the index search to propagate everything from its input as join
         // fields

@@ -61,26 +61,14 @@ public class FennelValuesRule
     public RelNode convert(RelNode rel)
     {
         ValuesRel valuesRel = (ValuesRel) rel;
-        RelTraitSet traitSet = valuesRel.getTraits();
-        FennelValuesRel fennelRel =
+        return
             new FennelValuesRel(
                 valuesRel.getCluster(),
                 valuesRel.getRowType(),
-                valuesRel.getTuples());
-        // copy over the other traits
-        for (int i = 0; i < traitSet.size(); i++) {
-            RelTrait trait = traitSet.getTrait(i);
-            if (trait.getTraitDef() != getTraitDef()) {
-                if (fennelRel.getTraits().getTrait(trait.getTraitDef())
-                    != null)
-                {
-                    fennelRel.getTraits().setTrait(trait.getTraitDef(), trait);
-                } else {
-                    fennelRel.getTraits().addTrait(trait);
-                }
-            }
-        }
-        return fennelRel;
+                valuesRel.getTuples())
+            .inheritTraitsFromExcept(
+                valuesRel,
+                getTraitDef());
     }
 }
 

@@ -1678,10 +1678,9 @@ public class LcsIndexGuide
                 false);
 
         RelNode keyInput =
-            RelOptRule.mergeTraitsAndConvert(
-                rel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                keyRel);
+            RelOptRule.convert(
+                keyRel,
+                rel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         assert (keyInput != null);
 
         return keyInput;

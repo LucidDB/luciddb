@@ -90,10 +90,9 @@ public class FennelAggRule
             // add a FennelSortRel node beneath AggRel with sort keys
             // corresponding to the group by keys
             RelNode sortInput =
-                mergeTraitsAndConvert(
-                    aggRel.getTraits(),
-                    FennelRel.FENNEL_EXEC_CONVENTION,
-                    relInput);
+                convert(
+                    relInput,
+                    aggRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
             if (sortInput == null) {
                 return;
             }
@@ -113,10 +112,9 @@ public class FennelAggRule
             fennelInput = fennelSortRel;
         } else {
             fennelInput =
-                mergeTraitsAndConvert(
-                    aggRel.getTraits(),
-                    FennelRel.FENNEL_EXEC_CONVENTION,
-                    relInput);
+                convert(
+                    relInput,
+                    aggRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
             if (fennelInput == null) {
                 return;
             }

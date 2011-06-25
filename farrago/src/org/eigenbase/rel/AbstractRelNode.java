@@ -144,17 +144,6 @@ public abstract class AbstractRelNode
     }
 
     /**
-     * Returns a clone of this RelNode's traits. Useful for implementing {@link
-     * #clone()}.
-     *
-     * @return a clone of this RelNode's traits.
-     */
-    public RelTraitSet cloneTraits()
-    {
-        return RelOptUtil.clone(traits);
-    }
-
-    /**
      * Sets this relational expression's traits to the same as another
      * relational expression. The other relational expression must be the same
      * type as this.
@@ -162,9 +151,13 @@ public abstract class AbstractRelNode
      * <p>The typical use of this method is in the implementation of a {@link
      * #clone()} method:
      *
-     * <blockquote><code>class MyRel { public MyRel clone() { return new MyRel(
-     * getCluster(), getChild().clone(), fieldX.clone(), fieldY.clone())
-     * .inheritTraitsFrom(this); } }</code></blockquote>
+     * <blockquote><code>class MyRel {<br/>
+     *   public MyRel clone() {<br/>
+     *     return new MyRel(<br/>
+     *       getCluster(), getChild().clone(),<br/>
+     *       fieldX.clone(), fieldY.clone()).inheritTraitsFrom(this);<br/>
+     *   }<br/>
+     * }</code></blockquote>
      *
      * <p>To enable calls to be chained in this way, this method returns <code>
      * this</code> as a convenience.
@@ -176,8 +169,24 @@ public abstract class AbstractRelNode
     @SuppressWarnings({ "unchecked" })
     public <T extends AbstractRelNode> T inheritTraitsFrom(T rel)
     {
-        traits = rel.cloneTraits();
+        traits = rel.getTraits();
         return (T) this;
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    public <T extends AbstractRelNode> T inheritTraitsFromExcept(
+        RelNode rel,
+        RelTraitDef traitDef)
+    {
+        traits =
+            traits.plusAllExcept(
+                rel.getTraits(), traitDef);
+        return (T) this;
+    }
+
+    public void setTraits(RelTraitSet traitSet)
+    {
+        this.traits = traitSet;
     }
 
     public void setCorrelVariable(String correlVariable)

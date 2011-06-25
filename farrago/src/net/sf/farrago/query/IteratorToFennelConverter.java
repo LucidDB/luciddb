@@ -113,15 +113,11 @@ public class IteratorToFennelConverter
         super(
             cluster,
             CallingConventionTraitDef.instance,
-            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            FENNEL_EXEC_CONVENTION.singletonSet,
             child);
+
         // copy over other traits
-        for (int i = 0; i < child.getTraits().size(); i++) {
-            RelTrait trait = child.getTraits().getTrait(i);
-            if (trait.getTraitDef() != CallingConventionTraitDef.instance) {
-                traits.addTrait(trait);
-            }
-        }
+        inheritTraitsFromExcept(child, CallingConventionTraitDef.instance);
 
         farragoTransformClassNameMap =
             new HashMap<List<FarragoRelImplementor.RelPathEntry>, String>();

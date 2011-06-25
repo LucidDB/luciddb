@@ -192,8 +192,8 @@ class VolcanoRuleMatch
         }
         final RelTrait targetTrait = getRule().getOutTrait();
         if ((targetSet != null) && (targetTrait != null)) {
-            final RelTraitSet targetTraitSet = rels[0].getTraits().clone();
-            targetTraitSet.setTrait(targetTrait.getTraitDef(), targetTrait);
+            final RelTraitSet targetTraitSet =
+                rels[0].getTraits().plus(targetTrait);
 
             // Find the subset in the target set which matches the expected
             // set of traits. It may not exist yet.

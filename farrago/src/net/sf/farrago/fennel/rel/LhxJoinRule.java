@@ -128,21 +128,17 @@ public class LhxJoinRule
         rightRel = inputRels[1];
 
         RelNode fennelLeft =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                leftRel);
-
+            convert(
+                leftRel,
+                joinRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelLeft == null) {
             return;
         }
 
         RelNode fennelRight =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                rightRel);
-
+            convert(
+                rightRel,
+                joinRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelRight == null) {
             return;
         }

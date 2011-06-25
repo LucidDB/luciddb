@@ -56,7 +56,8 @@ public abstract class IterRules
 
         protected UnionToIteratorRule(String description)
         {
-            super(UnionRel.class, CallingConvention.NONE,
+            super(
+                UnionRel.class, CallingConvention.NONE,
                 CallingConvention.ITERATOR, description);
         }
 
@@ -76,9 +77,9 @@ public abstract class IterRules
             for (int i = 0; i < newInputs.length; i++) {
                 // Stubborn, because inputs don't appear as operands.
                 newInputs[i] =
-                    mergeTraitsAndConvert(
-                        union.getTraits(), CallingConvention.ITERATOR,
-                        union.getInput(i));
+                    convert(
+                        union.getInput(i),
+                        union.getTraits().plus(CallingConvention.ITERATOR));
                 if (newInputs[i] == null) {
                     return null; // cannot convert this input
                 }
@@ -121,7 +122,8 @@ public abstract class IterRules
     {
         public OneRowToIteratorRule()
         {
-            super(OneRowRel.class, CallingConvention.NONE,
+            super(
+                OneRowRel.class, CallingConvention.NONE,
                 CallingConvention.ITERATOR, "OneRowToIteratorRule");
         }
 
@@ -141,7 +143,8 @@ public abstract class IterRules
 
         private IterCalcRule()
         {
-            super(CalcRel.class, CallingConvention.NONE,
+            super(
+                CalcRel.class, CallingConvention.NONE,
                 CallingConvention.ITERATOR, "IterCalcRule");
         }
 
@@ -149,9 +152,9 @@ public abstract class IterRules
         {
             final CalcRel calc = (CalcRel) rel;
             final RelNode convertedChild =
-                mergeTraitsAndConvert(
-                    calc.getTraits(), CallingConvention.ITERATOR,
-                    calc.getChild());
+                convert(
+                    calc.getChild(),
+                    calc.getTraits().plus(CallingConvention.ITERATOR));
             if (convertedChild == null) {
                 // We can't convert the child, so we can't convert rel.
                 return null;
@@ -167,7 +170,8 @@ public abstract class IterRules
             final JavaRelImplementor relImplementor =
                 rel.getCluster().getPlanner().getJavaRelImplementor(rel);
             if (!relImplementor.canTranslate(
-                convertedChild, calc.getProgram())) {
+                  convertedChild, calc.getProgram()))
+            {
                 // Some of the expressions cannot be translated into Java
                 return null;
             }
@@ -190,7 +194,8 @@ public abstract class IterRules
 
         private ProjectToIteratorRule()
         {
-            super(ProjectRel.class, CallingConvention.NONE,
+            super(
+                ProjectRel.class, CallingConvention.NONE,
                 CallingConvention.ITERATOR, "ProjectToIteratorRule");
         }
 
@@ -199,8 +204,9 @@ public abstract class IterRules
             final ProjectRel project = (ProjectRel) rel;
             RelNode inputRel = project.getChild();
             final RelNode iterChild =
-                mergeTraitsAndConvert(
-                    project.getTraits(), CallingConvention.ITERATOR, inputRel);
+                convert(
+                    inputRel,
+                    project.getTraits().plus(CallingConvention.ITERATOR));
             if (iterChild == null) {
                 return null;
             }
@@ -220,7 +226,8 @@ public abstract class IterRules
             // REVIEW: want to move canTranslate into RelImplementor
             // and implement it for Java & C++ calcs.
             final JavaRelImplementor relImplementor =
-                project.getCluster().getPlanner().getJavaRelImplementor(project);
+                project.getCluster().getPlanner().getJavaRelImplementor(
+                    project);
             if (!relImplementor.canTranslate(iterChild, program)) {
                 // Some of the expressions cannot be translated into Java
                 return null;
@@ -266,9 +273,9 @@ public abstract class IterRules
             RexNode condition = filterRel.getCondition();
 
             RelNode iterChild =
-                mergeTraitsAndConvert(
-                    project.getTraits(), CallingConvention.ITERATOR, inputRel);
-
+                convert(
+                    inputRel,
+                    project.getTraits().plus(CallingConvention.ITERATOR));
             if (iterChild == null) {
                 return;
             }

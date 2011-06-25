@@ -38,7 +38,7 @@ public class JavaOneRowRel extends OneRowRelBase implements JavaLoopRel,
 {
     public JavaOneRowRel(RelOptCluster cluster)
     {
-        super(cluster, new RelTraitSet(CallingConvention.JAVA));
+        super(cluster, CallingConvention.JAVA.singletonSet);
     }
 
     // implement RelNode

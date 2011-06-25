@@ -43,7 +43,7 @@ public class JavaUnionAllRel extends UnionRelBase implements JavaLoopRel
         RelOptCluster cluster,
         RelNode [] inputs)
     {
-        super(cluster, new RelTraitSet(CallingConvention.JAVA), inputs, true);
+        super(cluster, CallingConvention.JAVA.singletonSet, inputs, true);
     }
 
     // implement RelNode

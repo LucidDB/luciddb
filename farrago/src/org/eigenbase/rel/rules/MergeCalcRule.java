@@ -79,8 +79,7 @@ public class MergeCalcRule
                 topCalc.getCluster().getRexBuilder());
         final CalcRel newCalc =
             new CalcRel(
-                bottomCalc.getCluster(),
-                RelOptUtil.clone(bottomCalc.getTraits()),
+                bottomCalc.getCluster(), bottomCalc.getTraits(),
                 bottomCalc.getChild(),
                 topCalc.getRowType(),
                 mergedProgram,

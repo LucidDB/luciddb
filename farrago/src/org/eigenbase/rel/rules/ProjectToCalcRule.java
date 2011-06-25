@@ -77,8 +77,7 @@ public class ProjectToCalcRule
                 project.getCluster().getRexBuilder());
         final CalcRel calc =
             new CalcRel(
-                project.getCluster(),
-                RelOptUtil.clone(project.getTraits()),
+                project.getCluster(), project.getTraits(),
                 child,
                 rowType,
                 program,

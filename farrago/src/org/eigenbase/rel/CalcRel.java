@@ -82,7 +82,7 @@ public final class CalcRel
     {
         return new CalcRel(
             getCluster(),
-            cloneTraits(),
+            getTraits(),
             getChild(),
             rowType,
             program.copy(),
@@ -208,7 +208,7 @@ public final class CalcRel
         if (DeprecateProjectAndFilter) {
             return new CalcRel(
                 cluster,
-                RelOptUtil.clone(child.getTraits()),
+                child.getTraits(),
                 child,
                 program.getOutputRowType(),
                 program,
@@ -264,7 +264,7 @@ public final class CalcRel
             final RexProgram program = builder.getProgram();
             return new CalcRel(
                 cluster,
-                RelOptUtil.clone(child.getTraits()),
+                child.getTraits(),
                 child,
                 program.getOutputRowType(),
                 program,

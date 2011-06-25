@@ -43,7 +43,7 @@ public class JavaFilterRel extends FilterRelBase implements JavaLoopRel
         RexNode condition)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.JAVA), child,
+            cluster, CallingConvention.JAVA.singletonSet, child,
             condition);
     }
 

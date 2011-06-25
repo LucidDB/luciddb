@@ -328,11 +328,11 @@ public abstract class RelOptRule
             new RelTraitPropagationVisitor(planner, toTraits).go(rel);
         }
 
-        RelTraitSet outTraits = RelOptUtil.clone(rel.getTraits());
+        RelTraitSet outTraits = rel.getTraits();
         for (int i = 0; i < toTraits.size(); i++) {
             RelTrait toTrait = toTraits.getTrait(i);
             if (toTrait != null) {
-                outTraits.setTrait(i, toTrait);
+                outTraits = outTraits.plus(toTrait);
             }
         }
 
@@ -341,58 +341,6 @@ public abstract class RelOptRule
         }
 
         return planner.changeTraits(rel, outTraits);
-    }
-
-    /**
-     * Creates a new RelTraitSet based on the given traits and converts the
-     * relational expression to that trait set. Clones <code>baseTraits</code>
-     * and merges <code>newTraits</code> with the cloned set, then converts rel
-     * to that set. Normally, during a rule call, baseTraits are the traits of
-     * the rel's parent and newTraits are the traits that the rule wishes to
-     * guarantee.
-     *
-     * @param baseTraits base traits for converted rel
-     * @param newTraits altered traits
-     * @param rel the rel to convert
-     *
-     * @return converted rel or null if conversion could not be made
-     */
-    public static RelNode mergeTraitsAndConvert(
-        RelTraitSet baseTraits,
-        RelTraitSet newTraits,
-        RelNode rel)
-    {
-        RelTraitSet traits = RelOptUtil.mergeTraits(baseTraits, newTraits);
-
-        return convert(rel, traits);
-    }
-
-    /**
-     * Creates a new RelTraitSet based on the given traits and converts the
-     * relational expression to that trait set. Clones <code>baseTraits</code>
-     * and merges <code>newTrait</code> with the cloned set, then converts rel
-     * to that set. Normally, during a rule call, baseTraits are the traits of
-     * the rel's parent and newTrait is the trait that the rule wishes to
-     * guarantee.
-     *
-     * @param baseTraits base traits for converted rel
-     * @param newTrait altered trait
-     * @param rel the rel to convert
-     *
-     * @return converted rel or null if conversion could not be made
-     */
-    public static RelNode mergeTraitsAndConvert(
-        RelTraitSet baseTraits,
-        RelTrait newTrait,
-        RelNode rel)
-    {
-        RelTraitSet traits = RelOptUtil.clone(baseTraits);
-
-        traits.setTrait(
-            newTrait.getTraitDef(),
-            newTrait);
-
-        return convert(rel, traits);
     }
 
     /**

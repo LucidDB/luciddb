@@ -90,8 +90,7 @@ public class MergeFilterOntoCalcRule
                 rexBuilder);
         final CalcRel newCalc =
             new CalcRel(
-                calc.getCluster(),
-                RelOptUtil.clone(calc.getTraits()),
+                calc.getCluster(), calc.getTraits(),
                 calc.getChild(),
                 filter.getRowType(),
                 mergedProgram,

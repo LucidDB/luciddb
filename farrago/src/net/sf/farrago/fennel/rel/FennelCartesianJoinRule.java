@@ -115,19 +115,17 @@ public class FennelCartesianJoinRule
         }
 
         leftRel =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                leftRel);
+            convert(
+                leftRel,
+                joinRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (leftRel == null) {
             return;
         }
 
         rightRel =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                rightRel);
+            convert(
+                rightRel,
+                joinRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (rightRel == null) {
             return;
         }
@@ -189,7 +187,7 @@ public class FennelCartesianJoinRule
             newRel =
                 new CalcRel(
                     productRel.getCluster(),
-                    RelOptUtil.clone(joinRel.getTraits()),
+                    joinRel.getTraits(),
                     productRel,
                     joinRel.getRowType(),
                     program,

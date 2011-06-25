@@ -409,10 +409,9 @@ public class LcsIndexAccessRule
                         sargSeqList);
 
                 valueRels[i] =
-                    mergeTraitsAndConvert(
-                        callTraits,
-                        FennelRel.FENNEL_EXEC_CONVENTION,
-                        valueRels[i]);
+                    convert(
+                        valueRels[i],
+                        callTraits.plus(FennelRel.FENNEL_EXEC_CONVENTION));
                 i++;
             }
         }
@@ -562,10 +561,9 @@ public class LcsIndexAccessRule
                 sargSeqList);
 
         RelNode keyInput =
-            mergeTraitsAndConvert(
-                callTraits,
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                sargRel);
+            convert(
+                sargRel,
+                callTraits.plus(FennelRel.FENNEL_EXEC_CONVENTION));
         assert (keyInput != null);
 
         // Set up projections for the search directive and key.

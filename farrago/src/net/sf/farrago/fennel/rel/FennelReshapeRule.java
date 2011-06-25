@@ -121,10 +121,9 @@ public class FennelReshapeRule
         }
 
         RelNode fennelInput =
-            mergeTraitsAndConvert(
-                calcRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                calcRel.getChild());
+            convert(
+                calcRel.getChild(),
+                calcRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelInput == null) {
             return;
         }

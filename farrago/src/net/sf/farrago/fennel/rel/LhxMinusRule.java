@@ -103,21 +103,19 @@ public class LhxMinusRule
             assert (leftRel.getRowType() == rightRel.getRowType());
 
             RelNode fennelLeft =
-                mergeTraitsAndConvert(
-                    minusRel.getTraits(),
-                    FennelRel.FENNEL_EXEC_CONVENTION,
-                    leftRel);
-
+                convert(
+                    leftRel,
+                    minusRel.getTraits().plus(
+                        FennelRel.FENNEL_EXEC_CONVENTION));
             if (fennelLeft == null) {
                 return;
             }
 
             RelNode fennelRight =
-                mergeTraitsAndConvert(
-                    minusRel.getTraits(),
-                    FennelRel.FENNEL_EXEC_CONVENTION,
-                    rightRel);
-
+                convert(
+                    rightRel,
+                    minusRel.getTraits().plus(
+                        FennelRel.FENNEL_EXEC_CONVENTION));
             if (fennelRight == null) {
                 return;
             }

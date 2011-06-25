@@ -96,7 +96,7 @@ public class VolcanoPlannerTest
         RelNode convertedRel =
             planner.changeTraits(
                 leafRel,
-                new RelTraitSet(PHYS_CALLING_CONVENTION));
+                PHYS_CALLING_CONVENTION.singletonSet);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysLeafRel);
@@ -124,7 +124,7 @@ public class VolcanoPlannerTest
         RelNode convertedRel =
             planner.changeTraits(
                 singleRel,
-                new RelTraitSet(PHYS_CALLING_CONVENTION));
+                PHYS_CALLING_CONVENTION.singletonSet);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysSingleRel);
@@ -153,7 +153,7 @@ public class VolcanoPlannerTest
         RelNode convertedRel =
             planner.changeTraits(
                 singleRel,
-                new RelTraitSet(PHYS_CALLING_CONVENTION));
+                PHYS_CALLING_CONVENTION.singletonSet);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysSingleRel);
@@ -209,7 +209,7 @@ public class VolcanoPlannerTest
         RelNode convertedRel =
             planner.changeTraits(
                 singleRel,
-                new RelTraitSet(CallingConvention.ITERATOR));
+                CallingConvention.ITERATOR.singletonSet);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysToIteratorConverter);
@@ -252,7 +252,7 @@ public class VolcanoPlannerTest
         RelNode convertedRel =
             planner.changeTraits(
                 singleRel,
-                new RelTraitSet(PHYS_CALLING_CONVENTION));
+                PHYS_CALLING_CONVENTION.singletonSet);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysLeafRel);
@@ -288,7 +288,7 @@ public class VolcanoPlannerTest
         RelNode convertedRel =
             planner.changeTraits(
                 singleRel,
-                new RelTraitSet(PHYS_CALLING_CONVENTION));
+                PHYS_CALLING_CONVENTION.singletonSet);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysLeafRel);
@@ -319,7 +319,7 @@ public class VolcanoPlannerTest
         RelNode convertedRel =
             planner.changeTraits(
                 leafRel,
-                new RelTraitSet(PHYS_CALLING_CONVENTION));
+                PHYS_CALLING_CONVENTION.singletonSet);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysLeafRel);
@@ -526,7 +526,7 @@ public class VolcanoPlannerTest
         {
             super(
                 cluster,
-                new RelTraitSet(CallingConvention.NONE),
+                CallingConvention.NONE.singletonSet,
                 child);
         }
 
@@ -551,7 +551,7 @@ public class VolcanoPlannerTest
         {
             super(
                 cluster,
-                new RelTraitSet(CallingConvention.NONE),
+                CallingConvention.NONE.singletonSet,
                 label);
         }
     }
@@ -565,7 +565,7 @@ public class VolcanoPlannerTest
         {
             super(
                 cluster,
-                new RelTraitSet(PHYS_CALLING_CONVENTION),
+                PHYS_CALLING_CONVENTION.singletonSet,
                 label);
         }
 
@@ -585,7 +585,7 @@ public class VolcanoPlannerTest
         {
             super(
                 cluster,
-                new RelTraitSet(PHYS_CALLING_CONVENTION),
+                PHYS_CALLING_CONVENTION.singletonSet,
                 child);
         }
 
@@ -617,7 +617,7 @@ public class VolcanoPlannerTest
             super(
                 cluster,
                 CallingConventionTraitDef.instance,
-                new RelTraitSet(CallingConvention.ITERATOR),
+                CallingConvention.ITERATOR.singletonSet,
                 child);
         }
 
@@ -681,10 +681,9 @@ public class VolcanoPlannerTest
             NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
             RelNode childRel = singleRel.getChild();
             RelNode physInput =
-                mergeTraitsAndConvert(
-                    singleRel.getTraits(),
-                    PHYS_CALLING_CONVENTION,
-                    childRel);
+                convert(
+                    childRel,
+                    singleRel.getTraits().plus(PHYS_CALLING_CONVENTION));
             call.transformTo(
                 new PhysSingleRel(
                     singleRel.getCluster(),
@@ -721,10 +720,9 @@ public class VolcanoPlannerTest
             NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
             RelNode childRel = call.rels[1];
             RelNode physInput =
-                mergeTraitsAndConvert(
-                    singleRel.getTraits(),
-                    PHYS_CALLING_CONVENTION,
-                    childRel);
+                convert(
+                    childRel,
+                    singleRel.getTraits().plus(PHYS_CALLING_CONVENTION));
             call.transformTo(
                 new PhysSingleRel(
                     singleRel.getCluster(),

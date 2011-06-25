@@ -99,7 +99,7 @@ class FtrsIndexScanRel
     {
         super(
             cluster,
-            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            FENNEL_EXEC_CONVENTION.singletonSet,
             ftrsTable,
             connection);
         this.ftrsTable = ftrsTable;

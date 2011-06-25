@@ -182,7 +182,7 @@ class FlatFileColumnSet
     {
         return new CalcRel(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             child,
             program.getOutputRowType(),
             program,

@@ -80,8 +80,7 @@ public class FilterToCalcRule
 
         final CalcRel calc =
             new CalcRel(
-                filter.getCluster(),
-                RelOptUtil.clone(filter.getTraits()),
+                filter.getCluster(), filter.getTraits(),
                 rel,
                 inputRowType,
                 program,

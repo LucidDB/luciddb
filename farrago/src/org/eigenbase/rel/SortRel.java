@@ -57,7 +57,7 @@ public class SortRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             child);
         this.collations = collations;
 

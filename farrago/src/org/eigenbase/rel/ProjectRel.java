@@ -95,7 +95,7 @@ public final class ProjectRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             child,
             exps,
             rowType,

@@ -70,10 +70,9 @@ public class FennelRemoveRedundantSortRule
 
         if (inputRel instanceof FennelSortRel) {
             RelNode newRel =
-                mergeTraitsAndConvert(
-                    sortRel.getTraits(),
-                    FennelRel.FENNEL_EXEC_CONVENTION,
-                    inputRel);
+                convert(
+                    inputRel,
+                    sortRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
             if (newRel == null) {
                 return;
             }

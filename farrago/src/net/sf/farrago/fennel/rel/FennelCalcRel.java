@@ -77,7 +77,7 @@ public class FennelCalcRel
     {
         super(
             cluster,
-            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            FENNEL_EXEC_CONVENTION.singletonSet,
             child);
         Util.pre(rowType != null, "rowType != null");
         Util.pre(program != null, "program != null");

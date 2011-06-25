@@ -105,10 +105,10 @@ public class FennelRenameRule
         }
 
         RelNode fennelInput =
-            mergeTraitsAndConvert(
-                project.getChild().getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                project.getChild());
+            convert(
+                project.getChild(),
+                project.getChild().getTraits().plus(
+                    FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelInput == null) {
             return null;
         }
@@ -116,9 +116,7 @@ public class FennelRenameRule
             project.getCluster(),
             fennelInput,
             RelOptUtil.getFieldNames(project.getRowType()),
-            RelOptUtil.mergeTraits(
-                fennelInput.getTraits(),
-                new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION)));
+            fennelInput.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
     }
 }
 

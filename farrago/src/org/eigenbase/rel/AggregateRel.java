@@ -66,7 +66,7 @@ public final class AggregateRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             child,
             groupCount,
             aggCalls);

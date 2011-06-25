@@ -76,7 +76,7 @@ class MedMdrClassExtentRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.ITERATOR),
+            CallingConvention.ITERATOR.singletonSet,
             mdrClassExtent,
             connection);
         this.mdrClassExtent = mdrClassExtent;

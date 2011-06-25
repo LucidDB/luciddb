@@ -68,7 +68,8 @@ public class RelTraitPropagationVisitor
         for (int i = 0; i < baseTraits.size(); i++) {
             if (i >= relTraits.size()) {
                 // Copy traits that the new rel doesn't know about.
-                relTraits.addTrait(baseTraits.getTrait(i));
+                relTraits = relTraits.plus(baseTraits.getTrait(i));
+                rel.setTraits(relTraits);
             } else {
                 // Verify that the traits are from the same RelTraitDef
                 assert relTraits.getTrait(i).getTraitDef()

@@ -44,7 +44,7 @@ public class SamplingRel
         RelNode child,
         RelOptSamplingParameters params)
     {
-        super(cluster, new RelTraitSet(CallingConvention.NONE), child);
+        super(cluster, CallingConvention.NONE.singletonSet, child);
 
         this.params = params;
     }

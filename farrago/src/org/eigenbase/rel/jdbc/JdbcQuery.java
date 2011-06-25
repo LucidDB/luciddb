@@ -101,7 +101,7 @@ public class JdbcQuery
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.RESULT_SET));
+            CallingConvention.RESULT_SET.singletonSet);
         Util.pre(connection != null, "connection != null");
         Util.pre(dataSource != null, "dataSource != null");
         this.rowType = rowType;

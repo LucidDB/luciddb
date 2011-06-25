@@ -60,7 +60,7 @@ public class ValuesRel
             cluster,
             rowType,
             tuples,
-            new RelTraitSet(CallingConvention.NONE));
+            CallingConvention.NONE.singletonSet);
     }
 }
 

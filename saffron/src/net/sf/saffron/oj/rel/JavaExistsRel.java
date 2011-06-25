@@ -42,7 +42,7 @@ public class JavaExistsRel extends SingleRel implements JavaLoopRel
         RelOptCluster cluster,
         RelNode child)
     {
-        super(cluster, new RelTraitSet(CallingConvention.JAVA), child);
+        super(cluster, CallingConvention.JAVA.singletonSet, child);
         assert child.getRowType().getFieldList().size() == 0;
     }
 

@@ -56,7 +56,7 @@ public class FennelPullUncollectRel
     {
         super(
             cluster,
-            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            FENNEL_EXEC_CONVENTION.singletonSet,
             child);
         assert deriveRowType() != null : "invalid child rowtype";
     }

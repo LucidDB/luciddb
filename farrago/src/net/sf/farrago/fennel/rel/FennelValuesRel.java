@@ -78,7 +78,7 @@ public class FennelValuesRel
             cluster,
             rowType,
             tuples,
-            new RelTraitSet(FENNEL_EXEC_CONVENTION));
+            FENNEL_EXEC_CONVENTION.singletonSet);
         this.isVisibleInExplain = isVisibleInExplain;
     }
 
@@ -102,7 +102,7 @@ public class FennelValuesRel
             cluster,
             rowType,
             tuples,
-            new RelTraitSet(FENNEL_EXEC_CONVENTION));
+            FENNEL_EXEC_CONVENTION.singletonSet);
         this.isVisibleInExplain = true;
     }
 

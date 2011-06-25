@@ -85,10 +85,9 @@ public class FennelCalcRule
         CalcRel calc = (CalcRel) rel;
         RelNode relInput = rel.getInput(0);
         RelNode fennelInput =
-            mergeTraitsAndConvert(
-                calc.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                relInput);
+            convert(
+                relInput,
+                calc.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelInput == null) {
             return null;
         }

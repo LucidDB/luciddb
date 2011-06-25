@@ -48,7 +48,7 @@ public final class MinusRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE),
+            CallingConvention.NONE.singletonSet,
             inputs,
             all);
     }

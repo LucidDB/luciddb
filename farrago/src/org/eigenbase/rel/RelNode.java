@@ -366,6 +366,16 @@ public interface RelNode
      * @return a clone of this RelNode
      */
     RelNode clone();
+
+    /**
+     * Sets the traits of this relational expression.
+     *
+     * <p>Do not modify the traits after the relational expression has been
+     * registered.</p>
+     *
+     * @param traitSet Traits
+     */
+    void setTraits(RelTraitSet traitSet);
 }
 
 // End RelNode.java

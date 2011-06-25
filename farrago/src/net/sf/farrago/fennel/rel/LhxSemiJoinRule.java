@@ -220,21 +220,17 @@ public class LhxSemiJoinRule
         RelNode newRightRel = inputRels[1];
 
         RelNode fennelLeft =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                newLeftRel);
-
+            convert(
+                newLeftRel,
+                joinRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelLeft == null) {
             return;
         }
 
         RelNode fennelRight =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                newRightRel);
-
+            convert(
+                newRightRel,
+                joinRel.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelRight == null) {
             return;
         }

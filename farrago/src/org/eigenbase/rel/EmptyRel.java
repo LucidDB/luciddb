@@ -62,7 +62,7 @@ public class EmptyRel
     {
         super(
             cluster,
-            new RelTraitSet(CallingConvention.NONE));
+            CallingConvention.NONE.singletonSet);
         this.rowType = rowType;
     }
 

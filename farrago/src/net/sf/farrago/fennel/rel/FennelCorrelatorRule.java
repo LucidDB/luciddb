@@ -74,20 +74,20 @@ public class FennelCorrelatorRule
         }
         RelNode relLeftInput = correlatorRel.getLeft();
         RelNode fennelLeftInput =
-            mergeTraitsAndConvert(
-                correlatorRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                relLeftInput);
+            convert(
+                relLeftInput,
+                correlatorRel.getTraits().plus(
+                    FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelLeftInput == null) {
             return;
         }
 
         RelNode relRightInput = correlatorRel.getRight();
         RelNode fennelRightInput =
-            mergeTraitsAndConvert(
-                correlatorRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                relRightInput);
+            convert(
+                relRightInput,
+                correlatorRel.getTraits().plus(
+                    FennelRel.FENNEL_EXEC_CONVENTION));
         if (fennelRightInput == null) {
             return;
         }
