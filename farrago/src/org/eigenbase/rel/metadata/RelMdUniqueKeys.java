@@ -26,6 +26,7 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -113,11 +114,7 @@ public class RelMdUniqueKeys
                 BitSet colMask = itChild.next();
                 BitSet tmpMask = new BitSet();
                 boolean completeKeyProjected = true;
-                for (
-                    int bit = colMask.nextSetBit(0);
-                    bit >= 0;
-                    bit = colMask.nextSetBit(bit + 1))
-                {
+                for (int bit : Util.toIter(colMask)) {
                     if (mapInToOutPos.containsKey(bit)) {
                         tmpMask.set(mapInToOutPos.get(bit));
                     } else {
@@ -160,27 +157,17 @@ public class RelMdUniqueKeys
 
         if (tmpRightSet != null) {
             rightSet = new HashSet<BitSet>();
-            Iterator<BitSet> itRight = tmpRightSet.iterator();
-            while (itRight.hasNext()) {
-                BitSet colMask = itRight.next();
+            for (BitSet colMask : tmpRightSet) {
                 BitSet tmpMask = new BitSet();
-                for (
-                    int bit = colMask.nextSetBit(0);
-                    bit >= 0;
-                    bit = colMask.nextSetBit(bit + 1))
-                {
+                for (int bit : Util.toIter(colMask)) {
                     tmpMask.set(bit + nFieldsOnLeft);
                 }
                 rightSet.add(tmpMask);
             }
 
             if (leftSet != null) {
-                itRight = rightSet.iterator();
-                while (itRight.hasNext()) {
-                    BitSet colMaskRight = (BitSet) itRight.next();
-                    Iterator<BitSet> itLeft = leftSet.iterator();
-                    while (itLeft.hasNext()) {
-                        BitSet colMaskLeft = itLeft.next();
+                for (BitSet colMaskRight : rightSet) {
+                    for (BitSet colMaskLeft : leftSet) {
                         BitSet colMaskConcat = new BitSet();
                         colMaskConcat.or(colMaskLeft);
                         colMaskConcat.or(colMaskRight);
@@ -242,17 +229,16 @@ public class RelMdUniqueKeys
 
     public Set<BitSet> getUniqueKeys(AggregateRelBase rel, boolean ignoreNulls)
     {
-        Set<BitSet> retSet = new HashSet<BitSet>();
+        // REVIEW: jhyde, 2009/11/17: Why the special case? If the group set is
+        // empty, then the relation contains only one row (or zero if the table
+        // is empty) and therefore the empty set DOES constitute a unique key.
 
         // group by keys form a unique key
-        if (rel.getGroupCount() > 0) {
-            BitSet groupKey = new BitSet();
-            for (int i = 0; i < rel.getGroupCount(); i++) {
-                groupKey.set(i);
-            }
-            retSet.add(groupKey);
+        if (rel.getGroupSet().isEmpty()) {
+            return Collections.emptySet();
+        } else {
+            return Collections.singleton(rel.getGroupSet());
         }
-        return retSet;
     }
 
     // Catch-all rule when none of the others apply.

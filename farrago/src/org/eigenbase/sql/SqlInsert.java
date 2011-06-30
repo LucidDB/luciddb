@@ -32,7 +32,7 @@ import org.eigenbase.util.*;
  * statement.
  */
 public class SqlInsert
-    extends SqlCall
+    extends SqlDml
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -68,29 +68,24 @@ public class SqlInsert
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * @return the identifier for the target table of the insertion
-     */
     public SqlIdentifier getTargetTable()
     {
         return (SqlIdentifier) operands[TARGET_TABLE_OPERAND];
     }
 
-    /**
-     * @return the source expression for the data to be inserted
-     */
     public SqlNode getSource()
     {
         return operands[SOURCE_OPERAND];
     }
 
-    /**
-     * @return the list of target column names, or null for all columns in the
-     * target table
-     */
     public SqlNodeList getTargetColumnList()
     {
         return (SqlNodeList) operands[TARGET_COLUMN_LIST_OPERAND];
+    }
+
+    public SqlIdentifier getAlias()
+    {
+        return null;
     }
 
     public final SqlNode getModifierNode(SqlInsertKeyword modifier)

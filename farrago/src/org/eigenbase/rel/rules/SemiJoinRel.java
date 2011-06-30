@@ -79,18 +79,21 @@ public final class SemiJoinRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public SemiJoinRel clone()
+    @Override
+    public JoinRelBase copy(
+        RexNode conditionExpr,
+        List<RelDataTypeField> systemFieldList,
+        RelNode left,
+        RelNode right)
     {
-        SemiJoinRel clone =
-            new SemiJoinRel(
-                getCluster(),
-                left.clone(),
-                right.clone(),
-                condition.clone(),
-                new ArrayList<Integer>(getLeftKeys()),
-                new ArrayList<Integer>(getRightKeys()));
-        clone.inheritTraitsFrom(this);
-        return clone;
+        return new SemiJoinRel(
+            getCluster(),
+            left,
+            right,
+            conditionExpr,
+            // FIXME: If condition has changed, keys might have also
+            new ArrayList<Integer>(getLeftKeys()),
+            new ArrayList<Integer>(getRightKeys()));
     }
 
     // implement RelNode

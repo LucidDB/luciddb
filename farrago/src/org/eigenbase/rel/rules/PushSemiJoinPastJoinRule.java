@@ -28,6 +28,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util.CompositeList;
 
 
 /**
@@ -77,19 +78,14 @@ public class PushSemiJoinPastJoinRule
         int nFieldsY = joinRel.getRight().getRowType().getFields().length;
         int nFieldsZ = semiJoin.getRight().getRowType().getFields().length;
         int nTotalFields = nFieldsX + nFieldsY + nFieldsZ;
-        RelDataTypeField [] fields = new RelDataTypeField[nTotalFields];
 
         // create a list of fields for the full join result; note that
         // we can't simply use the fields from the semijoin because the
         // rowtype of a semijoin only includes the left hand side fields
-        RelDataTypeField [] joinFields = semiJoin.getRowType().getFields();
-        for (int i = 0; i < (nFieldsX + nFieldsY); i++) {
-            fields[i] = joinFields[i];
-        }
-        joinFields = semiJoin.getRight().getRowType().getFields();
-        for (int i = 0; i < nFieldsZ; i++) {
-            fields[i + nFieldsX + nFieldsY] = joinFields[i];
-        }
+        List<RelDataTypeField> fields =
+            CompositeList.of(
+                semiJoin.getRowType().getFieldList(),
+                semiJoin.getRight().getRowType().getFieldList());
 
         // determine which operands below the semijoin are the actual
         // Rels that participate in the semijoin
@@ -125,6 +121,7 @@ public class PushSemiJoinPastJoinRule
                     new RelOptUtil.RexInputConverter(
                         semiJoin.getCluster().getRexBuilder(),
                         fields,
+                        null,
                         adjustments));
             newLeftKeys = leftKeys;
         } else {
@@ -142,6 +139,7 @@ public class PushSemiJoinPastJoinRule
                     new RelOptUtil.RexInputConverter(
                         semiJoin.getCluster().getRexBuilder(),
                         fields,
+                        null,
                         adjustments));
             newLeftKeys = RelOptUtil.adjustKeys(leftKeys, -nFieldsX);
         }

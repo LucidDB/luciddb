@@ -116,7 +116,7 @@ public class FarragoSqlValidator
     }
 
     // override SqlValidator
-    protected boolean shouldAllowIntermediateOrderBy()
+    public boolean shouldAllowIntermediateOrderBy()
     {
         // Farrago follows the SQL standard on this.
         return false;
@@ -149,12 +149,12 @@ public class FarragoSqlValidator
     }
 
     // override SqlValidatorImpl
-    public void validateUpdate(SqlUpdate call)
+    public void validateUpdate(SqlUpdate update)
     {
         getPreparingStmt().setDmlValidation(
-            call.getTargetTable(),
+            update.getTargetTable(),
             PrivilegedActionEnum.UPDATE);
-        super.validateUpdate(call);
+        super.validateUpdate(update);
         getPreparingStmt().clearDmlValidation();
     }
 

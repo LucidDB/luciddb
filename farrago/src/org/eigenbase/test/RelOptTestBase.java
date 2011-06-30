@@ -37,6 +37,24 @@ import org.eigenbase.relopt.hep.*;
 abstract class RelOptTestBase
     extends SqlToRelTestBase
 {
+    /**
+     * Creates a RelOptTestBase.
+     */
+    protected RelOptTestBase()
+    {
+        super();
+    }
+
+    /**
+     * Creates a RelOptTestBase with an explicit name.
+     *
+     * @param name Test case name
+     */
+    protected RelOptTestBase(String name)
+    {
+        super(name);
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -153,13 +171,26 @@ abstract class RelOptTestBase
         assertTrue(relBefore != null);
 
         String planBefore = NL + RelOptUtil.toString(relBefore);
-        diffRepos.assertEquals("planBefore", "${planBefore}", planBefore);
+        checkBefore(planBefore);
 
         planner.setRoot(relBefore);
         RelNode relAfter = planner.findBestExp();
 
         String planAfter = NL + RelOptUtil.toString(relAfter);
-        diffRepos.assertEquals("planAfter", "${planAfter}", planAfter);
+        assertFalse(
+            "Rule did not change plan; probably a mistake?",
+            planBefore.equals(planAfter));
+        checkAfter(planAfter);
+    }
+
+    private void checkBefore(String planBefore)
+    {
+        getDiffRepos().assertEquals("planBefore", "${planBefore}", planBefore);
+    }
+
+    private void checkAfter(String planAfter)
+    {
+        getDiffRepos().assertEquals("planAfter", "${planAfter}", planAfter);
     }
 
     /**

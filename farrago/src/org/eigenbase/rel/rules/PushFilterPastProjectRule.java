@@ -61,6 +61,13 @@ public class PushFilterPastProjectRule
         FilterRel filterRel = (FilterRel) call.rels[0];
         ProjectRel projRel = (ProjectRel) call.rels[1];
 
+        // Cannot push filter if project contains a windowed aggregate. The
+        // filter would reduce the number of rows entering the project, and
+        // make the result inaccurate.
+        if (RexOver.containsOver(projRel.getProjectExps(), null)) {
+            return;
+        }
+
         // convert the filter to one that references the child of the project
         RexNode newCondition =
             RelOptUtil.pushFilterPastProject(filterRel.getCondition(), projRel);

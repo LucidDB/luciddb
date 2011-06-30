@@ -31,7 +31,7 @@ import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
@@ -163,11 +163,13 @@ public class RexProgramTest
      *     from t(x, y)</code>
      * <li><code>select (x + y) + (x + 1) as a, (x + x) as b from t(x, y)
      *     where ((x + y) > 1) and ((x + y) > 1)</code>
+     * <li><code>select 1 as a, cast(null as integer) as b, x + 1 as c
+     *     from t(x)</code>
      * </ul>
      */
     private RexProgramBuilder createProg(int variant)
     {
-        assert variant == 0 || variant == 1 || variant == 2;
+        assert variant == 0 || variant == 1 || variant == 2 || variant == 3;
         List<RelDataType> types =
             Arrays.asList(
                 typeFactory.createSqlType(SqlTypeName.INTEGER),
@@ -176,6 +178,7 @@ public class RexProgramTest
         RelDataType inputRowType = typeFactory.createStructType(types, names);
         final RexProgramBuilder builder =
             new RexProgramBuilder(inputRowType, rexBuilder);
+
         // $t0 = x
         // $t1 = y
         // $t2 = $t0 + 1 (i.e. x + 1)
@@ -189,6 +192,16 @@ public class RexProgramTest
                     SqlStdOperatorTable.plusOperator,
                     i0,
                     c1));
+
+        if (variant == 3) {
+            final RexNode t3 =
+                rexBuilder.makeNullLiteral(SqlTypeName.INTEGER);
+            builder.addProject(c1, "a");
+            builder.addProject(t3, "b");
+            builder.addProject(t2, "c");
+            return builder;
+        }
+
         // $t3 = 77 (not used)
         final RexLiteral c77 =
             rexBuilder.makeExactLiteral(
@@ -265,6 +278,67 @@ public class RexProgramTest
             builder.addCondition(t7);
         }
         return builder;
+    }
+
+    /**
+     * Unit test for {@link org.eigenbase.rex.RexBuilder#makeZeroLiteral}.
+     */
+    public void testRexBuilderMakeZeroLiteral()
+    {
+        for (BasicSqlType type : SqlLimitsTest.getTypes()) {
+            checkMakeZeroLiteral(type, Boolean.TRUE);
+            checkMakeZeroLiteral(type, Boolean.FALSE);
+            checkMakeZeroLiteral(type, null);
+        }
+    }
+
+    private void checkMakeZeroLiteral(BasicSqlType type, Boolean allowCast)
+    {
+        final RexNode literal =
+            allowCast == null
+            ? rexBuilder.makeZeroLiteral(type)
+            : rexBuilder.makeZeroLiteral(type, allowCast);
+        assertNotNull(literal);
+        assertNotNull(literal.toString());
+        if (allowCast == Boolean.TRUE) {
+            assertEquals(
+                type.getSqlTypeName(), literal.getType().getSqlTypeName());
+            if (type.getSqlTypeName().allowsPrec()) {
+                assertEquals(
+                    type.getPrecision(), literal.getType().getPrecision());
+            }
+            if (type.getSqlTypeName().allowsScale()) {
+                assertEquals(type.getScale(), literal.getType().getScale());
+            }
+        } else {
+            assertTrue(literal instanceof RexLiteral);
+        }
+        assertFalse(literal.getType().isNullable());
+    }
+
+    /**
+     * Unit test for
+     * {@link org.eigenbase.rex.RexProgram#getSourceExpression(int)}.
+     */
+    public void testRexProgramGetSourceExpression()
+    {
+        final RexProgram program0 = createProg(0).getProgram();
+        assertEquals(
+            "+(+($0, $1), +($0, 1))",
+            program0.getSourceExpression(0).toString());
+        assertEquals(
+            "+($0, $0)",
+            program0.getSourceExpression(1).toString());
+        final RexProgram program3 = createProg(3).getProgram();
+        assertEquals(
+            "1",
+            program3.getSourceExpression(0).toString());
+        assertEquals(
+            "CAST(null):INTEGER",
+            program3.getSourceExpression(1).toString());
+        assertEquals(
+            "+($0, 1)",
+            program3.getSourceExpression(2).toString());
     }
 }
 

@@ -194,7 +194,7 @@ public abstract class MedAbstractFennelTableModRel
         Collection<FemLocalIndex> indexes =
             FarragoCatalogUtil.getTableIndexes(repos, cwmTable);
         for (FemLocalIndex index : indexes) {
-            if (getOperation().equals(TableModificationRel.Operation.INSERT)
+            if (getOperation() == Operation.INSERT
                 && FarragoCatalogUtil.isDeletionIndex(index))
             {
                 continue;

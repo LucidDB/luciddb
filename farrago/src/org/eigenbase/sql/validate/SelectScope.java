@@ -96,7 +96,7 @@ public class SelectScope
     //~ Instance fields --------------------------------------------------------
 
     private final SqlSelect select;
-    protected final List<String> windowNames = new ArrayList<String>();
+    private final List<String> windowNames = new ArrayList<String>();
 
     private List<SqlNode> expandedSelectList = null;
 
@@ -210,27 +210,23 @@ public class SelectScope
         windowNames.add(winName);
     }
 
+    /**
+     * Returns whether there is a window in this or an enclosing scope with
+     * a given name.
+     *
+     * @param winName Window name
+     * @return Whether window is defined in this or an enclosing scope
+     */
     public boolean existingWindowName(String winName)
     {
-        String listName;
-        ListIterator<String> entry = windowNames.listIterator();
-        while (entry.hasNext()) {
-            listName = entry.next();
-            if (0 == listName.compareToIgnoreCase(winName)) {
+        for (SelectScope scope = this;
+            scope != null;
+            scope = SqlValidatorUtil.getEnclosingSelectScope(scope.getParent()))
+        {
+            if (scope.windowNames.contains(winName)) {
                 return true;
             }
         }
-
-        // if the name wasn't found then check the parent(s)
-        SqlValidatorScope walker = parent;
-        while ((null != walker) && !(walker instanceof EmptyScope)) {
-            if (walker instanceof SelectScope) {
-                final SelectScope parentScope = (SelectScope) walker;
-                return parentScope.existingWindowName(winName);
-            }
-            walker = parent;
-        }
-
         return false;
     }
 

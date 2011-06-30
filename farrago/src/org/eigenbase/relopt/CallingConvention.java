@@ -172,7 +172,16 @@ public class CallingConvention
      */
     private final Class interfaze;
 
+    /**
+     * Trait set containing this calling convention.
+     */
     public final RelTraitSet singletonSet;
+
+    /**
+     * Operand rule predicate that matches relational expressions of this
+     * calling convention.
+     */
+    public final RelOptRuleOperand.Predicate predicate;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -191,6 +200,7 @@ public class CallingConvention
             "RelNode.class.isAssignableFrom(interfaze)");
         maxOrdinal = Math.max(ordinal, maxOrdinal);
         singletonSet = new RelTraitSet(this);
+        predicate = RelOptRuleOperand.predicate(this);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -240,11 +250,8 @@ public class CallingConvention
      */
     public boolean equals(Object o)
     {
-        if (o == null) {
-            return false;
-        }
-
-        return ordinal == ((CallingConvention) o).ordinal;
+        return o instanceof CallingConvention
+            && ordinal == ((CallingConvention) o).ordinal;
     }
 
     /**

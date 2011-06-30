@@ -676,7 +676,7 @@ public class SqlValidatorTestCase
             SqlValidator validator = getValidator();
             SqlNode n = parseAndValidate(validator, sql);
 
-            RelDataType rowType = validator.getValidatedNodeType(n);
+            RelDataType rowType = validator.getRootNodeType(n);
             return rowType;
         }
 

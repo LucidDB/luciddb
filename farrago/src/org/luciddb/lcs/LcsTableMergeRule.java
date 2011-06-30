@@ -40,6 +40,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -311,8 +312,7 @@ public class LcsTableMergeRule
             joinRel.getInput(0),
             leftKeyExprs,
             null);
-        BitSet leftKeys = new BitSet();
-        RelOptUtil.setRexInputBitmap(leftKeys, 0, leftKeyExprs.size());
+        BitSet leftKeys = Util.bitSetBetween(0, leftKeyExprs.size());
         // If the keys are unique, that ensures that at most one source row
         // joins with each target row.  Since nulls will be filtered out by the
         // join condition, it's ok if there are nulls in the source join keys.

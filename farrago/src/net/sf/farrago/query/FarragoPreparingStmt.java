@@ -65,7 +65,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.advise.*;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.*;
@@ -301,11 +300,6 @@ public class FarragoPreparingStmt
         return sqlOperatorTable;
     }
 
-    public boolean hasSqlValidator()
-    {
-        return sqlValidator != null;
-    }
-
     // implement FarragoSessionPreparingStmt
     public SqlValidator getSqlValidator()
     {
@@ -354,14 +348,28 @@ public class FarragoPreparingStmt
         initClassDecl();
     }
 
+    protected PreparedResult implement0(
+        RelDataType rowType,
+        RelNode rootRel,
+        SqlKind sqlKind,
+        ClassDeclaration decl,
+        Argument[] args)
+    {
+        // Ignore passed in class declaration and args, and use the ones created
+        // by preIncrement.
+        return implement(
+            rowType, rootRel, sqlKind, implementingClassDecl, implementingArgs);
+    }
+
     // implement FarragoSessionPreparedStmt
     public SqlAdvisor getAdvisor()
     {
-        SqlValidatorWithHints validator = new SqlAdvisorValidator(
-            getSqlOperatorTable(),
-            this,
-            new SqlTypeFactoryImpl(),
-            SqlConformance.Default);
+        SqlValidatorWithHints validator =
+            new SqlAdvisorValidator(
+                getSqlOperatorTable(),
+                this,
+                getSqlValidator().getTypeFactory(),
+                SqlConformance.Default);
         return new SqlAdvisor(validator);
     }
 
@@ -378,16 +386,6 @@ public class FarragoPreparingStmt
                 };
             implementingClassDecl = super.init(implementingArgs);
         }
-    }
-
-    protected ClassDeclaration getImplementingClassDecl()
-    {
-        return implementingClassDecl;
-    }
-
-    protected Argument [] getImplementingArgs()
-    {
-        return implementingArgs;
     }
 
     protected TableAccessMap getTableAccessMap()
@@ -462,7 +460,7 @@ public class FarragoPreparingStmt
         }
     }
 
-    protected void prepareForCompilation()
+    public void prepareForCompilation()
     {
         // REVIEW jvs 20-Jan-2005: The idea here is to gather up all jars
         // referenced by external user-defined routines and provide them to the
@@ -670,8 +668,7 @@ public class FarragoPreparingStmt
             executableStmt =
                 new FarragoExecutableExplainStmt(
                     getFarragoTypeFactory().createStructType(
-                        new RelDataType[0],
-                        new String[0]),
+                        Collections.<Pair<String, RelDataType>>emptyList()),
                     preparedResult.getCode());
         }
 
@@ -694,13 +691,14 @@ public class FarragoPreparingStmt
         getSqlToRelConverter();
         if (analyzedSql.paramRowType == null) {
             // query expression
-            rootRel = sqlToRelConverter.convertQuery(sqlNode, false, true);
+            rootRel = sqlToRelConverter.convertQuery(
+                sqlNode, false, SqlToRelConverter.QueryContext.TOP);
             analyzedSql.setResultType(rootRel.getRowType());
             analyzedSql.paramRowType = getParamRowType();
         } else {
             // parameterized row expression
             analyzedSql.resultType =
-                getSqlValidator().getValidatedNodeType(sqlNode);
+                getSqlValidator().getRootNodeType(sqlNode);
         }
         analyzedSql.dependencies =
             Collections.unmodifiableSet(directDependencies);
@@ -799,7 +797,7 @@ public class FarragoPreparingStmt
     // implement FarragoSessionPreparingStmt
     public SqlToRelConverter getSqlToRelConverter()
     {
-        return getSqlToRelConverter(sqlValidator, this);
+        return getSqlToRelConverter(getSqlValidator(), this);
     }
 
     // implement FarragoSessionPreparingStmt
@@ -864,7 +862,11 @@ public class FarragoPreparingStmt
         return newRootRel;
     }
 
-    // override OJPreparingStmt
+    protected RelNode trimUnusedFields(RelNode rootRel)
+    {
+        return getSqlToRelConverter().trimUnusedFields(rootRel);
+    }
+
     protected RelNode optimize(RelDataType rowType, RelNode rootRel)
     {
         boolean dumpPlan = planDumpTracer.isLoggable(Level.FINE);
@@ -1032,7 +1034,9 @@ public class FarragoPreparingStmt
                 null,
                 queryString,
                 true);
-        RelNode relNode = sqlToRelConverter.convertQuery(sqlQuery, true, false);
+        RelNode relNode =
+            sqlToRelConverter.convertQuery(
+                sqlQuery, true, SqlToRelConverter.QueryContext.VIEW);
 
         --expansionDepth;
         return relNode;
@@ -1110,6 +1114,7 @@ public class FarragoPreparingStmt
                     new ScalarSubqueryConverter(this));
             }
             sqlToRelConverter.enableTableAccessConversion(false);
+            sqlToRelConverter.setTrimUnusedFields(false);
 
             // currently the only physical implementation available
             // for ValuesRel is FennelValuesRel
@@ -1256,12 +1261,14 @@ public class FarragoPreparingStmt
                     table,
                     getFarragoTypeFactory());
         } else if (columnSet instanceof FemLocalView) {
-            RelDataType rowType = createTableRowType(columnSet);
+            Pair<RelDataType, List<RelDataTypeField>> pair =
+                createTableRowType(columnSet);
             FemLocalView view = (FemLocalView) columnSet;
             relOptTable =
                 new FarragoView(
                     view,
-                    rowType,
+                    pair.left,
+                    pair.right,
                     datasetName,
                     view.getModality());
         } else {
@@ -1270,12 +1277,13 @@ public class FarragoPreparingStmt
         initializeQueryColumnSet(relOptTable, columnSet);
 
         if (oldColumnSet != null) {
-            RelDataType rowType = createTableRowType(oldColumnSet);
+            Pair<RelDataType, List<RelDataTypeField>> pair =
+                createTableRowType(oldColumnSet);
             relOptTable =
                 new PermutingRelOptTable(
                     this,
                     oldColumnSet.getName(),
-                    rowType,
+                    pair.left,
                     relOptTable);
         }
 
@@ -1443,7 +1451,32 @@ public class FarragoPreparingStmt
             throw new FarragoUnvalidatedDependencyException();
         }
 
-        RelDataType rowType = createTableRowType(table);
+        Pair<RelDataType, List<RelDataTypeField>> pair =
+            createTableRowType(table);
+
+        SqlAccessType allowedAccess =
+            FarragoCatalogUtil.getTableAllowedAccess(table);
+        return newValidatorTable(
+            resolved.getQualifiedName(),
+            pair.left,
+            allowedAccess,
+            modality);
+    }
+
+    /**
+     * Creates a row-type for a given table. This row-type includes any system
+     * columns which are implicit for this type of table.
+     *
+     * @param table Repository table
+     *
+     * @return Pair consisting of row type (not including system columns)
+     *    and list of system columns
+     */
+    protected Pair<RelDataType, List<RelDataTypeField>> createTableRowType(
+        CwmNamedColumnSet table)
+    {
+        RelDataType rowType =
+            getFarragoTypeFactory().createStructTypeFromClassifier(table);
 
         if (table instanceof FemLocalTable) {
             int nColumnsTotal = rowType.getFieldCount();
@@ -1468,6 +1501,8 @@ public class FarragoPreparingStmt
 
             // If a label is set, hide any columns which were created
             // after the label
+            Timestamp labelTimestamp =
+                getSession().getSessionLabelCreationTimestamp();
             if (labelTimestamp != null) {
                 while (nColumnsActual > 1) {
                     FemStoredColumn column =
@@ -1490,36 +1525,13 @@ public class FarragoPreparingStmt
             if (nColumnsActual < nColumnsTotal) {
                 rowType =
                     getFarragoTypeFactory().createStructType(
-                        RelOptUtil.getFieldTypeList(rowType).subList(
-                            0,
-                            nColumnsActual),
-                        RelOptUtil.getFieldNameList(rowType).subList(
+                        rowType.getFieldList().subList(
                             0,
                             nColumnsActual));
             }
         }
 
-        SqlAccessType allowedAccess =
-            FarragoCatalogUtil.getTableAllowedAccess(table);
-        return newValidatorTable(
-            resolved.getQualifiedName(),
-            rowType,
-            allowedAccess,
-            modality);
-    }
-
-    /**
-     * Creates a row-type for a given table. This row-type includes any system
-     * columns which are implicit for this type of type.
-     *
-     * @param table Repository table
-     *
-     * @return Row type including system columns
-     */
-    protected RelDataType createTableRowType(CwmNamedColumnSet table)
-    {
-        return getFarragoTypeFactory().createStructTypeFromClassifier(
-            table);
+        return Pair.of(rowType, Collections.<RelDataTypeField>emptyList());
     }
 
     /**
@@ -1757,7 +1769,9 @@ public class FarragoPreparingStmt
             RelDataType rowType,
             RelOptTable inputTable)
         {
-            super(schema, name, rowType);
+            super(
+                schema, name, rowType,
+                Collections.<RelDataTypeField>emptyList());
             assert inputTable != null : "inputTable";
             this.inputTable = inputTable;
         }

@@ -19,11 +19,13 @@
 
 package net.sf.saffron.ext;
 
+import java.util.Collections;
+
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.RelOptConnection;
 import org.eigenbase.relopt.RelOptSchema;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -37,7 +39,7 @@ public class ExtentTable extends RelOptAbstractTable
         String name,
         RelDataType rowType)
     {
-        super(schema, name, rowType);
+        super(schema, name, rowType, Collections.<RelDataTypeField>emptyList());
     }
 
     public RelNode toRel(

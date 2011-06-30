@@ -25,6 +25,7 @@ package net.sf.farrago.type;
 import java.sql.*;
 
 import java.util.*;
+import java.util.List;
 
 import javax.jmi.model.*;
 
@@ -203,6 +204,7 @@ public interface FarragoTypeFactory
      */
     public Class getClassForJavaParamStyle(
         RelDataType type);
+
 }
 
 // End FarragoTypeFactory.java

@@ -65,7 +65,7 @@ public class RemoveDistinctRule
         }
         RelNode child = distinct.getChild();
         if (child.isDistinct()) {
-            child = call.getPlanner().register(child, distinct);
+            child = call.getPlanner().register(child, distinct, call);
             child =
                 convert(
                     child,

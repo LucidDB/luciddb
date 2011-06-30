@@ -55,7 +55,31 @@ public abstract class SetOpRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public abstract SetOpRel clone(RelNode [] inputs, boolean all);
+    public SetOpRel clone()
+    {
+        return copy(
+            all,
+            RelOptUtil.clone(inputs))
+            .inheritTraitsFrom(this);
+    }
+
+    /**
+     * Copies this set operation relational expression.
+     *
+     * <p>Same general contract as {@link RelNode#copy(RelNode...)}.
+     *
+     * @param all Whether all
+     * @param inputs Input relational expressions
+     *
+     * @return Copy of this set operation
+     */
+    public abstract SetOpRel copy(boolean all, RelNode... inputs);
+
+    @Override
+    public SetOpRel copy(RelNode... inputs)
+    {
+        return copy(all, inputs);
+    }
 
     public boolean isDistinct()
     {

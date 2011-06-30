@@ -33,6 +33,13 @@ import org.eigenbase.relopt.*;
  */
 class MedMqlTableRel extends TableAccessRelBase
 {
+    /**
+     * Creates a MedMqlTableRel.
+     *
+     * @param cluster Cluster
+     * @param table Table
+     * @param connection Connection
+     */
     public MedMqlTableRel(
         RelOptCluster cluster,
         RelOptTable table,
@@ -45,9 +52,10 @@ class MedMqlTableRel extends TableAccessRelBase
             connection);
     }
 
-    MedMqlColumnSet getMedMqlColumnSet()
+    // override, with refined return type
+    public MedMqlColumnSet getTable()
     {
-        return (MedMqlColumnSet) getTable();
+        return (MedMqlColumnSet) table;
     }
 }
 

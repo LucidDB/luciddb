@@ -21,6 +21,8 @@
 */
 package org.eigenbase.rel;
 
+import java.util.List;
+
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -42,39 +44,48 @@ public class TableFunctionRel
     /**
      * Creates a <code>TableFunctionRel</code>.
      *
-     * @param cluster {@link RelOptCluster}  this relational expression belongs
-     * to
+     * @param cluster Cluster this relational expression belongs to
      * @param rexCall function invocation expression
      * @param rowType row type produced by function
      * @param inputs 0 or more relational inputs
+     * @param inputRowTypes Row types of inputs
      */
     public TableFunctionRel(
         RelOptCluster cluster,
         RexNode rexCall,
         RelDataType rowType,
-        RelNode [] inputs)
+        RelNode[] inputs,
+        List<RelDataType> inputRowTypes)
     {
         super(
             cluster,
             CallingConvention.NONE.singletonSet,
             rexCall,
             rowType,
-            inputs);
+            inputs,
+            inputRowTypes);
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    public TableFunctionRel clone()
+    @Override
+    public TableFunctionRel copy(RelNode... inputs)
     {
         TableFunctionRel clone =
             new TableFunctionRel(
                 getCluster(),
                 getCall(),
                 getRowType(),
-                RelOptUtil.clone(inputs));
-        clone.inheritTraitsFrom(this);
+                inputs,
+                getInputRowTypes());
         clone.setColumnMappings(getColumnMappings());
         return clone;
+    }
+
+    public TableFunctionRel clone()
+    {
+        return copy(RelOptUtil.clone(inputs))
+            .inheritTraitsFrom(this);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

@@ -21,10 +21,14 @@
 */
 package org.eigenbase.sql.validate;
 
+import java.util.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.util.mapping.*;
 
 
 /**
@@ -82,10 +86,34 @@ public class SetopNamespace
                 }
                 validator.validateQuery(operand, scope);
             }
-            return call.getOperator().validateOperands(
-                validator,
-                scope,
-                call);
+            final RelDataType rowType =
+                call.getOperator().validateOperands(
+                    validator, scope, call);
+
+            // Permute row type according to the field names in row type as
+            // written.
+            final RelDataType nsRowTypeAsWritten =
+                validator.getNamespace(call.operands[0]).getRowTypeAsWritten();
+            final List<String> fieldNames =
+                RelOptUtil.getFieldNameList(
+                    nsRowTypeAsWritten);
+            final RelDataType rowTypeAsWritten =
+                validator.getTypeFactory().createStructType(
+                    new AbstractList<Map.Entry<String, RelDataType>>()
+                    {
+                        public Map.Entry<String, RelDataType> get(int index)
+                        {
+                            return SqlValidatorUtil.lookupField(
+                                rowType, fieldNames.get(index));
+                        }
+
+                        public int size()
+                        {
+                            return fieldNames.size();
+                        }
+                    });
+            setRowType(rowType, rowTypeAsWritten);
+            return rowType;
         default:
             throw Util.newInternal("Not a query: " + call.getKind());
         }

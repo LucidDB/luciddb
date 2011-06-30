@@ -66,7 +66,7 @@ public class RemoveTrivialCalcRule
             return;
         }
         RelNode child = calc.getInput(0);
-        child = call.getPlanner().register(child, calc);
+        child = call.getPlanner().register(child, calc, call);
         child =
             convert(
                 child,

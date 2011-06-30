@@ -30,6 +30,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 
 /**
@@ -135,7 +136,8 @@ public abstract class ProjectRelBase
         }
         RexChecker checker =
             new RexChecker(
-                getChild().getRowType(), fail);
+                getChild().getRowType(),
+                fail);
         for (RexNode exp : exps) {
             exp.accept(checker);
         }
@@ -209,6 +211,31 @@ public abstract class ProjectRelBase
         return implementor.findRel((JavaRel) this, exps[field]);
     }
 
+    /**
+     * Returns the input field that an output field is populated from, or -1 if
+     * it is populated from an expression.
+     *
+     * @param outputOrdinal Ordinal of output field
+     * @return Input field that output fields is populated from; or -1
+     */
+    public int getSourceField(int outputOrdinal)
+    {
+        RexNode expr = exps[outputOrdinal];
+        while (true) {
+            if (expr instanceof RexCall
+                && ((RexCall) expr).getOperator()
+                == SqlStdOperatorTable.inFennelFunc)
+            {
+                // drill through identity function
+                expr = ((RexCall) expr).getOperands()[0];
+            } else if (expr instanceof RexInputRef) {
+                return ((RexInputRef) expr).getIndex();
+            } else {
+                return -1;
+            }
+        }
+    }
+
     //~ Inner Interfaces -------------------------------------------------------
 
     public interface Flags
@@ -225,89 +252,6 @@ public abstract class ProjectRelBase
         int None = 0;
     }
 
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Visitor which walks over a program and checks validity.
-     */
-    private static class Checker
-        extends RexVisitorImpl<Boolean>
-    {
-        private final boolean fail;
-        private final RelDataType inputRowType;
-        int failCount = 0;
-
-        /**
-         * Creates a Checker.
-         *
-         * @param inputRowType Input row type to expressions
-         * @param fail Whether to throw if checker finds an error
-         */
-        private Checker(RelDataType inputRowType, boolean fail)
-        {
-            super(true);
-            this.fail = fail;
-            this.inputRowType = inputRowType;
-        }
-
-        public Boolean visitInputRef(RexInputRef inputRef)
-        {
-            final int index = inputRef.getIndex();
-            final RelDataTypeField [] fields = inputRowType.getFields();
-            if ((index < 0) || (index >= fields.length)) {
-                assert !fail;
-                ++failCount;
-                return false;
-            }
-            if (!RelOptUtil.eq(
-                    "inputRef",
-                    inputRef.getType(),
-                    "underlying field",
-                    fields[index].getType(),
-                    fail))
-            {
-                assert !fail;
-                ++failCount;
-                return false;
-            }
-            return true;
-        }
-
-        public Boolean visitLocalRef(RexLocalRef localRef)
-        {
-            assert !fail : "localRef invalid in project";
-            ++failCount;
-            return false;
-        }
-
-        public Boolean visitFieldAccess(RexFieldAccess fieldAccess)
-        {
-            super.visitFieldAccess(fieldAccess);
-            final RelDataType refType =
-                fieldAccess.getReferenceExpr().getType();
-            assert refType.isStruct();
-            final RelDataTypeField field = fieldAccess.getField();
-            final int index = field.getIndex();
-            if ((index < 0) || (index > refType.getFields().length)) {
-                assert !fail;
-                ++failCount;
-                return false;
-            }
-            final RelDataTypeField typeField = refType.getFields()[index];
-            if (!RelOptUtil.eq(
-                    "type1",
-                    typeField.getType(),
-                    "type2",
-                    fieldAccess.getType(),
-                    fail))
-            {
-                assert !fail;
-                ++failCount;
-                return false;
-            }
-            return true;
-        }
-    }
 }
 
 // End ProjectRelBase.java

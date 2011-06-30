@@ -236,7 +236,8 @@ public class OJPlannerFactory
             return new JavaAggregateRel(
                 aggregate.getCluster(),
                 javaChild,
-                aggregate.getGroupCount(),
+                aggregate.getSystemFieldList(),
+                aggregate.getGroupSet(),
                 aggregate.getAggCallList());
         }
     }

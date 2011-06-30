@@ -46,30 +46,40 @@ public class CompositeList<T> extends AbstractList<T>
     private final List<T>[] lists;
 
     /**
-     * Creates a CompoundList.
+     * Creates a CompositeList.
      *
      * @param lists Constituent lists
      */
-    public CompositeList(List<T>... lists)
+    public CompositeList(List<? extends T>... lists)
     {
-        this.lists = lists;
+        //noinspection unchecked
+        this.lists = (List<T>[]) lists;
     }
 
     /**
-     * Creates a CompoundList.
+     * Creates a CompositeList.
      *
      * <p>More convenient than {@link #CompositeList(java.util.List[])},
      * because element type is inferred. Use this method as you would
      * {@link java.util.Arrays#asList(Object[])} or
      * {@link java.util.EnumSet#of(Enum, Enum[])}.
      *
+     * <p>Optimizes cases where zero or one lists are passed in.
+     *
      * @param lists Consistituent lists
      * @param <T> Element type
      * @return List consisting of all lists
      */
-    public static <T> CompositeList<T> of(List<T>... lists)
+    public static <T> List<T> of(List<? extends T>... lists)
     {
-        return new CompositeList<T>(lists);
+        switch (lists.length) {
+        case 0:
+            return Collections.emptyList();
+        case 1:
+            return Collections.unmodifiableList(lists[0]);
+        default:
+            return new CompositeList<T>(lists);
+        }
     }
 
     public T get(int index)

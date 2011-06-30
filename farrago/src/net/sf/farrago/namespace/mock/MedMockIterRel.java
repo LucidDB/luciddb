@@ -48,10 +48,17 @@ class MedMockIterRel
 {
     //~ Instance fields --------------------------------------------------------
 
-    private MedMockColumnSet columnSet;
+    private final MedMockColumnSet columnSet;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a MedMockIterRel.
+     *
+     * @param cluster Cluster
+     * @param columnSet Column set
+     * @param connection Connection
+     */
     MedMockIterRel(
         MedMockColumnSet columnSet,
         RelOptCluster cluster,

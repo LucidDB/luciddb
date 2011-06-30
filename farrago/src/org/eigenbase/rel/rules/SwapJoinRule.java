@@ -30,7 +30,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
-
 /**
  * <code>SwapJoinRule</code> permutes the inputs to a join. Outer joins cannot
  * be permuted.
@@ -59,6 +58,7 @@ public class SwapJoinRule
         super(
             new RelOptRuleOperand(
                 JoinRel.class,
+                RelOptRuleOperand.hasSystemFields(false),
                 ANY));
     }
 
@@ -138,10 +138,9 @@ public class SwapJoinRule
     {
         JoinRel join = (JoinRel) call.rels[0];
 
-        if (!join.getSystemFieldList().isEmpty()) {
-            // FIXME Enable this rule for joins with system fields
-            return;
-        }
+        // FIXME Enable this rule for joins with system fields
+        assert join.getSystemFieldList().isEmpty()
+            : "Operand predicate should ensure no sys fields";
 
         final RelNode swapped = swap(join);
         if (swapped == null) {
@@ -178,7 +177,8 @@ public class SwapJoinRule
                 project,
                 swapped.getTraits());
 
-        RelNode rel = call.getPlanner().ensureRegistered(project, newJoin);
+        RelNode rel =
+            call.getPlanner().ensureRegistered(project, newJoin, call);
         Util.discard(rel);
     }
 

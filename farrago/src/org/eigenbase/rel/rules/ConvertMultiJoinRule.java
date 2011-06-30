@@ -379,8 +379,8 @@ public class ConvertMultiJoinRule
                         srcConds[i].accept(
                             new RelOptUtil.RexInputConverter(
                                 rexBuilder,
-                                srcFields,
-                                destFields,
+                                Arrays.asList(srcFields),
+                                Arrays.asList(destFields),
                                 adjustments));
                 }
             }
@@ -489,8 +489,8 @@ public class ConvertMultiJoinRule
             rightFilter.accept(
                 new RelOptUtil.RexInputConverter(
                     joinRel.getCluster().getRexBuilder(),
-                    right.getRowType().getFields(),
-                    joinRel.getRowType().getFields(),
+                    right.getRowType().getFieldList(),
+                    joinRel.getRowType().getFieldList(),
                     adjustments));
         return rightFilter;
     }

@@ -155,6 +155,19 @@ public interface SqlValidator
     void validateQuery(SqlNode node, SqlValidatorScope scope);
 
     /**
+     * Returns the type of the root node of a query.
+     *
+     * <p>The default implementation returns the same value as
+     * {@link #getValidatedNodeType(org.eigenbase.sql.SqlNode)}. Derived classes
+     * may return a type that is similar, but lacking system fields.
+     *
+     * @param node Root node of query
+     *
+     * @return validated type, never null
+     */
+    RelDataType getRootNodeType(SqlNode node);
+
+    /**
      * Returns the type assigned to a node by validation.
      *
      * @param node the node of interest
@@ -341,6 +354,33 @@ public interface SqlValidator
     boolean isAggregate(SqlNode selectNode);
 
     /**
+     * Returns whether a parse tree node -- typically a SELECT, but may be
+     * another query operation such as a UNION or VALUES -- is a cursor.
+     *
+     * <p>The root of a statement is always a cursor; and any query that is
+     * inside the CURSOR function as an argument to a function.
+     *
+     * <blockquote><code>SELECT e.name, d.name<br/>
+     * FROM TABLE(upperCase(SELECT * FROM emp)) AS e<br/>
+     * JOIN (SELECT * FROM dept WHERE location = 'USA') AS d<br/>
+     * USING (deptno)</code></blockquote>
+     *
+     * <ul>
+     * <li>'SELECT e.name ...' is a cursor (because it is the root);
+     * <li>'SELECT * FROM emp' is a cursor (because it is an argument to the
+     *     CURSOR function);
+     * <li>'SELECT * FROM dept' is not a cursor.
+     * </ul>
+     *
+     * <p>Note that in {@link #shouldAllowIntermediateOrderBy()}, an
+     * 'intermediate' query is any query that is not a cursor.
+     *
+     * @param node Parse tree node representing a query
+     * @return Whether parse tree node is a cursor
+     */
+    boolean isCursor(SqlNode node);
+
+    /**
      * Converts a window specification or window name into a fully-resolved
      * window specification. For example, in <code>SELECT sum(x) OVER (PARTITION
      * BY x ORDER BY y), sum(y) OVER w1, sum(z) OVER (w ORDER BY y) FROM t
@@ -392,19 +432,16 @@ public interface SqlValidator
         int ordinal);
 
     /**
-     * Returns a list of expressions, with every occurrence of "&#42;" or
+     * Returns the select list of a query, with every occurrence of "&#42;" or
      * "TABLE.&#42;" expanded.
      *
-     * @param selectList Select clause to be expanded
-     * @param query Query
-     * @param includeSystemVars Whether to include system variables
+     * <p>Caches the results to save effort when the expanded select list is
+     * used multiple times during the validation and translation of a query.</p>
      *
+     * @param query Query
      * @return expanded select clause
      */
-    SqlNodeList expandStar(
-        SqlNodeList selectList,
-        SqlSelect query,
-        boolean includeSystemVars);
+    SqlNodeList getExpandedSelectList(SqlSelect query);
 
     /**
      * Returns the scope that expressions in the WHERE and GROUP BY clause of
@@ -427,12 +464,13 @@ public interface SqlValidator
     /**
      * Saves the type of a {@link SqlNode}, now that it has been validated.
      *
+     * <p>NOTE: Use with caution! Generally only the validator should call this
+     * method. Code outside the validator should treat derived type information
+     * as read-only, so it is consistent throughout the validation process.
+     *
      * @param node A SQL parse tree node
      * @param type Its type; must not be null
      *
-     * @deprecated This method should not be in the {@link SqlValidator}
-     * interface. The validator should drive the type-derivation process, and
-     * store nodes' types when they have been derived.
      * @pre type != null
      * @pre node != null
      */
@@ -477,7 +515,7 @@ public interface SqlValidator
      * <ul>
      * <li>In FROM ({@link #getFromScope} , you can only see 'foo'.
      * <li>In WHERE ({@link #getWhereScope}), GROUP BY ({@link #getGroupScope}),
-     * SELECT ({@link #getSelectScope}), and the ON clause of the JOIN ({@link
+     * SELECT ({@code getSelectScope}), and the ON clause of the JOIN ({@link
      * #getJoinScope}) you can see 'emp', 'dept', and 'foo'.
      * <li>In ORDER BY ({@link #getOrderScope}), you can see the column alias
      * 'x'; and tables 'emp', 'dept', and 'foo'.
@@ -612,6 +650,15 @@ public interface SqlValidator
     boolean shouldExpandIdentifiers();
 
     /**
+     * Whether to allow an ORDER BY clause in a subquery.
+     *
+     * <p>The default implementation says yes; the SQL standard says no.
+     *
+     * @return whether to allow an ORDER BY clause in a subquery
+     */
+    boolean shouldAllowIntermediateOrderBy();
+
+    /**
      * Enables or disables rewrite of "macro-like" calls such as COALESCE.
      *
      * @param rewriteCalls new setting
@@ -695,6 +742,15 @@ public interface SqlValidator
     boolean isSystemField(RelDataTypeField field);
 
     /**
+     * Returns a list of fields to be prefixed to each relational expression.
+     *
+     * <p>The default implementation returns the empty list.
+     *
+     * @return List of system fields
+     */
+    List<RelDataTypeField> getSystemFields();
+
+    /**
      * Returns a description of how each field in the row type maps to a
      * catalog, schema, table and column in the schema.
      *
@@ -707,6 +763,14 @@ public interface SqlValidator
      *     object
      */
     List<List<String>> getFieldOrigins(SqlNode sqlQuery);
+
+    /**
+     * Returns the row type of a cursor argument to a UDX call.
+     *
+     * @param cursorCall Call to the CURSOR operator wrapped around a query
+     * @return Row type of the cursor
+     */
+    RelDataType getCursorRowType(SqlCall cursorCall);
 }
 
 // End SqlValidator.java

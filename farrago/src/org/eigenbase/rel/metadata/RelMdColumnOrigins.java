@@ -26,6 +26,7 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -50,7 +51,7 @@ public class RelMdColumnOrigins
         // that.
         mapParameterTypes(
             "getColumnOrigins",
-            Collections.singletonList((Class) Integer.TYPE));
+            Collections.<Class>singletonList(Integer.TYPE));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -59,16 +60,28 @@ public class RelMdColumnOrigins
         AggregateRelBase rel,
         int iOutputColumn)
     {
-        if (iOutputColumn < rel.getGroupCount()) {
-            // Group columns pass through directly.
+        int n = iOutputColumn;
+        final int sysFieldCount = rel.getSystemFieldList().size();
+        final int groupCount = rel.getGroupSet().cardinality();
+
+        // System columns pass through directly.
+        if (n < sysFieldCount) {
             return invokeGetColumnOrigins(
                 rel.getChild(),
-                iOutputColumn);
+                n);
         }
+        n -= sysFieldCount;
+
+        // Next, group columns.
+        if (n < groupCount) {
+            return invokeGetColumnOrigins(
+                rel.getChild(),
+                Util.toList(rel.getGroupSet()).get(n));
+        }
+        n -= groupCount;
 
         // Aggregate columns are derived from input columns
-        AggregateCall call =
-            rel.getAggCallList().get(iOutputColumn - rel.getGroupCount());
+        AggregateCall call = rel.getAggCallList().get(n);
 
         Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
         for (Integer iInput : call.getArgList()) {
@@ -88,6 +101,8 @@ public class RelMdColumnOrigins
         JoinRelBase rel,
         int iOutputColumn)
     {
+        final int sysFieldCount = rel.getSystemFieldList().size();
+        iOutputColumn -= sysFieldCount;
         int nLeftColumns = rel.getLeft().getRowType().getFieldList().size();
         Set<RelColumnOrigin> set;
         boolean derived = false;

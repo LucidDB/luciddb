@@ -222,9 +222,9 @@ public class JdbcQuery
         return planner.makeCost(rows, cpu, io);
     }
 
-    public void onRegister(RelOptPlanner planner)
+    public void onRegister(RelOptPlanner planner, RelOptRuleCall call)
     {
-        super.onRegister(planner);
+        super.onRegister(planner, call);
         Util.discard(getForeignSql()); // compute query string now
     }
 

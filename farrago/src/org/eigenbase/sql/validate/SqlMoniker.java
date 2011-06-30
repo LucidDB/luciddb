@@ -23,9 +23,8 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.*;
 
-
 /**
- * An interface of an object identifier that represents a SqlIdentifier
+ * An interface of an object identifier that represents a SqlIdentifier.
  *
  * @author tleung
  * @version $Id$
@@ -33,6 +32,8 @@ import org.eigenbase.sql.*;
  */
 public interface SqlMoniker
 {
+    SqlMoniker[] EMPTY_ARRAY = new SqlMoniker[0];
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -50,6 +51,12 @@ public interface SqlMoniker
      */
     SqlIdentifier toIdentifier();
 
+    /**
+     * Returns a unique identifier of this moniker. Result is similar to
+     * {@link Object#toString()} but sometimes includes the object type.
+     *
+     * @return Unique identifier
+     */
     String id();
 }
 

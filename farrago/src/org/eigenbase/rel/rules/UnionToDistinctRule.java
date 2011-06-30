@@ -22,8 +22,11 @@
 */
 package org.eigenbase.rel.rules;
 
+import java.util.Collections;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
@@ -60,7 +63,12 @@ public class UnionToDistinctRule
                 union.getCluster(),
                 union.getInputs().clone(),
                 true);
-        call.transformTo(RelOptUtil.createDistinctRel(unionAll));
+        call.transformTo(
+            RelOptUtil.createDistinctRel(
+                unionAll,
+                // REVIEW: Is systemFieldList always empty? This rule could be
+                // applied to a UNION that is aware of ROWTIME.
+                Collections.<RelDataTypeField>emptyList()));
     }
 }
 

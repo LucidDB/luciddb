@@ -26,6 +26,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.util.Util;
 
 import java.util.*;
 
@@ -55,9 +56,15 @@ public class MedJdbcAggPushDownRule
     {
         AggregateRel aggRel = (AggregateRel) call.rels[0];
         MedJdbcQueryRel queryRel = (MedJdbcQueryRel) call.rels[1];
+
+        final int sysFieldCount = aggRel.getSystemFieldList().size();
+        if (sysFieldCount != 0) {
+            return;
+        }
+
         SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
         SqlNodeList groupBy = new SqlNodeList(SqlParserPos.ZERO);
-        for (int i = 0; i < aggRel.getGroupCount(); ++i) {
+        for (int i : Util.toIter(aggRel.getGroupSet())) {
             SqlIdentifier id =
                 new SqlIdentifier(
                     queryRel.getRowType().getFieldList().get(i).getName(),
@@ -106,11 +113,11 @@ public class MedJdbcAggPushDownRule
 
         // mark the aggregation key as unique; the planner may
         // rely on having this info available
-        Set<BitSet> uniqueKeys = new HashSet<BitSet>();
-        BitSet uniqueKey = new BitSet(aggRel.getRowType().getFieldCount());
-        uniqueKey.set(0, aggRel.getGroupCount());
-        uniqueKeys.add(uniqueKey);
-
+        Set<BitSet> uniqueKeys =
+            Collections.singleton(
+                Util.bitSetBetween(
+                    sysFieldCount,
+                    aggRel.getGroupSet().cardinality()));
         RelNode rel =
             new MedJdbcQueryRel(
                 queryRel.getServer(),

@@ -90,6 +90,15 @@ public abstract class JoinRelBase
 
     //~ Methods ----------------------------------------------------------------
 
+    @SuppressWarnings({"CloneDoesntCallSuperClone"})
+    public JoinRelBase clone()
+    {
+        return copy(
+            condition.clone(), getSystemFieldList(), left.clone(),
+            right.clone())
+            .inheritTraitsFrom(this);
+    }
+
     public RexNode [] getChildExps()
     {
         return new RexNode[] { condition };
@@ -120,8 +129,7 @@ public abstract class JoinRelBase
         return right;
     }
 
-    // TODO: enable
-    public boolean _isValid(boolean fail)
+    public boolean isValid(boolean fail)
     {
         if (!super.isValid(fail)) {
             return false;
@@ -147,11 +155,10 @@ public abstract class JoinRelBase
             RexChecker checker =
                 new RexChecker(
                     getCluster().getTypeFactory().createStructType(
-                        new RelDataTypeFactory.ListFieldInfo(
-                            CompositeList.of(
-                                getSystemFieldList(),
-                                getLeft().getRowType().getFieldList(),
-                                getRight().getRowType().getFieldList()))),
+                        CompositeList.of(
+                            getSystemFieldList(),
+                            getLeft().getRowType().getFieldList(),
+                            getRight().getRowType().getFieldList())),
                     fail);
             condition.accept(checker);
             if (checker.getFailureCount() > 0) {
@@ -253,17 +260,6 @@ public abstract class JoinRelBase
             getCluster().getTypeFactory(),
             null,
             getSystemFieldList());
-    }
-
-    /**
-     * Returns a list of system fields that will be prefixed to
-     * output row type.
-     *
-     * @return list of system fields
-     */
-    public List<RelDataTypeField> getSystemFieldList()
-    {
-        return Collections.emptyList();
     }
 
     /**
@@ -385,6 +381,33 @@ public abstract class JoinRelBase
             typeList.add(field.getType());
         }
     }
+
+    @Override
+    public RelNode copy(
+        RelNode... inputs)
+    {
+        assert inputs.length == 2;
+        return copy(
+            getCondition(), getSystemFieldList(), inputs[0], inputs[1]);
+    }
+
+    /**
+     * Creates a copy of this join, overriding condition, system fields and
+     * inputs.
+     *
+     * <p>General contract as {@link org.eigenbase.rel.RelNode#copy}.
+     *
+     * @param conditionExpr Condition
+     * @param systemFieldList System fields
+     * @param left Left input
+     * @param right Right input
+     * @return Copy of this join
+     */
+    public abstract JoinRelBase copy(
+        RexNode conditionExpr,
+        List<RelDataTypeField> systemFieldList,
+        RelNode left,
+        RelNode right);
 }
 
 // End JoinRelBase.java

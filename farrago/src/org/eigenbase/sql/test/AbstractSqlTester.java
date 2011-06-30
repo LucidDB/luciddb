@@ -31,6 +31,7 @@ import junit.framework.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -159,17 +160,11 @@ public abstract class AbstractSqlTester
         String [] inputValues)
     {
         StringBuilder buf = new StringBuilder();
-        buf.append("SELECT ").append(expr).append(" OVER (").append(windowSpec)
-        .append(") FROM (");
-        for (int i = 0; i < inputValues.length; i++) {
-            if (i > 0) {
-                buf.append(" UNION ALL ");
-            }
-            buf.append("SELECT ");
-            String inputValue = inputValues[i];
-            buf.append(inputValue).append(" AS x FROM (VALUES (1))");
-        }
-        buf.append(")");
+        buf.append("SELECT ").append(expr)
+            .append(" OVER (").append(windowSpec)
+            .append(") FROM (VALUES ");
+        Util.appendList(buf, inputValues);
+        buf.append(") AS t(x)");
         return buf.toString();
     }
 

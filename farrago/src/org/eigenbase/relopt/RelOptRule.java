@@ -277,6 +277,12 @@ public abstract class RelOptRule
      * a new expression, then calls back {@link RelOptRuleCall#transformTo} to
      * register the expression.</p>
      *
+     * <p>If the rule does not create a new expression, it may call
+     * {@link RelOptRuleCall#failed(String)} to document why it was
+     * unsuccessful. Calling {@code failed} is optional: it may generate
+     * diagnostic information, but does not affect the behavior of the planning
+     * process.
+     *
      * @param call Rule call
      *
      * @see #matches(RelOptRuleCall)

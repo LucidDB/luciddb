@@ -55,6 +55,8 @@ public class FennelCartesianJoinRule
         super(
             new RelOptRuleOperand(
                 JoinRel.class,
+                RelOptRuleOperand.hasSystemFields(false),
+                false,
                 new RelOptRuleOperand(RelNode.class, ANY),
                 new RelOptRuleOperand(RelNode.class, ANY)));
     }
@@ -72,10 +74,9 @@ public class FennelCartesianJoinRule
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
 
-        if (!joinRel.getSystemFieldList().isEmpty()) {
-            // Cannot convert joins that generate system fields.
-            return;
-        }
+        // Cannot convert joins that generate system fields.
+        assert joinRel.getSystemFieldList().isEmpty()
+            : "Operand predicate should ensure no sys fields";
 
         RelNode leftRel = call.rels[1];
         RelNode rightRel = call.rels[2];
@@ -185,13 +186,11 @@ public class FennelCartesianJoinRule
                     joinRel.getRowType(),
                     productRel.getCluster().getRexBuilder());
             newRel =
-                new CalcRel(
+                new FennelCalcRel(
                     productRel.getCluster(),
-                    joinRel.getTraits(),
                     productRel,
                     joinRel.getRowType(),
-                    program,
-                    Collections.<RelCollation>emptyList());
+                    program);
         } else {
             newRel = productRel;
         }

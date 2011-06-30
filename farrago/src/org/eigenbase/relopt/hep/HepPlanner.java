@@ -715,8 +715,7 @@ public class HepPlanner
 
     // implement RelOptPlanner
     public RelNode register(
-        RelNode rel,
-        RelNode equivRel)
+        RelNode rel, RelNode equivRel, RelOptRuleCall call)
     {
         // Ignore; this call is mostly to tell Volcano how to avoid
         // infinite loops.
@@ -724,7 +723,8 @@ public class HepPlanner
     }
 
     // implement RelOptPlanner
-    public RelNode ensureRegistered(RelNode rel, RelNode equivRel)
+    public RelNode ensureRegistered(
+        RelNode rel, RelNode equivRel, RelOptRuleCall call)
     {
         return rel;
     }

@@ -44,9 +44,9 @@ public abstract class TableFunctionRelBase
 
     private final RexNode rexCall;
 
-    private final RelDataType rowType;
-
     protected final RelNode [] inputs;
+
+    protected final List<RelDataType> inputRowTypes;
 
     private Set<RelColumnMapping> columnMappings;
 
@@ -55,23 +55,25 @@ public abstract class TableFunctionRelBase
     /**
      * Creates a <code>TableFunctionRelBase</code>.
      *
-     * @param cluster {@link RelOptCluster}  this relational expression belongs
-     * to
+     * @param cluster Cluster this relational expression belongs to
      * @param rexCall function invocation expression
      * @param rowType row type produced by function
      * @param inputs 0 or more relational inputs
+     * @param inputRowTypes Row types of inputs
      */
     protected TableFunctionRelBase(
         RelOptCluster cluster,
         RelTraitSet traits,
         RexNode rexCall,
         RelDataType rowType,
-        RelNode [] inputs)
+        RelNode[] inputs,
+        List<RelDataType> inputRowTypes)
     {
         super(cluster, traits);
         this.rexCall = rexCall;
         this.rowType = rowType;
         this.inputs = inputs;
+        this.inputRowTypes = inputRowTypes;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -155,9 +157,17 @@ public abstract class TableFunctionRelBase
         this.columnMappings = columnMappings;
     }
 
-    protected RelDataType deriveRowType()
+    /**
+     * Returns the row types of the input relational expressions. After
+     * planning, the input relational expressions may have slightly different
+     * types (for example, renamed fields), so use this method to get the
+     * types which will become the JDBC metadata for the UDX.
+     *
+     * @return List of row types of input relational expressions
+     */
+    public List<RelDataType> getInputRowTypes()
     {
-        return rowType;
+        return inputRowTypes;
     }
 }
 

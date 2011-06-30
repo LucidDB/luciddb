@@ -51,6 +51,14 @@ public abstract class TableAccessRelBase
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a TableAccessRelBase.
+     *
+     * @param cluster Cluster
+     * @param traits Set of traits
+     * @param table Table
+     * @param connection Connection
+     */
     protected TableAccessRelBase(
         RelOptCluster cluster,
         RelTraitSet traits,
@@ -102,7 +110,8 @@ public abstract class TableAccessRelBase
 
     public RelDataType deriveRowType()
     {
-        return table.getRowType();
+        return RelOptUtil.getRowTypeIncludingSystemFields(
+            getCluster().getTypeFactory(), table, true);
     }
 
     public void explain(RelOptPlanWriter pw)

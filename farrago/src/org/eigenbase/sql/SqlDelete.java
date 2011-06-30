@@ -27,11 +27,10 @@ import org.eigenbase.sql.validate.*;
 
 
 /**
- * A <code>SqlDelete</code> is a node of a parse tree which represents a DELETE
- * statement.
+ * Parse tree node representing a DELETE statement.
  */
 public class SqlDelete
-    extends SqlCall
+    extends SqlDml
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -62,20 +61,19 @@ public class SqlDelete
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * @return the identifier for the target table of the deletion
-     */
     public SqlIdentifier getTargetTable()
     {
         return (SqlIdentifier) operands[TARGET_TABLE_OPERAND];
     }
 
-    /**
-     * @return the alias for the target table of the deletion
-     */
     public SqlIdentifier getAlias()
     {
         return (SqlIdentifier) operands[ALIAS_OPERAND];
+    }
+
+    public SqlNodeList getTargetColumnList()
+    {
+        return null;
     }
 
     /**
@@ -90,13 +88,15 @@ public class SqlDelete
     }
 
     /**
-     * Gets the source SELECT expression for the data to be deleted. This
-     * returns null before the condition has been expanded by
-     * SqlValidator.performUnconditionRewrites.
+     * {@inheritDoc}
      *
-     * @return the source SELECT for the data to be inserted
+     * <p>In a DELETE statement, it is always a SELECT. Returns
+     * null before the statement has been expanded by
+     * {@link SqlValidatorImpl#performUnconditionalRewrites}.</p>
+     *
+     * @return the source SELECT for the data to be updated
      */
-    public SqlSelect getSourceSelect()
+    public SqlSelect getSource()
     {
         return (SqlSelect) operands[SOURCE_SELECT_OPERAND];
     }

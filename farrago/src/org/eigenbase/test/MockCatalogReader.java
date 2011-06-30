@@ -123,7 +123,7 @@ public class MockCatalogReader
         registerSchema(salesSchema);
 
         // Register "EMP" table.
-        MockTable empTable = new MockTable(salesSchema, "EMP");
+        MockTable empTable = createMockTable(salesSchema, "EMP");
         empTable.addColumn("EMPNO", intType);
         empTable.addColumn("ENAME", varchar20Type);
         empTable.addColumn("JOB", varchar10Type);
@@ -136,13 +136,13 @@ public class MockCatalogReader
         registerTable(empTable);
 
         // Register "DEPT" table.
-        MockTable deptTable = new MockTable(salesSchema, "DEPT");
+        MockTable deptTable = createMockTable(salesSchema, "DEPT");
         deptTable.addColumn("DEPTNO", intType);
         deptTable.addColumn("NAME", varchar10Type);
         registerTable(deptTable);
 
         // Register "BONUS" table.
-        MockTable bonusTable = new MockTable(salesSchema, "BONUS");
+        MockTable bonusTable = createMockTable(salesSchema, "BONUS");
         bonusTable.addColumn("ENAME", varchar20Type);
         bonusTable.addColumn("JOB", varchar10Type);
         bonusTable.addColumn("SAL", intType);
@@ -150,7 +150,7 @@ public class MockCatalogReader
         registerTable(bonusTable);
 
         // Register "SALGRADE" table.
-        MockTable salgradeTable = new MockTable(salesSchema, "SALGRADE");
+        MockTable salgradeTable = createMockTable(salesSchema, "SALGRADE");
         salgradeTable.addColumn("GRADE", intType);
         salgradeTable.addColumn("LOSAL", intType);
         salgradeTable.addColumn("HISAL", intType);
@@ -158,7 +158,7 @@ public class MockCatalogReader
 
         // Register "EMP_ADDRESS" table
         MockTable contactAddressTable =
-            new MockTable(salesSchema, "EMP_ADDRESS");
+            createMockTable(salesSchema, "EMP_ADDRESS");
         contactAddressTable.addColumn("EMPNO", intType);
         contactAddressTable.addColumn("HOME_ADDRESS", addressType);
         contactAddressTable.addColumn("MAILING_ADDRESS", addressType);
@@ -169,7 +169,7 @@ public class MockCatalogReader
         registerSchema(customerSchema);
 
         // Register "CONTACT" table.
-        MockTable contactTable = new MockTable(customerSchema, "CONTACT");
+        MockTable contactTable = createMockTable(customerSchema, "CONTACT");
         contactTable.addColumn("CONTACTNO", intType);
         contactTable.addColumn("FNAME", varchar10Type);
         contactTable.addColumn("LNAME", varchar10Type);
@@ -178,7 +178,7 @@ public class MockCatalogReader
         registerTable(contactTable);
 
         // Register "ACCOUNT" table.
-        MockTable accountTable = new MockTable(customerSchema, "ACCOUNT");
+        MockTable accountTable = createMockTable(customerSchema, "ACCOUNT");
         accountTable.addColumn("ACCTNO", intType);
         accountTable.addColumn("TYPE", varchar20Type);
         accountTable.addColumn("BALANCE", intType);
@@ -265,6 +265,13 @@ public class MockCatalogReader
     public String getSchemaName()
     {
         return defaultSchema;
+    }
+
+    protected MockTable createMockTable(
+        MockSchema schema,
+        String name)
+    {
+        return new MockTable(schema, name);
     }
 
     //~ Inner Classes ----------------------------------------------------------

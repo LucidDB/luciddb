@@ -65,22 +65,28 @@ public abstract class MedAbstractColumnSet
      * Creates a new MedAbstractColumnSet.
      *
      * @param localName name of this ColumnSet as it will be known within the
-     * Farrago system
+     *     Farrago system
      * @param foreignName name of this ColumnSet as it is known on the foreign
-     * server; may be null if no meaningful name exists
+     *     server; may be null if no meaningful name exists
      * @param rowType row type descriptor
+     * @param systemFieldList List of system fields; may be empty, never null
      * @param tableProps table-level properties
      * @param columnPropMap column-level properties (map from column name to
-     * Properties object)
+     *     Properties object)
      */
     protected MedAbstractColumnSet(
-        String [] localName,
-        String [] foreignName,
+        String[] localName,
+        String[] foreignName,
         RelDataType rowType,
+        List<RelDataTypeField> systemFieldList,
         Properties tableProps,
         Map<String, Properties> columnPropMap)
     {
-        super(null, localName[localName.length - 1], rowType);
+        super(
+            null,
+            localName[localName.length - 1],
+            rowType,
+            systemFieldList);
         this.localName = localName;
         this.foreignName = foreignName;
         this.tableProps = tableProps;
@@ -161,6 +167,11 @@ public abstract class MedAbstractColumnSet
         return allowedAccess;
     }
 
+    /**
+     * Sets the access type of the table.
+     *
+     * @param allowedAccess Access type
+     */
     public void setAllowedAccess(SqlAccessType allowedAccess)
     {
         this.allowedAccess = allowedAccess;
@@ -200,7 +211,8 @@ public abstract class MedAbstractColumnSet
             udxSpecificName,
             serverMofId,
             args,
-            RelNode.emptyArray);
+            RelNode.emptyArray,
+            Collections.<RelDataType>emptyList());
     }
 
     /**
@@ -218,18 +230,18 @@ public abstract class MedAbstractColumnSet
         RelDataType targetRowType,
         RelDataType srcRowType)
     {
-        ArrayList<RexNode> rexNodeList = new ArrayList();
+        List<RexNode> rexNodeList = new ArrayList<RexNode>();
         RexBuilder rexBuilder = cluster.getRexBuilder();
         FarragoWarningQueue warningQueue =
             getPreparingStmt().getStmtValidator().getWarningQueue();
         String objectName = this.localName[this.localName.length - 1];
 
-        HashMap<String, RelDataType> srcMap = new HashMap();
+        Map<String, RelDataType> srcMap = new HashMap<String, RelDataType>();
         for (RelDataTypeField srcField : srcRowType.getFieldList()) {
             srcMap.put(srcField.getName(), srcField.getType());
         }
 
-        ArrayList<String> allTargetFields = new ArrayList();
+        List<String> allTargetFields = new ArrayList<String>();
         int index = 0;
         for (RelDataTypeField targetField : targetRowType.getFieldList()) {
             allTargetFields.add(targetField.getName());

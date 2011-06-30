@@ -129,6 +129,12 @@ public class FarragoTypeFactoryImpl
     }
 
     // implement FarragoTypeFactory
+    public List<RelDataTypeField> getSystemFieldList()
+    {
+        return Collections.emptyList();
+    }
+
+    // implement FarragoTypeFactory
     public RelDataType createCwmType(
         CwmSqldataType cwmType)
     {
@@ -215,8 +221,8 @@ public class FarragoTypeFactoryImpl
                 // REVIEW jvs 12-Feb-2005:  what is this for?
                 componentType =
                     createStructType(
-                        new RelDataType[] { componentType },
-                        new String[] { "EXP$0" });
+                        Collections.singletonList(
+                            Pair.of("EXP$0", componentType)));
             }
             return createMultisetType(componentType, -1);
         } else if (classifier instanceof FemSqldistinguishedType) {

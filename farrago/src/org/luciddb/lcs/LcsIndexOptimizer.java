@@ -879,15 +879,10 @@ public class LcsIndexOptimizer
             return null;
         }
 
-        BitSet dimKeys = new BitSet();
-        for (int dimCol : dimKeyList) {
-            dimKeys.set(dimCol);
-        }
-
         Double dimKeyCND =
             RelMetadataQuery.getDistinctRowCount(
                 dimRel,
-                dimKeys,
+                Util.bitSetOf(dimKeyList),
                 null);
 
         if (dimKeyCND == null) {

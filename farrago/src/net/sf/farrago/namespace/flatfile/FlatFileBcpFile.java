@@ -466,9 +466,9 @@ class FlatFileBcpFile
                                     typeScale),
                                 true);
                     } else {
-                        if ((typeName.equals(SqlTypeName.TIMESTAMP))
-                            || (typeName.equals(SqlTypeName.TIME)))
-                        {
+                        switch (typeName) {
+                        case TIMESTAMP:
+                        case TIME:
                             typeLen = typeName.getDefaultPrecision();
                         }
                         types[index] =

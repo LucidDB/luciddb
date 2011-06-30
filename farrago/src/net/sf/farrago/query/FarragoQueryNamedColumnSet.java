@@ -22,8 +22,11 @@
 */
 package net.sf.farrago.query;
 
+import java.util.List;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.sql2003.FemLocalView;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -64,17 +67,21 @@ public abstract class FarragoQueryNamedColumnSet
     /**
      * Creates a new FarragoQueryNamedColumnSet object.
      *
-     * @param cwmColumnSet catalog definition for column set
-     * @param rowType type for rows stored in column set
+     * @param cwmColumnSet Catalog definition for column set
+     * @param rowType Type for rows stored in column set (not including system
+     *     fields)
+     * @param systemFieldList List of system fields (may be empty, not null)
      */
     FarragoQueryNamedColumnSet(
         CwmNamedColumnSet cwmColumnSet,
-        RelDataType rowType)
+        RelDataType rowType,
+        List<RelDataTypeField> systemFieldList)
     {
         super(
             null,
             cwmColumnSet.getName(),
-            rowType);
+            rowType,
+            systemFieldList);
         this.cwmColumnSet = cwmColumnSet;
         this.allowedAccess =
             FarragoCatalogUtil.getTableAllowedAccess(cwmColumnSet);

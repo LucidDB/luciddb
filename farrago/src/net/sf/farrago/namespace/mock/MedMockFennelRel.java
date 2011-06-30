@@ -46,10 +46,17 @@ class MedMockFennelRel
 {
     //~ Instance fields --------------------------------------------------------
 
-    private MedMockColumnSet columnSet;
+    private final MedMockColumnSet columnSet;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a MedMockFennelRel.
+     *
+     * @param cluster Cluster
+     * @param columnSet Column set
+     * @param connection Connection
+     */
     MedMockFennelRel(
         MedMockColumnSet columnSet,
         RelOptCluster cluster,

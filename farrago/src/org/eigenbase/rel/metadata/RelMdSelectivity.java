@@ -28,6 +28,7 @@ import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -79,7 +80,7 @@ public class RelMdSelectivity
                     new RelOptUtil.RexInputConverter(
                         rexBuilder,
                         null,
-                        input.getRowType().getFields(),
+                        input.getRowType().getFieldList(),
                         adjustments));
             double sel = RelMetadataQuery.getSelectivity(input, modifiedPred);
 
@@ -144,7 +145,7 @@ public class RelMdSelectivity
         List<RexNode> notPushable = new ArrayList<RexNode>();
         List<RexNode> pushable = new ArrayList<RexNode>();
         RelOptUtil.splitFilters(
-            rel.getGroupCount(),
+            rel.getGroupSet(),
             predicate,
             pushable,
             notPushable);
@@ -168,7 +169,7 @@ public class RelMdSelectivity
         List<RexNode> notPushable = new ArrayList<RexNode>();
         List<RexNode> pushable = new ArrayList<RexNode>();
         RelOptUtil.splitFilters(
-            rel.getRowType().getFieldCount(),
+            Util.bitSetBetween(0, rel.getRowType().getFieldCount()),
             predicate,
             pushable,
             notPushable);

@@ -1168,7 +1168,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    LhxAggRel(groupCount=[1])'
+'    LhxAggRel(group=[{0}])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 > 
 > select ename from lhxemps group by ename order by 1;
@@ -1184,7 +1184,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    LhxAggRel(groupCount=[1])'
+'    LhxAggRel(group=[{0}])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select deptno from lhxemps group by deptno order by 1;
@@ -1198,7 +1198,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    LhxAggRel(groupCount=[1])'
+'    LhxAggRel(group=[{0}])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select distinct deptno from lhxemps order by 1;
@@ -1211,7 +1211,7 @@
 > select count(deptno) from lhxemps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'  FennelAggRel(group=[{}], EXPR$0=[COUNT($0)])'
 '    LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select count(deptno) from lhxemps;
@@ -1224,7 +1224,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT($1)])'
+'      LhxAggRel(group=[{0}], EXPR$0=[COUNT($1)])'
 '        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO]])'
 > 
 > select count(empno) from lhxemps group by deptno order by 1;
@@ -1239,8 +1239,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT($1)])'
-'        LhxAggRel(groupCount=[2])'
+'      LhxAggRel(group=[{0}], EXPR$0=[COUNT($1)])'
+'        LhxAggRel(group=[{0, 1}])'
 '          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO]])'
 > 
 > select count(distinct empno) from lhxemps group by deptno order by 1;
@@ -1265,7 +1265,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'      LhxAggRel(group=[{0}], EXPR$0=[COUNT()])'
 '        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select count(*) from lhxemps group by deptno order by 1;
@@ -1293,7 +1293,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'      LhxAggRel(group=[{0}], EXPR$0=[COUNT()])'
 '        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select count(*) from lhxemps group by deptno order by 1;
@@ -1313,7 +1313,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0) NOT NULL])'
-'      LhxAggRel(groupCount=[1], EXPR$0=[MAX($1)])'
+'      LhxAggRel(group=[{0}], EXPR$0=[MAX($1)])'
 '        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 > select max(ename) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -1329,11 +1329,11 @@
 > select empno, min(ename), max(ename) from lhxemps group by empno;
 'column0'
 'FennelToIteratorConverter'
-'  LhxAggRel(groupCount=[1], EXPR$1=[MIN($1)], EXPR$2=[MAX($1)])'
+'  LhxAggRel(group=[{0}], EXPR$1=[MIN($1)], EXPR$2=[MAX($1)])'
 '    LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 > 
 > select empno, min(ename), max(ename) from lhxemps group by empno;
-Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ' ] (state=,code=0)
+Error: Row size (6033 bytes) exceeds maximum (4088 bytes); row data:  [ 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ' ] (state=,code=0)
 > 
 > -----------------------------
 > -- aggregating NULL values --
@@ -1348,30 +1348,30 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 > explain plan for select ename1 from emps1 group by ename1;
 'column0'
 'FennelToIteratorConverter'
-'  LhxAggRel(groupCount=[1])'
+'  LhxAggRel(group=[{0}])'
 '    LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 > explain plan for select distinct ename1 from emps1;
 'column0'
 'FennelToIteratorConverter'
-'  LhxAggRel(groupCount=[1])'
+'  LhxAggRel(group=[{0}])'
 '    LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 > explain plan for select count(*) from emps1 group by ename1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'    LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'    LhxAggRel(group=[{0}], EXPR$0=[COUNT()])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 > explain plan for select count(ename1) from emps1 group by ename1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'    LhxAggRel(groupCount=[1], EXPR$0=[COUNT($0)])'
+'    LhxAggRel(group=[{0}], EXPR$0=[COUNT($0)])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 > explain plan for select count(distinct ename1) from emps1;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
-'    LhxAggRel(groupCount=[1])'
+'  FennelAggRel(group=[{}], EXPR$0=[COUNT($0)])'
+'    LhxAggRel(group=[{0}])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 > 
 > select ename1 from emps1 group by ename1;
@@ -1546,7 +1546,7 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '    LcsRowScanRel(table=[[LOCALDB, LHX, TAB]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB$A, SYS$CLUSTERED_INDEX$TAB$B, SYS$CLUSTERED_INDEX$TAB$C]])'
-'    LhxAggRel(groupCount=[1])'
+'    LhxAggRel(group=[{0}])'
 '      FennelMergeRel'
 '        FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
 '          FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER A) NOT NULL])'
@@ -1557,7 +1557,7 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], A=[$t0], $condition=[$t1])'
 '            FennelToIteratorConverter'
-'              LhxAggRel(groupCount=[1])'
+'              LhxAggRel(group=[{0}])'
 '                FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
 '                  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER A) NOT NULL])'
 '                    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[RIGHTSEMI])'

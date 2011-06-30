@@ -114,7 +114,9 @@ public class ConverterTest extends TestCase
                 testContext.connection,
                 new JavaRexBuilder(testContext.connection.getRelOptSchema()
                         .getTypeFactory()));
-        final RelNode rel = converter.convertQuery(sqlQuery, true, true);
+        final RelNode rel =
+            converter.convertQuery(
+                sqlQuery, true, SqlToRelConverter.QueryContext.TOP);
         assertTrue(rel != null);
         final StringWriter sw = new StringWriter();
         final RelOptPlanWriter planWriter =

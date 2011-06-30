@@ -45,7 +45,7 @@ public abstract class RelDataTypeFactoryImpl
 {
     //~ Instance fields --------------------------------------------------------
 
-    private HashMap<RelDataType, RelDataType> map =
+    private final Map<RelDataType, RelDataType> map =
         new HashMap<RelDataType, RelDataType>();
 
     //~ Constructors -----------------------------------------------------------
@@ -89,6 +89,7 @@ public abstract class RelDataTypeFactoryImpl
         List<RelDataType> typeList,
         List<String> fieldNameList)
     {
+        assert typeList.size() == fieldNameList.size();
         final RelDataTypeField [] fields =
             new RelDataTypeField[typeList.size()];
         for (int i = 0; i < fields.length; i++) {
@@ -115,6 +116,31 @@ public abstract class RelDataTypeFactoryImpl
                     fieldInfo.getFieldType(i));
         }
         return canonize(new RelRecordType(fields));
+    }
+
+    // implement RelDataTypeFactory
+    public final RelDataType createStructType(
+        final List<? extends Map.Entry<String, RelDataType>> fieldList)
+    {
+        return createStructType(
+            new FieldInfo()
+            {
+                public int getFieldCount()
+                {
+                    return fieldList.size();
+                }
+
+                public String getFieldName(int index)
+                {
+                    return fieldList.get(index).getKey();
+                }
+
+                public RelDataType getFieldType(int index)
+                {
+                    return fieldList.get(index).getValue();
+                }
+            }
+        );
     }
 
     // implement RelDataTypeFactory
@@ -146,18 +172,20 @@ public abstract class RelDataTypeFactoryImpl
 
         // recursively compute column-wise least restrictive
         RelDataType [] inputTypes = new RelDataType[types.length];
-        RelDataType [] outputTypes = new RelDataType[nFields];
-        String [] fieldNames = new String[nFields];
+        List<Pair<String, RelDataType>> fields =
+            new ArrayList<Pair<String, RelDataType>>();
         for (int j = 0; j < nFields; ++j) {
             // REVIEW jvs 22-Jan-2004:  Always use the field name from the
             // first type?
-            fieldNames[j] = type0.getFields()[j].getName();
             for (int i = 0; i < types.length; ++i) {
                 inputTypes[i] = types[i].getFields()[j].getType();
             }
-            outputTypes[j] = leastRestrictive(inputTypes);
+            fields.add(
+                Pair.of(
+                    type0.getFields()[j].getName(),
+                    leastRestrictive(inputTypes)));
         }
-        return createStructType(outputTypes, fieldNames);
+        return createStructType(fields);
     }
 
     // copy a non-record type, setting nullability
@@ -279,14 +307,13 @@ public abstract class RelDataTypeFactoryImpl
      */
     private static RelDataTypeField [] getFieldArray(RelDataType [] types)
     {
-        ArrayList<RelDataTypeField> fieldList =
+        List<RelDataTypeField> fieldList =
             new ArrayList<RelDataTypeField>();
         for (int i = 0; i < types.length; i++) {
             RelDataType type = types[i];
             addFields(type, fieldList);
         }
-        return (RelDataTypeField []) fieldList.toArray(
-            new RelDataTypeField[fieldList.size()]);
+        return fieldList.toArray(new RelDataTypeField[fieldList.size()]);
     }
 
     /**
@@ -294,15 +321,14 @@ public abstract class RelDataTypeFactoryImpl
      */
     private static RelDataType [] getTypeArray(RelDataType [] types)
     {
-        ArrayList<RelDataType> typeList = new ArrayList<RelDataType>();
+        List<RelDataType> typeList = new ArrayList<RelDataType>();
         getTypeArray(types, typeList);
-        return (RelDataType []) typeList.toArray(
-            new RelDataType[typeList.size()]);
+        return typeList.toArray(new RelDataType[typeList.size()]);
     }
 
     private static void getTypeArray(
         RelDataType [] types,
-        ArrayList<RelDataType> typeList)
+        List<RelDataType> typeList)
     {
         for (int i = 0; i < types.length; i++) {
             RelDataType type = types[i];
@@ -319,19 +345,15 @@ public abstract class RelDataTypeFactoryImpl
      */
     private static void addFields(
         RelDataType type,
-        ArrayList<RelDataTypeField> fieldList)
+        List<RelDataTypeField> fieldList)
     {
         if (type instanceof RelCrossType) {
             final RelCrossType crossType = (RelCrossType) type;
-            for (int i = 0; i < crossType.types.length; i++) {
-                addFields(crossType.types[i], fieldList);
+            for (RelDataType type1 : crossType.types) {
+                addFields(type1, fieldList);
             }
         } else {
-            RelDataTypeField [] fields = type.getFields();
-            for (int j = 0; j < fields.length; j++) {
-                RelDataTypeField field = fields[j];
-                fieldList.add(field);
-            }
+            fieldList.addAll(type.getFieldList());
         }
     }
 
@@ -343,7 +365,7 @@ public abstract class RelDataTypeFactoryImpl
     private RelDataTypeField [] fieldsOf(Class clazz)
     {
         final Field [] fields = clazz.getFields();
-        ArrayList<RelDataTypeFieldImpl> list =
+        List<RelDataTypeFieldImpl> list =
             new ArrayList<RelDataTypeFieldImpl>();
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
@@ -361,8 +383,7 @@ public abstract class RelDataTypeFactoryImpl
             return null;
         }
 
-        return (RelDataTypeField []) list.toArray(
-            new RelDataTypeField[list.size()]);
+        return list.toArray(new RelDataTypeField[list.size()]);
     }
 
     // implement RelDataTypeFactory

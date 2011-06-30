@@ -33,6 +33,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util14.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -331,11 +332,7 @@ public class RelMdUtil
         BitSet rightMask,
         int nFieldsOnLeft)
     {
-        for (
-            int bit = groupKey.nextSetBit(0);
-            bit >= 0;
-            bit = groupKey.nextSetBit(bit + 1))
-        {
+        for (int bit : Util.toIter(groupKey)) {
             if (bit < nFieldsOnLeft) {
                 leftMask.set(bit);
             } else {
@@ -619,20 +616,26 @@ public class RelMdUtil
         BitSet childKey)
     {
         List<AggregateCall> aggCalls = aggRel.getAggCallList();
-        for (
-            int bit = groupKey.nextSetBit(0);
-            bit >= 0;
-            bit = groupKey.nextSetBit(bit + 1))
-        {
-            if (bit < aggRel.getGroupCount()) {
-                // group by column
-                childKey.set(bit);
+        for (int bit : Util.toIter(groupKey)) {
+            int n = bit;
+            final int sysFieldCount = aggRel.getSystemFieldList().size();
+            final int groupCount = aggRel.getGroupSet().cardinality();
+            if (n < sysFieldCount) {
+                childKey.set(n);
             } else {
-                // aggregate column -- set a bit for each argument being
-                // aggregated
-                AggregateCall agg = aggCalls.get(bit - aggRel.getGroupCount());
-                for (Integer arg : agg.getArgList()) {
-                    childKey.set(arg);
+                n -= sysFieldCount;
+                if (n < groupCount) {
+                    // group by column
+                    childKey.set(Util.toList(aggRel.getGroupSet()).get(n));
+                } else {
+                    n -= groupCount;
+
+                    // aggregate column -- set a bit for each argument being
+                    // aggregated
+                    final AggregateCall agg = aggCalls.get(n);
+                    for (int arg : agg.getArgList()) {
+                        childKey.set(arg);
+                    }
                 }
             }
         }
@@ -653,11 +656,7 @@ public class RelMdUtil
         BitSet baseCols,
         BitSet projCols)
     {
-        for (
-            int bit = groupKey.nextSetBit(0);
-            bit >= 0;
-            bit = groupKey.nextSetBit(bit + 1))
-        {
+        for (int bit : Util.toIter(groupKey)) {
             if (projExprs[bit] instanceof RexInputRef) {
                 baseCols.set(((RexInputRef) projExprs[bit]).getIndex());
             } else {

@@ -333,9 +333,9 @@ public class SqlTypeAssignmentRules
         Map<SqlTypeName, Set<SqlTypeName>> ruleset =
             coerce ? coerceRules : rules;
 
-        if (to.equals(SqlTypeName.NULL)) {
+        if (to == SqlTypeName.NULL) {
             return false;
-        } else if (from.equals(SqlTypeName.NULL)) {
+        } else if (from == SqlTypeName.NULL) {
             return true;
         }
 

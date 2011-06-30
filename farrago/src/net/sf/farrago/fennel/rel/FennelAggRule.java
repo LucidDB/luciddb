@@ -25,6 +25,7 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -66,19 +67,17 @@ public class FennelAggRule
     {
         AggregateRel aggRel = (AggregateRel) call.rels[0];
 
+        if (!aggRel.getSystemFieldList().isEmpty()) {
+            return;
+        }
+
         for (AggregateCall aggCall : aggRel.getAggCallList()) {
             if (aggCall.isDistinct()) {
                 // AGG(DISTINCT x) must be rewritten before this rule
                 // can apply
                 return;
             }
-
-            // TODO jvs 5-Oct-2005:  find a better way of detecting
-            // whether the aggregate function is one of the builtins supported
-            // by Fennel; also test whether we can handle input datatype
-            try {
-                FennelRelUtil.lookupAggFunction(aggCall);
-            } catch (IllegalArgumentException ex) {
+            if (!FennelRelUtil.isFennelBuiltinAggFunction(aggCall)) {
                 return;
             }
         }
@@ -86,7 +85,7 @@ public class FennelAggRule
         RelNode relInput = aggRel.getChild();
         RelNode fennelInput;
 
-        if (aggRel.getGroupCount() > 0) {
+        if (!aggRel.getGroupSet().isEmpty()) {
             // add a FennelSortRel node beneath AggRel with sort keys
             // corresponding to the group by keys
             RelNode sortInput =
@@ -97,11 +96,7 @@ public class FennelAggRule
                 return;
             }
 
-            Integer [] keyProjection = new Integer[aggRel.getGroupCount()];
-            for (int i = 0; i < keyProjection.length; ++i) {
-                keyProjection[i] = i;
-            }
-
+            Integer [] keyProjection = Util.toArray(aggRel.getGroupSet());
             boolean discardDuplicates = false;
             FennelSortRel fennelSortRel =
                 new FennelSortRel(
@@ -124,7 +119,8 @@ public class FennelAggRule
             new FennelAggRel(
                 aggRel.getCluster(),
                 fennelInput,
-                aggRel.getGroupCount(),
+                aggRel.getSystemFieldList(),
+                aggRel.getGroupSet(),
                 aggRel.getAggCallList());
         call.transformTo(fennelAggRel);
     }

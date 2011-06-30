@@ -37,8 +37,23 @@ public interface SqlValidatorTable
 {
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the row type of this table.
+     *
+     * <p>Unlike {@link SqlValidatorNamespace#getRowType()}, does not include
+     * any system columns.
+     *
+     * @return Row type of this table
+     */
     RelDataType getRowType();
 
+    /**
+     * Returns the qualified name of this table.
+     *
+     * <p>Typically something like {@code {"LOCALDB", "SALES", "EMPS"} }.
+     *
+     * @return Name of this table qualified by catalog and schema name
+     */
     String [] getQualifiedName();
 
     /**

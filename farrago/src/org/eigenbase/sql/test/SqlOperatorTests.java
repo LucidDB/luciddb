@@ -653,9 +653,10 @@ public abstract class SqlOperatorTests
 
         // string to integer
         getTester().checkScalarExact("cast('6543' as integer)", "6543");
-        if (Bug.Frg26Fixed) {
-            getTester().checkScalarExact("cast(' -123 ' as int)", "-123");
-        }
+
+        // cast to numeric should trim string first (was issue FRG-26)
+        getTester().checkScalarExact("cast(' -123 ' as int)", "-123");
+
         getTester().checkScalarExact(
             "cast('654342432412312' as bigint)",
             "BIGINT NOT NULL",
@@ -4249,6 +4250,12 @@ public abstract class SqlOperatorTests
             values,
             result,
             0d);
+        // with zero values
+        getTester().checkAgg(
+            "avg(x)",
+            new String[] {},
+            null,
+            0d);
     }
 
     public void testStddevPopFunc()
@@ -4585,7 +4592,7 @@ public abstract class SqlOperatorTests
                 SqlString literalString =
                     literal.toSqlString(SqlDialect.DUMMY);
                 final String expr =
-                    "CAST(" + literalString
+                    "CAST(" + literalString.getSql()
                     + " AS " + type + ")";
                 if ((type.getSqlTypeName() == SqlTypeName.VARBINARY)
                     && !Bug.Frg283Fixed)
@@ -4647,7 +4654,8 @@ public abstract class SqlOperatorTests
                     // Values which are too large to be literals fail at
                     // validate time.
                     tester.checkFails(
-                        "CAST(^" + literalString + "^ AS " + type + ")",
+                        "CAST(^" + literalString.getSql() + "^ AS " + type
+                        + ")",
                         "Numeric literal '.*' out of range",
                         false);
                 } else if (

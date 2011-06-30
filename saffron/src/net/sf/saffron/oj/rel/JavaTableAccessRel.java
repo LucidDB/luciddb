@@ -1,6 +1,7 @@
 /*
 // Saffron preprocessor and data engine.
 // Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2002-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,6 +20,8 @@
 
 package net.sf.saffron.oj.rel;
 
+import java.util.Collections;
+
 import net.sf.saffron.core.ImplementableTable;
 
 import openjava.ptree.ParseTree;
@@ -30,6 +33,7 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptConnection;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.util.Util;
+import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
@@ -38,12 +42,23 @@ import org.eigenbase.util.Util;
 public class JavaTableAccessRel
     extends TableAccessRelBase implements JavaLoopRel
 {
+    /**
+     * Creates a JavaTableAccessRel.
+     *
+     * @param cluster Cluster
+     * @param table Table
+     * @param connection Connection
+     */
     public JavaTableAccessRel(
         RelOptCluster cluster,
         ImplementableTable table,
         RelOptConnection connection)
     {
-        super(cluster, CallingConvention.JAVA.singletonSet, table, connection);
+        super(
+            cluster,
+            CallingConvention.JAVA.singletonSet,
+            table,
+            connection);
     }
 
     public JavaTableAccessRel clone()
@@ -66,6 +81,5 @@ public class JavaTableAccessRel
         throw Util.newInternal("should never be called");
     }
 }
-
 
 // End JavaTableAccessRel.java

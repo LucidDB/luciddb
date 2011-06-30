@@ -28,6 +28,7 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -120,7 +121,7 @@ public class LcsIndexAggRule
             Integer [] proj = indexOnlyScan.getOutputProj();
             if (!projectionSatisfiesGroupBy(
                     proj,
-                    aggRel.getGroupCount()))
+                    aggRel.getGroupSet()))
             {
                 return;
             }
@@ -148,7 +149,7 @@ public class LcsIndexAggRule
                 if ((proj != null)
                     && projectionSatisfiesGroupBy(
                         proj,
-                        aggRel.getGroupCount()))
+                        aggRel.getGroupSet()))
                 {
                     bestIndex = index;
                     bestProj = proj;
@@ -171,7 +172,8 @@ public class LcsIndexAggRule
             new LcsIndexAggRel(
                 aggRel.getCluster(),
                 indexOnlyScan,
-                aggRel.getGroupCount(),
+                aggRel.getSystemFieldList(),
+                aggRel.getGroupSet(),
                 aggRel.getAggCallList());
 
         call.transformTo(indexAgg);
@@ -183,23 +185,24 @@ public class LcsIndexAggRule
      * and the group by columns are required to be sorted in order, so the index
      * scan projection should be a prefix of the index scan: 0, 1, 2, ... etc.
      *
-     * @param proj the projection from an index
-     * @param groupCount the number of columns to be grouped. the columns are
-     * assumed to be the prefix of input to the aggregate
+     * @param proj Projection from an index
+     * @param groupSet Columns to be grouped. The columns are
+     *     assumed to be the prefix of input to the aggregate
      *
      * @return whether the projection can meet the group by requirements of an
-     * aggregate
+     *     aggregate
      */
     private boolean projectionSatisfiesGroupBy(
         Integer [] proj,
-        int groupCount)
+        BitSet groupSet)
     {
         if (proj == null) {
             return false;
         }
-        assert (proj.length >= groupCount);
-        for (int i = 0; i < groupCount; i++) {
-            if (proj[i] != i) {
+        assert (proj.length >= groupSet.cardinality());
+        int i = 0;
+        for (int groupCol : Util.toIter(groupSet)) {
+            if (proj[i++] != groupCol) {
                 return false;
             }
         }

@@ -19,8 +19,7 @@
 
 package net.sf.saffron.oj.xlat;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,8 +41,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptQuery;
 import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexFieldAccess;
 import org.eigenbase.util.Util;
@@ -208,8 +206,8 @@ class QueryInfo
 
             // Deal with any forward-references.
             if (!cluster.getQuery().getMapDeferredToCorrel().isEmpty()) {
-                for (RelOptQuery.DeferredLookup deferredLookup :
-                    cluster.getQuery().getMapDeferredToCorrel().keySet())
+                for (RelOptQuery.DeferredLookup deferredLookup
+                    : cluster.getQuery().getMapDeferredToCorrel().keySet())
                 {
                     DeferredLookupImpl lookup =
                         (DeferredLookupImpl) deferredLookup;
@@ -250,7 +248,8 @@ class QueryInfo
                 convertExpToInternal(
                     conditionExp,
                     new RelNode [] { left, right });
-            return new JoinRel(cluster, left, right, conditionExp1, joinType,
+            return new JoinRel(
+                cluster, left, right, conditionExp1, joinType,
                 variablesStopped);
         } else if (exp instanceof AliasedExpression) {
             AliasedExpression aliasedExp = (AliasedExpression) exp;
@@ -297,7 +296,8 @@ class QueryInfo
      */
     RelNode convertQueryToRel(QueryExpression queryExp)
     {
-        tracer.log(Level.FINE,
+        tracer.log(
+            Level.FINE,
             "convertQueryToRel: queryExp=[" + queryExp + "] recurse [");
 
         Expression fromList = queryExp.getFrom();
@@ -361,7 +361,8 @@ class QueryInfo
                 new AggregateRel(
                     cluster,
                     getRoot(),
-                    preGroups.length,
+                    Collections.<RelDataTypeField>emptyList(),
+                    Util.bitSetBetween(0, preGroups.length),
                     aggCalls));
             if (whereClause != null) {
                 setRoot(
@@ -369,12 +370,12 @@ class QueryInfo
                         rexWhereClause));
             }
             setRoot(
-                queryExp.isBoxed() ?
-                CalcRel.createProject(
+                queryExp.isBoxed()
+                ? CalcRel.createProject(
                     getRoot(),
                     rexSelects,
-                    aliases) :
-                new ProjectRel(
+                    aliases)
+                : new ProjectRel(
                     cluster,
                     getRoot(),
                     rexSelects,
@@ -392,7 +393,8 @@ class QueryInfo
                 OJUtil.ojToType(
                     cluster.getTypeFactory(),
                     queryRowClass);
-            tracer.log(Level.FINE,
+            tracer.log(
+                Level.FINE,
                 "] return [" + getRoot() + "] rowType=[" + relRowType + "]");
             assert (relRowType == queryRowType);
             return getRoot();
@@ -425,18 +427,21 @@ class QueryInfo
         if ((sorts != null) && (sorts.length > 0)) {
             throw Util.newInternal("sort not implemented");
 
-            //          Parameter parameter = new Parameter("p", rel.getRowType(), null);
-            //              ExpReplacer replacer = new OrdinalRef.Replacer(0, parameter);
-            //              Sort[] compiledSorts = new Sort[sorts.length];
-            //              for (int i = 0; i < sorts.length; i++) {
-            //                  compiledSorts[i] = new Sort(
-            //                      (Exp) replacer.go(sorts[i].safeClone()),
-            //                      sorts[i].ascending);
-            //              }
-            //              rel = new Sort(env, rel, sorts, parameter);
+            //          Parameter parameter =
+            //              new Parameter("p", rel.getRowType(), null);
+            //          ExpReplacer replacer =
+            //              new OrdinalRef.Replacer(0, parameter);
+            //          Sort[] compiledSorts = new Sort[sorts.length];
+            //          for (int i = 0; i < sorts.length; i++) {
+            //              compiledSorts[i] = new Sort(
+            //                  (Exp) replacer.go(sorts[i].safeClone()),
+            //                  sorts[i].ascending);
+            //          }
+            //          rel = new Sort(env, rel, sorts, parameter);
         }
         RelDataType relRowType = getRoot().getRowType();
-        tracer.log(Level.FINE,
+        tracer.log(
+            Level.FINE,
             "] return [" + getRoot() + "] rowType=[" + relRowType + "]");
         RelDataType fieldType = relRowType;
 
@@ -457,7 +462,8 @@ class QueryInfo
                 cluster.getTypeFactory(),
                 queryRowClass);
         if (fieldType != queryRowType) {
-            throw Util.newInternal("rel row type (" + fieldType
+            throw Util.newInternal(
+                "rel row type (" + fieldType
                 + ") should equal the " + "row type (" + queryRowType
                 + ") of the query it was " + "translated from");
         }
@@ -663,11 +669,6 @@ class QueryInfo
             String varName)
         {
             return QueryInfo.this.lookup(offset, inputs, isParent, varName);
-        }
-
-        public RexFieldAccess getFieldAccess(String name)
-        {
-            throw new UnsupportedOperationException();
         }
     }
 }

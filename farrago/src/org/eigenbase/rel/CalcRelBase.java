@@ -67,6 +67,9 @@ public abstract class CalcRelBase
 
     public boolean isValid(boolean fail)
     {
+        if (!super.isValid(fail)) {
+            return false;
+        }
         if (!RelOptUtil.equal(
                 "program's input type",
                 program.getInputRowType(),

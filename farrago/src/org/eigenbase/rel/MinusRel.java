@@ -69,26 +69,13 @@ public final class MinusRel
         return dRows;
     }
 
-    public MinusRel clone()
+    public MinusRel copy(boolean all, RelNode... inputs)
     {
-        MinusRel clone =
-            new MinusRel(
-                getCluster(),
-                RelOptUtil.clone(inputs),
-                all);
-        clone.inheritTraitsFrom(this);
-        return clone;
-    }
-
-    public MinusRel clone(RelNode [] inputs, boolean all)
-    {
-        MinusRel clone =
+        return
             new MinusRel(
                 getCluster(),
                 inputs,
                 all);
-        clone.inheritTraitsFrom(this);
-        return clone;
     }
 }
 

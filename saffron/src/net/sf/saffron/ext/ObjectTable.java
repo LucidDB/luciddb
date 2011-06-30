@@ -19,9 +19,11 @@
 
 package net.sf.saffron.ext;
 
+import java.util.Collections;
+
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -38,7 +40,7 @@ public class ObjectTable extends RelOptAbstractTable
         RelOptSchema schema,
         RelDataType rowType)
     {
-        super(schema, null, rowType);
+        super(schema, null, rowType, Collections.<RelDataTypeField>emptyList());
     }
 
     public String [] getQualifiedName()

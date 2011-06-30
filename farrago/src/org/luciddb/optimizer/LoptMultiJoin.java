@@ -285,11 +285,11 @@ public class LoptMultiJoin
     }
 
     /**
-     * @return array of fields contained within the multijoin
+     * @return list of fields contained within the multijoin
      */
-    public RelDataTypeField [] getMultiJoinFields()
+    public List<RelDataTypeField> getMultiJoinFields()
     {
-        return multiJoin.getRowType().getFields();
+        return multiJoin.getRowType().getFieldList();
     }
 
     /**
@@ -708,7 +708,7 @@ public class LoptMultiJoin
      *
      * @return fields of the join
      */
-    public RelDataTypeField [] getJoinFields(
+    public List<RelDataTypeField> getJoinFields(
         LoptJoinTree left,
         LoptJoinTree right)
     {
@@ -718,7 +718,7 @@ public class LoptMultiJoin
                     left.getJoinTree().getRowType(),
                     right.getJoinTree().getRowType()
                 });
-        return rowType.getFields();
+        return rowType.getFieldList();
     }
 
     /**

@@ -21,9 +21,11 @@
 */
 package net.sf.farrago.query;
 
+import java.util.*;
 import java.util.List;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.behavioral.CallArguments;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
@@ -64,47 +66,30 @@ public class FarragoJavaUdxRel
     /**
      * Creates a <code>FarragoJavaUdxRel</code>.
      *
-     * @param cluster {@link RelOptCluster}  this relational expression belongs
-     * to
+     * @param cluster Cluster this relational expression belongs to
      * @param rexCall function invocation expression
      * @param rowType row type produced by function
      * @param serverMofId MOFID of data server to associate with this UDX
      * invocation, or null for none
      * @param inputs 0 or more relational inputs
+     * @param inputRowTypes Row types of inputs
      */
     public FarragoJavaUdxRel(
         RelOptCluster cluster,
         RexNode rexCall,
         RelDataType rowType,
         String serverMofId,
-        RelNode [] inputs)
+        RelNode [] inputs,
+        List<RelDataType> inputRowTypes)
     {
         super(
             cluster,
             CallingConvention.ITERATOR.singletonSet,
             rexCall,
             rowType,
-            inputs);
+            inputs,
+            inputRowTypes);
         this.serverMofId = serverMofId;
-    }
-
-    /**
-     * Creates a <code>FarragoJavaUdxRel</code> with no relational inputs.
-     *
-     * @param cluster {@link RelOptCluster}  this relational expression belongs
-     * to
-     * @param rexCall function invocation expression
-     * @param rowType row type produced by function
-     * @param serverMofId MOFID of data server to associate with this UDX
-     * invocation, or null for none
-     */
-    public FarragoJavaUdxRel(
-        RelOptCluster cluster,
-        RexNode rexCall,
-        RelDataType rowType,
-        String serverMofId)
-    {
-        this(cluster, rexCall, rowType, serverMofId, RelNode.emptyArray);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -124,7 +109,7 @@ public class FarragoJavaUdxRel
      * server with the given MOFID at runtime via {@link
      * FarragoUdrRuntime#getDataServerRuntimeSupport}
      * @param args arguments to UDX invocation
-     * @param relInputs relational inputs
+     * @param inputs relational inputs
      */
     public static RelNode newUdxRel(
         FarragoPreparingStmt preparingStmt,
@@ -132,7 +117,8 @@ public class FarragoJavaUdxRel
         String udxSpecificName,
         String serverMofId,
         RexNode [] args,
-        RelNode [] relInputs)
+        RelNode [] inputs,
+        List<RelDataType> inputRowTypes)
     {
         // Parse the specific name of the UDX.
         SqlIdentifier udxId;
@@ -186,7 +172,8 @@ public class FarragoJavaUdxRel
                 rexCall,
                 resultType,
                 serverMofId,
-                relInputs);
+                inputs,
+                inputRowTypes);
 
         // Optimizer wants us to preserve original types,
         // so cast back for the final result.
@@ -205,7 +192,8 @@ public class FarragoJavaUdxRel
                 getCall(),
                 getRowType(),
                 serverMofId,
-                RelOptUtil.clone(inputs));
+                RelOptUtil.clone(inputs),
+                getInputRowTypes());
         clone.inheritTraitsFrom(this);
         clone.setColumnMappings(getColumnMappings());
         return clone;
@@ -315,7 +303,8 @@ public class FarragoJavaUdxRel
             Expression typeLookupCall =
                 generateTypeLookupCall(
                     implementor,
-                    inputs[i]);
+                    inputs[i],
+                    inputRowTypes.get(i));
 
             ExpressionList resultSetParams = new ExpressionList();
             resultSetParams.add(childExprs[i]);
@@ -390,7 +379,8 @@ public class FarragoJavaUdxRel
         Expression typeLookupCall =
             generateTypeLookupCall(
                 implementor,
-                this);
+                this,
+                outputRowType);
 
         Expression tupleIterExp =
             new AllocationExpression(
@@ -416,17 +406,27 @@ public class FarragoJavaUdxRel
      * generates a call which will retrieve it from the executable context at
      * runtime. The literal string key used is based on the relational
      * expression id.
+     *
+     * <p>The rowType parameter exists because relNode's field names may have
+     * been altered during the planning process, and the UDX requires field
+     * names to be precisely correct.</p>
+     *
+     * @param implementor Implementor
+     * @param relNode Relational expression implementing input
+     * @param rowType Row type of input
+     * @return Call to get the input's row type
      */
     private Expression generateTypeLookupCall(
         JavaRelImplementor implementor,
-        RelNode relNode)
+        RelNode relNode,
+        RelDataType rowType)
     {
         String resultSetName = "ResultSet:" + relNode.getId();
         FarragoPreparingStmt preparingStmt =
             ((FarragoRelImplementor) implementor).getPreparingStmt();
         preparingStmt.mapResultSetType(
             resultSetName,
-            relNode.getRowType());
+            rowType);
 
         MethodCall typeLookupCall =
             new MethodCall(

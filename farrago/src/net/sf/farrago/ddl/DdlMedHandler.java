@@ -29,22 +29,14 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.plugin.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 

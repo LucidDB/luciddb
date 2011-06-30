@@ -130,7 +130,7 @@ public class PushProjectPastJoinRule
             newJoinFilter =
                 pushProject.convertRefsAndExprs(
                     joinRel.getCondition(),
-                    projJoinFields,
+                    projJoinFieldList,
                     adjustments);
         }
 

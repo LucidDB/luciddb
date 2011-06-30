@@ -283,7 +283,8 @@ public class FarragoMultisetSplitterRule
                 new AggregateRel(
                     cluster,
                     uncollect,
-                    1,
+                    Collections.<RelDataTypeField>emptyList(),
+                    Util.bitSetOf(0),
                     Collections.singletonList(countCall));
             final RexNode inputRef =
                 RexUtil.maybeCast(
@@ -390,7 +391,8 @@ public class FarragoMultisetSplitterRule
                 new AggregateRel(
                     cluster,
                     uncollect,
-                    1,
+                    Collections.<RelDataTypeField>emptyList(),
+                    Util.bitSetOf(0),
                     Collections.singletonList(countCall));
             RexNode c = RelOptUtil.createInputRef(aggregateRel, -1);
             RelNode filterRel =
@@ -645,13 +647,15 @@ public class FarragoMultisetSplitterRule
                 new AggregateRel(
                     cluster,
                     u1,
-                    1,
+                    Collections.<RelDataTypeField>emptyList(),
+                    Util.bitSetOf(0),
                     aggCalls);
             AggregateRel aggregateGroupRel2 =
                 new AggregateRel(
                     cluster,
                     u2,
-                    1,
+                    Collections.<RelDataTypeField>emptyList(),
+                    Util.bitSetOf(0),
                     aggCalls);
             JoinRel joinRel =
                 new JoinRel(
@@ -781,12 +785,15 @@ public class FarragoMultisetSplitterRule
                 argList,
                 countType,
                 null);
-        final int groupCount = child.getRowType().getFieldCount();
+        final List<RelDataTypeField> systemFieldList = Collections.emptyList();
         AggregateRel aggregateRel =
             new AggregateRel(
                 cluster,
                 child,
-                groupCount,
+                systemFieldList,
+                Util.bitSetBetween(
+                    systemFieldList.size(),
+                    child.getRowType().getFieldCount()),
                 Collections.singletonList(countCall));
         RexNode expr0 = RelOptUtil.createInputRef(aggregateRel, -1);
         RexNode [] whenThenElse =
@@ -882,7 +889,8 @@ public class FarragoMultisetSplitterRule
             new AggregateRel(
                 cluster,
                 child,
-                1,
+                Collections.<RelDataTypeField>emptyList(),
+                Util.bitSetOf(0),
                 Collections.singletonList(countCall));
         SqlOperator op;
         if (neg) {

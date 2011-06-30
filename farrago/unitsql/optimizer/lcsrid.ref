@@ -397,7 +397,7 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 > explain plan for select count(*) from tencols where lcs_rid(c0) < 3;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'  FennelAggRel(group=[{}], EXPR$0=[COUNT()])'
 '    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], expr#2=[3], expr#3=[<($t0, $t2)], $f0=[$t1], $condition=[$t3])'
 '      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[LCS_RID]], clustered indexes=[[I_C0]])'
 > explain plan for select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)

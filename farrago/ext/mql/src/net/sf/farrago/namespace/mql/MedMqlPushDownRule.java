@@ -25,6 +25,7 @@ import java.util.*;
 import java.text.*;
 import java.math.*;
 import java.io.*;
+import java.util.Collections;
 
 import net.sf.farrago.query.*;
 
@@ -318,7 +319,7 @@ class MedMqlPushDownRule extends RelOptRule
         RelDataType rowType,
         Map<String, String> fieldBindings)
     {
-        MedMqlColumnSet columnSet = tableRel.getMedMqlColumnSet();
+        MedMqlColumnSet columnSet = tableRel.getTable();
 
         RexBuilder rexBuilder = tableRel.getCluster().getRexBuilder();
 
@@ -364,8 +365,9 @@ class MedMqlPushDownRule extends RelOptRule
             rowType,
             columnSet.udxSpecificName,
             columnSet.server.getServerMofId(),
-            new RexNode[] { urlArg, mqlArg, rowTypeArg },
-            RelNode.emptyArray);
+            new RexNode[]{urlArg, mqlArg, rowTypeArg},
+            RelNode.emptyArray,
+            Collections.<RelDataType>emptyList());
         return rel;
     }
 
@@ -374,7 +376,7 @@ class MedMqlPushDownRule extends RelOptRule
         MedMqlTableRel tableRel,
         FilterRel filter, ProjectRel topProj, ProjectRel bottomProj)
     {
-        MedMqlColumnSet columnSet = tableRel.getMedMqlColumnSet();
+        MedMqlColumnSet columnSet = tableRel.getTable();
 
         RelNode rel = createFarragoUdxRel(
             tableRel,

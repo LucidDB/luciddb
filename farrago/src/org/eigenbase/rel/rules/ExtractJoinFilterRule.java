@@ -59,7 +59,11 @@ public final class ExtractJoinFilterRule
      */
     private ExtractJoinFilterRule()
     {
-        super(new RelOptRuleOperand(JoinRel.class, ANY));
+        super(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                RelOptRuleOperand.hasSystemFields(false),
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -76,10 +80,9 @@ public final class ExtractJoinFilterRule
             return;
         }
 
-        if (!joinRel.getSystemFieldList().isEmpty()) {
-            // FIXME Enable this rule for joins with system fields
-            return;
-        }
+        // FIXME Enable this rule for joins with system fields
+        assert joinRel.getSystemFieldList().isEmpty()
+            : "Operand predicate should ensure no sys fields";
 
         // NOTE jvs 14-Mar-2006:  See SwapJoinRule for why we
         // preserve attribute semiJoinDone here.

@@ -21,7 +21,6 @@
 */
 package net.sf.farrago.fennel.rel;
 
-import java.lang.reflect.Constructor;
 import java.util.*;
 
 import org.eigenbase.rel.*;
@@ -30,8 +29,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.util.Util;
-import net.sf.farrago.query.FennelRel;
 
+import net.sf.farrago.query.FennelRel;
 
 /**
  * FennelWindowRule is a rule for implementing a {@link CalcRel} which contains
@@ -43,9 +42,10 @@ import net.sf.farrago.query.FennelRel;
  * merges {@link CalcRel} and {@link WindowedAggregateRel} objects together,
  * thereby dealing with this problem at the logical level.)
  *
- * By default the rule produces a {@link FennelWindowRel}, but each instance can
- * be altered to produce a subclass instead: see {@link #setResultClass}.
-
+ * <p>By default the rule produces a {@link FennelWindowRel}, but each instance
+ * can be cloned with a factory to produce a subclass instead: see
+ * {@link #withFactory}.
+ *
  * @author jhyde
  * @version $Id$
  */
@@ -54,136 +54,39 @@ public abstract class FennelWindowRule
 {
     //~ Instance fields
 
-    // class of RelNode to produce
-    private Class<FennelWindowRel> resultFactoryClass = FennelWindowRel.class;
+    private final Factory factory;
 
     //~ Static fields/initializers ---------------------------------------------
+
+    private static final Factory FACTORY = new FactoryImpl();
 
     /**
      * Instance of the rule which matches {@link CalcRel} on top of {@link
      * WindowedAggregateRel} on top of {@link CalcRel}.
      */
     public static final FennelWindowRule CalcOnWinOnCalc =
-        new FennelWindowRule(
-            new RelOptRuleOperand(
-                CalcRel.class,
-                new RelOptRuleOperand(
-                    WindowedAggregateRel.class,
-                    new RelOptRuleOperand(
-                        CalcRel.class,
-                        ANY))),
-            "FennelWindowRule.CalcOnWinOnCalc")
-        {
-            // implement RelOptRule
-            public void onMatch(RelOptRuleCall call)
-            {
-                final CalcRel outCalc = (CalcRel) call.rels[0];
-                final WindowedAggregateRel winAgg =
-                    (WindowedAggregateRel) call.rels[1];
-                final CalcRel inCalc = (CalcRel) call.rels[2];
-                final RelNode child = inCalc.getChild();
-                if (inCalc.getProgram().getCondition() != null) {
-                    // FennelWindowRel cannot filter its input. Leave it to
-                    // the Calc-on-Win rule.
-                    return;
-                }
-                createRels(call, outCalc, winAgg, inCalc, child);
-            }
-        };
+        new CalcOnWinOnCalcRule(FACTORY, "FennelWindowRule");
 
     /**
      * Instance of the rule which matches a {@link CalcRel} on top of a {@link
      * WindowedAggregateRel}.
      */
     public static final FennelWindowRule CalcOnWin =
-        new FennelWindowRule(
-            new RelOptRuleOperand(
-                CalcRel.class,
-                new RelOptRuleOperand(
-                    WindowedAggregateRel.class,
-                    new RelOptRuleOperand(
-                        RelNode.class,
-                        ANY))),
-            "FennelWindowRule.CalcOnWin")
-        {
-            // implement RelOptRule
-            public void onMatch(RelOptRuleCall call)
-            {
-                if (call.rels[2] instanceof CalcRel) {
-                    // The Calc-on-Win-on-Calc rule will have dealt with this.
-                    return;
-                }
-                final CalcRel outCalc = (CalcRel) call.rels[0];
-                if (RexOver.containsOver(outCalc.getProgram())) {
-                    return;
-                }
-                final WindowedAggregateRel winAggRel =
-                    (WindowedAggregateRel) call.rels[1];
-                final RelNode child = call.rels[2];
-                if (child instanceof CalcRel) {
-                    CalcRel calcRel = (CalcRel) child;
-                    if (calcRel.getProgram().getCondition() == null) {
-                        // The Calc-on-Win-on-Calc rule will deal with this.
-                        return;
-                    }
-                }
-                createRels(call, outCalc, winAggRel, null, child);
-            }
-        };
+        new CalcOnWinRule(FACTORY, "FennelWindowRule");
 
     /**
      * Instance of the rule which matches a {@link WindowedAggregateRel} on top
      * of a {@link CalcRel}.
      */
     public static final FennelWindowRule WinOnCalc =
-        new FennelWindowRule(
-            new RelOptRuleOperand(
-                WindowedAggregateRel.class,
-                new RelOptRuleOperand(
-                    CalcRel.class,
-                    ANY)),
-            "FennelWindowRule.WinOnCalc")
-        {
-            // implement RelOptRule
-            public void onMatch(RelOptRuleCall call)
-            {
-                final WindowedAggregateRel winAgg =
-                    (WindowedAggregateRel) call.rels[0];
-                final CalcRel inCalc = (CalcRel) call.rels[1];
-                if (inCalc.getProgram().getCondition() != null) {
-                    return;
-                }
-                final RelNode child = inCalc.getChild();
-                createRels(call, null, winAgg, inCalc, child);
-            }
-        };
+        new WinOnCalcRule(FACTORY, "FennelWindowRule");
 
     /**
      * Instance of the rule which matches a {@link WindowedAggregateRel} on top
      * of a {@link RelNode}.
      */
     public static final FennelWindowRule Win =
-        new FennelWindowRule(
-            new RelOptRuleOperand(
-                WindowedAggregateRel.class,
-                new RelOptRuleOperand(
-                    RelNode.class,
-                    ANY)),
-            "FennelWindowRule.Win")
-        {
-            // implement RelOptRule
-            public void onMatch(RelOptRuleCall call)
-            {
-                final WindowedAggregateRel winAgg =
-                    (WindowedAggregateRel) call.rels[0];
-                final RelNode child = call.rels[1];
-                if (child instanceof CalcRel) {
-                    // The Win-Calc rule will deal with this.
-                    return;
-                }
-                createRels(call, null, winAgg, null, child);
-            }
-        };
+        new WinRule(FACTORY, "FennelWindowRule");
 
     //~ Constructors -----------------------------------------------------------
 
@@ -192,28 +95,36 @@ public abstract class FennelWindowRule
      *
      * @param operand root operand, must not be null
      *
-     * @param description Description, or null to guess description
+     * @param descriptionPrefix Description prefix
+     *
+     * @param descriptionSuffix Description suffix
+     *
+     * @param factory Factory to create a {@link FennelWindowRel} if rule
+     *   succeeds
      */
     private FennelWindowRule(
         RelOptRuleOperand operand,
-        String description)
+        String descriptionPrefix,
+        String descriptionSuffix,
+        Factory factory)
     {
-        super(operand, description);
+        super(operand, descriptionPrefix + "." + descriptionSuffix);
+        this.factory = factory;
+        assert factory != null;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Changes the class of result RelNode.
-     * @return the changed rule.
-     * @param c new class; must be a subtype of FennelWindowRel.
+     * Creates a copy of this rule that uses a different factory. (It is not
+     * possible to modify this rule's factory, because rules are immutable.)
+     *
+     * @param factory Factory
+     * @param prefix Prefix of rule instance name
      */
-    public FennelWindowRule setResultClass(Class c)
-    {
-        assert FennelWindowRel.class.isAssignableFrom(c) : "invalid arg class";
-        this.resultFactoryClass = c;
-        return this;
-    }
+    public abstract FennelWindowRule withFactory(
+        Factory factory,
+        String prefix);
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -241,7 +152,8 @@ public abstract class FennelWindowRule
         if (!child.getTraits().equals(traits)) {
             fennelInput =
                 convert(
-                    child, child.getTraits().plusAll(traits));
+                    child,
+                    child.getTraits().plusAll(traits));
             if (fennelInput == null) {
                 return;
             }
@@ -496,7 +408,7 @@ public abstract class FennelWindowRule
 
         // Put all these programs together in the final relational expression.
         FennelWindowRel fennelCalcRel =
-            newFennelWindowRel(
+            factory.newFennelWindowRel(
                 cluster,
                 fennelInput,
                 windowList.toArray(
@@ -638,17 +550,33 @@ public abstract class FennelWindowRule
     }
 
     /**
-     * factory method for a FennelWindowRel
+     * Factory to create a {@link FennelWindowRel} or a subclass.
      */
-    private FennelWindowRel newFennelWindowRel(
-        RelOptCluster cluster,
-        RelNode child,
-        FennelWindowRel.Window[] windows,
-        RexProgram inputProgram,
-        RexProgram outputProgram)
+    public interface Factory
     {
-        if (resultFactoryClass == FennelWindowRel.class) {
-            // default case; normal java to show what it means
+        /**
+         * Creates a FennelWindowRel
+         */
+        FennelWindowRel newFennelWindowRel(
+            RelOptCluster cluster,
+            RelNode child,
+            FennelWindowRel.Window[] windows,
+            RexProgram inputProgram,
+            RexProgram outputProgram);
+    }
+
+    /**
+     * Implementation of {@link Factory} that creates a {@link FennelWindowRel}.
+     */
+    public static class FactoryImpl implements Factory
+    {
+        public FennelWindowRel newFennelWindowRel(
+            RelOptCluster cluster,
+            RelNode child,
+            FennelWindowRel.Window[] windows,
+            RexProgram inputProgram,
+            RexProgram outputProgram)
+        {
             return new FennelWindowRel(
                 cluster,
                 child,
@@ -656,29 +584,175 @@ public abstract class FennelWindowRule
                 inputProgram,
                 windows,
                 outputProgram);
-        } else {
-            // otherwise call constructor by reflection
-            try {
-                final Constructor<FennelWindowRel> ctor;
-                ctor = resultFactoryClass.getConstructor(
-                    RelOptCluster.class,
-                    RelNode.class,
-                    RelDataType.class,
-                    RexProgram.class,
-                    FennelWindowRel.Window[].class,
-                    RexProgram.class);
-                return ctor.newInstance(
-                    cluster,
-                    child,
-                    outputProgram.getOutputRowType(),
-                    inputProgram,
-                    windows,
-                    outputProgram);
-            } catch (Exception e) {
-                assert false : "Internal error"; // FIX
-                e.printStackTrace();
-                return null;
+        }
+    }
+
+    private static class CalcOnWinOnCalcRule extends FennelWindowRule
+    {
+        /**
+         * Creates a CalcOnWinOnCalcRule.
+         */
+        private CalcOnWinOnCalcRule(Factory factory, String prefix)
+        {
+            super(
+                new RelOptRuleOperand(
+                    CalcRel.class,
+                    new RelOptRuleOperand(
+                        WindowedAggregateRel.class,
+                        new RelOptRuleOperand(
+                            CalcRel.class,
+                            RelOptRule.ANY))),
+                prefix,
+                "CalcOnWinOnCalc",
+                factory);
+        }
+
+        @Override
+        public FennelWindowRule withFactory(Factory factory, String prefix)
+        {
+            return new CalcOnWinOnCalcRule(factory, prefix);
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            final CalcRel outCalc = (CalcRel) call.rels[0];
+            final WindowedAggregateRel winAgg =
+                (WindowedAggregateRel) call.rels[1];
+            final CalcRel inCalc = (CalcRel) call.rels[2];
+            final RelNode child = inCalc.getChild();
+            if (inCalc.getProgram().getCondition() != null) {
+                // FennelWindowRel cannot filter its input. Leave it to
+                // the Calc-on-Win rule.
+                return;
             }
+            createRels(call, outCalc, winAgg, inCalc, child);
+        }
+    }
+
+    private static class CalcOnWinRule extends FennelWindowRule
+    {
+        /**
+         * Creates a CalcOnWinRule.
+         */
+        private CalcOnWinRule(Factory factory, String prefix)
+        {
+            super(
+                new RelOptRuleOperand(
+                    CalcRel.class,
+                    new RelOptRuleOperand(
+                        WindowedAggregateRel.class,
+                        new RelOptRuleOperand(
+                            RelNode.class,
+                            RelOptRule.ANY))),
+                prefix,
+                "CalcOnWin",
+                factory);
+        }
+
+        @Override
+        public FennelWindowRule withFactory(Factory factory, String prefix)
+        {
+            return new CalcOnWinRule(factory, prefix);
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            if (call.rels[2] instanceof CalcRel) {
+                // The Calc-on-Win-on-Calc rule will have dealt with this.
+                return;
+            }
+            final CalcRel outCalc = (CalcRel) call.rels[0];
+            if (RexOver.containsOver(outCalc.getProgram())) {
+                return;
+            }
+            final WindowedAggregateRel winAggRel =
+                (WindowedAggregateRel) call.rels[1];
+            final RelNode child = call.rels[2];
+            if (child instanceof CalcRel) {
+                CalcRel calcRel = (CalcRel) child;
+                if (calcRel.getProgram().getCondition() == null) {
+                    // The Calc-on-Win-on-Calc rule will deal with this.
+                    return;
+                }
+            }
+            createRels(call, outCalc, winAggRel, null, child);
+        }
+    }
+
+    private static class WinOnCalcRule extends FennelWindowRule
+    {
+        /**
+         * Creates a WinOnCalcRule.
+         */
+        private WinOnCalcRule(Factory factory, String prefix)
+        {
+            super(
+                new RelOptRuleOperand(
+                    WindowedAggregateRel.class,
+                    new RelOptRuleOperand(
+                        CalcRel.class,
+                        RelOptRule.ANY)),
+                prefix,
+                "WinOnCalc",
+                factory);
+        }
+
+        @Override
+        public FennelWindowRule withFactory(Factory factory, String prefix)
+        {
+            return new WinOnCalcRule(factory, prefix);
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            final WindowedAggregateRel winAgg =
+                (WindowedAggregateRel) call.rels[0];
+            final CalcRel inCalc = (CalcRel) call.rels[1];
+            if (inCalc.getProgram().getCondition() != null) {
+                return;
+            }
+            final RelNode child = inCalc.getChild();
+            createRels(call, null, winAgg, inCalc, child);
+        }
+    }
+
+    private static class WinRule extends FennelWindowRule
+    {
+        /**
+         * Creates a WinRule.
+         */
+        private WinRule(Factory factory, String prefix)
+        {
+            super(
+                new RelOptRuleOperand(
+                    WindowedAggregateRel.class,
+                    new RelOptRuleOperand(
+                        RelNode.class,
+                        RelOptRule.ANY)),
+                prefix,
+                "Win",
+                factory);
+        }
+
+        public FennelWindowRule withFactory(Factory factory, String prefix)
+        {
+            return new WinRule(factory, prefix);
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            final WindowedAggregateRel winAgg =
+                (WindowedAggregateRel) call.rels[0];
+            final RelNode child = call.rels[1];
+            if (child instanceof CalcRel) {
+                // The Win-Calc rule will deal with this.
+                return;
+            }
+            createRels(call, null, winAgg, null, child);
         }
     }
 }

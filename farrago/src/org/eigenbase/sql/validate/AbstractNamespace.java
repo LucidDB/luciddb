@@ -59,6 +59,19 @@ abstract class AbstractNamespace
 
     protected final SqlNode enclosingNode;
 
+    /**
+     * Row type containing fields in the same order as select clause. Does not
+     * contain any system fields.
+     *
+     * <p>Useful for validating that, say,
+     * "INSERT INTO t SELECT a, b, c FROM t2" has the right number of fields.
+     *
+     * <p>It may make sense to convert this into a
+     * {@link org.eigenbase.util.mapping.Mapping} of the fields of
+     * {@link #rowType}. That has a bit more information content.
+     */
+    protected RelDataType rowTypeAsWritten;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -137,14 +150,16 @@ abstract class AbstractNamespace
         return rowType;
     }
 
-    public RelDataType getRowTypeSansSystemColumns()
+    public RelDataType getRowTypeAsWritten()
     {
-        return getRowType();
+        Util.discard(getRowType()); // ensure that we validate
+        return rowTypeAsWritten != null ? rowTypeAsWritten : rowType;
     }
 
-    public void setRowType(RelDataType rowType)
+    public void setRowType(RelDataType rowType, RelDataType rowTypeAsWritten)
     {
         this.rowType = rowType;
+        this.rowTypeAsWritten = rowTypeAsWritten;
     }
 
     public SqlNode getEnclosingNode()

@@ -23,8 +23,10 @@
 package org.eigenbase.rex;
 
 import java.io.*;
+import java.util.Arrays;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -107,26 +109,14 @@ public class RexWindow
                 pw.print(' ');
             }
             pw.print("PARTITION BY ");
-            for (int i = 0; i < partitionKeys.length; i++) {
-                if (i > 0) {
-                    pw.print(", ");
-                }
-                RexNode partitionKey = partitionKeys[i];
-                pw.print(partitionKey.toString());
-            }
+            Util.printList(pw, Arrays.asList(partitionKeys));
         }
         if (orderKeys.length > 0) {
             if (clauseCount++ > 0) {
                 pw.print(' ');
             }
             pw.print("ORDER BY ");
-            for (int i = 0; i < orderKeys.length; i++) {
-                if (i > 0) {
-                    pw.print(", ");
-                }
-                RexNode orderKey = orderKeys[i];
-                pw.print(orderKey.toString());
-            }
+            Util.printList(pw, Arrays.asList(orderKeys));
         }
         if (lowerBound == null) {
             // No ROWS or RANGE clause

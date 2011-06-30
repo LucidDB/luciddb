@@ -76,7 +76,7 @@ public class SelectNamespace
 
     public SqlMonotonicity getMonotonicity(String columnName)
     {
-        final RelDataType rowType = this.getRowTypeSansSystemColumns();
+        final RelDataType rowType = this.getRowTypeAsWritten();
         final int field = SqlTypeUtil.findField(rowType, columnName);
         final SqlNodeList selectList = select.getSelectList();
         final SqlNode selectItem = selectList.get(field);

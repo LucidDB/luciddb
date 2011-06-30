@@ -69,26 +69,13 @@ public final class IntersectRel
         return dRows;
     }
 
-    public IntersectRel clone()
+    public IntersectRel copy(boolean all, RelNode... inputs)
     {
-        IntersectRel clone =
-            new IntersectRel(
-                getCluster(),
-                RelOptUtil.clone(inputs),
-                all);
-        clone.inheritTraitsFrom(this);
-        return clone;
-    }
-
-    public IntersectRel clone(RelNode [] inputs, boolean all)
-    {
-        final IntersectRel clone =
+        return
             new IntersectRel(
                 getCluster(),
                 inputs,
                 all);
-        clone.inheritTraitsFrom(this);
-        return clone;
     }
 }
 

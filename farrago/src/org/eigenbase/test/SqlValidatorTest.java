@@ -4753,10 +4753,17 @@ public class SqlValidatorTest
     public void testInSubquery()
     {
         check("select * from emp where deptno in (select deptno from dept)");
+    }
+
+    public void testInSubquery2()
+    {
         check(
             "select * from emp where (empno,deptno)"
             + " in (select deptno,deptno from dept)");
+    }
 
+    public void testInSubquery3()
+    {
         // NOTE: jhyde: The closing caret should be one character to the right
         // ("dept)^"), but it's difficult to achieve, because parentheses are
         // discarded during the parsing process.
@@ -4838,6 +4845,31 @@ public class SqlValidatorTest
         checkFails(
             "select ^empno^, deptno from emp group by deptno",
             "Expression 'EMPNO' is not being grouped");
+    }
+
+    /**
+     * Tests a GROUP BY query on a subquery where some of the field names are
+     * not unique, but the fields we are referencing are unique, so that's OK.
+     */
+    public void testGroupByNonUnique()
+    {
+        check(
+            "select x, sum(y) from (\n"
+            + "  select empno as a, empno as x, deptno as y, 1 as a\n"
+            + "  from emp)\n"
+            + "group by x");
+    }
+
+    /**
+     * Tests a query where some of the field names are not unique.
+     */
+    public void testProjectNonUnique()
+    {
+        checkResultType(
+            "select empno as a, empno as x, deptno as y, 1 as a\n"
+            + "from emp",
+            "RecordType(INTEGER NOT NULL A, INTEGER NOT NULL X,"
+            + " INTEGER NOT NULL Y, INTEGER NOT NULL A) NOT NULL");
     }
 
     public void testSingleNoAlias()
@@ -4963,6 +4995,17 @@ public class SqlValidatorTest
             "select 1 from (values (^'x'^)) union " + NL
             + "(values ('a'))",
             "Type mismatch in column 1 of UNION");
+    }
+
+    public void testAliasList()
+    {
+        checkResultType(
+            "select d.c, a + b from (\n"
+            + "  select deptno, 1 as one, name from dept\n"
+            + ") as d(a, b, c)\n"
+            + "where c like 'X%'",
+            "RecordType(VARCHAR(10) NOT NULL C,"
+            + " INTEGER NOT NULL EXPR$1) NOT NULL");
     }
 
     public void testValuesTypeMismatchFails()
@@ -5538,6 +5581,24 @@ public class SqlValidatorTest
             + " order by upper(^eno^)",
             tester.getConformance().isSortByAlias() ? null
             : "Column 'ENO' not found in any table");
+    }
+
+    public void testOrderInSubquery()
+    {
+        if (tester.getValidator().shouldAllowIntermediateOrderBy()) {
+            check(
+                "select deptno, ename from (\n"
+                + " select *\n"
+                + " from emp\n"
+                + " order by deptno + empno)");
+        } else {
+            checkFails(
+                "select deptno, ename from (\n"
+                + " select *\n"
+                + " from emp\n"
+                + " ^order by deptno + empno^)",
+                "ORDER BY is only allowed on top-level SELECT");
+        }
     }
 
     public void testGroup()

@@ -992,17 +992,17 @@ public abstract class FennelRelUtil
      * Helper method which sets properties of a {@link FemAggStreamDef}.
      *
      * @param aggCalls List of calls to aggregate functions
-     * @param groupCount Number of grouping columns =
+     * @param groupSet Bitset of grouping fields
      * @param repos Repository
      * @param aggStream Agg stream to configure
      */
     public static void defineAggStream(
         List<AggregateCall> aggCalls,
-        int groupCount,
+        BitSet groupSet,
         FarragoRepos repos,
         FemAggStreamDef aggStream)
     {
-        aggStream.setGroupingPrefixSize(groupCount);
+        aggStream.setGroupingPrefixSize(groupSet.cardinality());
         for (AggregateCall call : aggCalls) {
             assert (!call.isDistinct());
 
@@ -1036,6 +1036,26 @@ public abstract class FennelRelUtil
     {
         return AggFunctionEnum.forName(
             "AGG_FUNC_" + call.getAggregation().getName());
+    }
+
+    /**
+     * Returns whether the aggregate function is one of the builtins supported
+     * by Fennel.
+     *
+     * @param aggCall Call to an aggregate function
+     * @return Whether aggregate function is a builtin
+     */
+    public static boolean isFennelBuiltinAggFunction(AggregateCall aggCall)
+    {
+        // TODO jvs 5-Oct-2005:  find a better way of detecting
+        // whether the aggregate function is one of the builtins supported
+        // by Fennel; also test whether we can handle input datatype
+        try {
+            lookupAggFunction(aggCall);
+            return true;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 }
 

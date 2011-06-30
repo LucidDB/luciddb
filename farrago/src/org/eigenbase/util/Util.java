@@ -51,10 +51,6 @@ import openjava.ptree.Expression;
 import openjava.ptree.StatementList;
 
 import org.eigenbase.runtime.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.validate.*;
-
 
 /**
  * Miscellaneous utility functions.
@@ -98,7 +94,6 @@ public class Util
 
     public static final Object [] emptyObjectArray = new Object[0];
     public static final String [] emptyStringArray = new String[0];
-    public static final SqlMoniker [] emptySqlMonikerArray = new SqlMoniker[0];
 
     private static boolean driversLoaded = false;
 
@@ -121,6 +116,25 @@ public class Util
     private static final Map<Class, Map<String, ? extends Enum>>
         mapClazzToMapNameToEnum =
             new WeakHashMap<Class, Map<String, ? extends Enum>>();
+
+    /**
+     * @see #spaces(int)
+     */
+    private static String[] SPACES_LIST = {
+        "",
+        " ",
+        "  ",
+        "   ",
+        "    ",
+        "     ",
+        "      ",
+        "       "
+    };
+
+    /**
+     * @see #spaces(int)
+     */
+    private static String SPACES = "        ";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -256,18 +270,25 @@ public class Util
     /**
      * Returns a set of the elements which are in <code>set1</code> but not in
      * <code>set2</code>, without modifying either.
+     *
+     * @param set1 First set
+     * @param set2 Second set
+     * @return Set of every element that is in set1 but not in set2
      */
     public static <T> Set<T> minus(Set<T> set1, Set<T> set2)
     {
-        if (set1.isEmpty()) {
+        if (set1.isEmpty()
+            || set2.isEmpty())
+        {
             return set1;
-        } else if (set2.isEmpty()) {
-            return set1;
-        } else {
-            Set<T> set = new HashSet<T>(set1);
-            set.removeAll(set2);
-            return set;
         }
+        Set<T> set = new HashSet<T>(set1.size());
+        for (T t : set1) {
+            if (!set2.contains(t)) {
+                set.add(t);
+            }
+        }
+        return set;
     }
 
     /**
@@ -439,11 +460,99 @@ public class Util
     }
 
     /**
-     * Prints a flat array of objects as [e1,e2,...]
+     * Prints a collection of objects to a PrintWriter, separated by commas.
+     * For example, "e1, e2, null, e4".
+     *
+     * @param pw Print writer
+     * @param collection Collection
+     * @return Print writer
+     */
+    public static <E> PrintWriter printList(
+        PrintWriter pw,
+        Collection<E> collection)
+    {
+        int n = 0;
+        for (E e : collection) {
+            if (n++ > 0) {
+                pw.print(", ");
+            }
+            pw.print(e);
+        }
+        return pw;
+    }
+
+    /**
+     * Prints a collection of objects to a PrintStream, separated by commas.
+     * For example, "e1, e2, null, e4".
+     *
+     * @param out Print stream
+     * @param collection Collection
+     * @return Print writer
+     */
+    public static <E> PrintStream printList(
+        PrintStream out,
+        Collection<E> collection)
+    {
+        int n = 0;
+        for (E e : collection) {
+            if (n++ > 0) {
+                out.print(", ");
+            }
+            out.print(e);
+        }
+        return out;
+    }
+
+    /**
+     * Appends a collection of objects to a StringBuilder, separated by commas.
+     * For example, "e1, e2, null, e4".
+     *
+     * @param buf Print stream
+     * @param collection Collection
+     * @return Print writer
+     */
+    public static <E> StringBuilder appendList(
+        StringBuilder buf,
+        Collection<E> collection)
+    {
+        int n = 0;
+        for (E e : collection) {
+            if (n++ > 0) {
+                buf.append(", ");
+            }
+            buf.append(e);
+        }
+        return buf;
+    }
+
+    /**
+     * Appends an array of objects to a StringBuilder, separated by commas.
+     * For example, "e1, e2, null, e4".
+     *
+     * @param es Array
+     * @return Print writer
+     */
+    public static <E> StringBuilder appendList(
+        StringBuilder buf,
+        E[] es)
+    {
+        for (int i = 0; i < es.length; i++) {
+            E e = es[i];
+            if (i > 0) {
+                buf.append(", ");
+            }
+            buf.append(e);
+        }
+        return buf;
+    }
+
+    /**
+     * Prints a flat array of objects as "[e1,e2,...]". There are no spaces
+     * after commas. Null values are treated as empty strings.
      */
     public static String flatArrayToString(Object [] a)
     {
-        StringBuffer sb = new StringBuffer("[");
+        StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < a.length; i++) {
             if (i > 0) {
                 sb.append(",");
@@ -1563,10 +1672,7 @@ public class Util
         throws IOException, InterruptedException
     {
         return runAppProcess(
-            newAppProcess(cmdarray),
-            logger,
-            appInput,
-            appOutput);
+            newAppProcess(cmdarray), logger, appInput, appOutput);
     }
 
     /**
@@ -2071,6 +2177,84 @@ public class Util
             bitSet.set(fromIndex, toIndex);
         }
         return bitSet;
+    }
+
+    /**
+     * Returns a string of length {@code i} that consists entirely of space
+     * characters.
+     *
+     * <p>Strings are cached to avoid object creation overhead.
+     *
+     * @param i Length of desired string
+     * @return String of {@code i} space characters
+     */
+    public static synchronized String spaces(int i) {
+        // SPACES_LIST is an array of cached strings.
+        // Its length is a power of 2 (initially 8).
+        // SPACES_LIST[i] is either null or a string of length i.
+        // SPACES is a string of spaces whose length is SPACES_LIST.length.
+        // Each entry in SPACES_LIST is populated on first use by making a
+        // substring of SPACES. (Substrings share the same backing char array,
+        // so require less memory than building a new string from scratch.)
+        if (i > SPACES_LIST.length - 1) {
+            do {
+                SPACES_LIST = copyOf(SPACES_LIST, SPACES_LIST.length * 2);
+            } while (i > SPACES_LIST.length - 1);
+            char[] chars = new char[SPACES_LIST.length];
+            Arrays.fill(chars, ' ');
+            SPACES = new String(chars);
+        }
+        String s = SPACES_LIST[i];
+        if (s == null) {
+            s = SPACES_LIST[i] = SPACES.substring(0, i);
+        }
+        return s;
+    }
+
+    /**
+     * Like <code>{@link java.util.Arrays}.copyOf(Object[], int)</code>, but
+     * exists prior to JDK 1.6.
+     *
+     * @param original the array to be copied
+     * @param newLength the length of the copy to be returned
+     * @return a copy of the original array, truncated or padded with zeros
+     *     to obtain the specified length
+     */
+    public static <T> T[] copyOf(T[] original, int newLength) {
+        //noinspection unchecked
+        return (T[]) copyOf(original, newLength, original.getClass());
+    }
+
+    /**
+     * Copies the specified array.
+     *
+     * @param original the array to be copied
+     * @param newLength the length of the copy to be returned
+     * @param newType the class of the copy to be returned
+     * @return a copy of the original array, truncated or padded with nulls
+     *     to obtain the specified length
+     */
+    public static <T, U> T[] copyOf(
+        U[] original, int newLength, Class<? extends T[]> newType)
+    {
+        @SuppressWarnings({"unchecked", "RedundantCast"})
+        T[] copy = ((Object)newType == (Object)Object[].class)
+            ? (T[]) new Object[newLength]
+            : (T[]) Array.newInstance(newType.getComponentType(), newLength);
+        //noinspection SuspiciousSystemArraycopy
+        System.arraycopy(
+            original, 0, copy, 0,
+            Math.min(original.length, newLength));
+        return copy;
+    }
+
+    public static <T> boolean startsWith(
+        List<T> list,
+        List<T> prefixList)
+    {
+        return list.size() >= prefixList.size()
+            && prefixList.equals(
+                list.subList(0, prefixList.size()));
     }
 
     //~ Inner Classes ----------------------------------------------------------

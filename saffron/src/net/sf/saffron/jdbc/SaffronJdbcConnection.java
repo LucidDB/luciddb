@@ -307,6 +307,79 @@ public class SaffronJdbcConnection implements Connection
         throw new UnsupportedOperationException();
     }
 
+    // New methods in JDBC 4.0
+
+    public Clob createClob() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public Blob createBlob() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public NClob createNClob() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public SQLXML createSQLXML() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean isValid(int timeout) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setClientInfo(String name, String value)
+        throws SQLClientInfoException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setClientInfo(Properties properties)
+        throws SQLClientInfoException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getClientInfo(String name) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public Properties getClientInfo() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public Array createArrayOf(
+        String typeName, Object[] elements) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public Struct createStruct(
+        String typeName, Object[] attributes) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> T unwrap(Class<T> iface) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean isWrapperFor(Class<?> iface) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // End of JDBC methods
+
     protected String getUrlPrefix()
     {
         return SaffronJdbcDriver.getUrlPrefixStatic();

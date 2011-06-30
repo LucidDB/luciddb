@@ -55,7 +55,8 @@ import org.eigenbase.util.Util;
  *     }
  * }
  * SalesConnection sales;
- * Emp[] femaleEmps = (select from sales.emps as emp where emp.gender.equals("F"));
+ * Emp[] femaleEmps = (select from sales.emps as emp
+ *                     where emp.gender.equals("F"));
  * </pre>
  *
  * </blockquote>The expression <code>sales.emps</code> is a valid table because
@@ -121,6 +122,11 @@ public class ReflectSchema implements RelOptSchema
                         return fieldType;
                     }
 
+                    public List<RelDataTypeField> getSystemFieldList()
+                    {
+                        return Collections.emptyList();
+                    }
+
                     public double getRowCount()
                     {
                         return 10;
@@ -147,8 +153,8 @@ public class ReflectSchema implements RelOptSchema
                         final JavaRexBuilder javaRexBuilder =
                             (JavaRexBuilder) cluster.getRexBuilder();
                         final RexNode rex =
-                            javaRexBuilder.makeJava(connectionInfo.env,
-                                expr);
+                            javaRexBuilder.makeJava(
+                                connectionInfo.env, expr);
                         return new ExpressionReaderRel(
                             cluster,
                             cluster.getRexBuilder().makeFieldAccess(

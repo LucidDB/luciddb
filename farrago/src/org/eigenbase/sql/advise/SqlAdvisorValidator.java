@@ -52,6 +52,8 @@ public class SqlAdvisorValidator
     private final RelDataType emptyStructType =
         SqlTypeUtil.createEmptyStructType(typeFactory);
 
+    private final List<RelDataTypeField> systemFieldList;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -74,9 +76,15 @@ public class SqlAdvisorValidator
         SqlConformance conformance)
     {
         super(opTab, catalogReader, typeFactory, conformance);
+        this.systemFieldList = getTypeFactory().getSystemFieldList();
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    public List<RelDataTypeField> getSystemFields()
+    {
+        return systemFieldList;
+    }
 
     /**
      * Registers the identifier and its scope into a map keyed by ParserPostion.
@@ -91,7 +99,15 @@ public class SqlAdvisorValidator
         }
     }
 
-    private void registerId(SqlIdentifier id, SqlValidatorScope scope)
+    /**
+     * Registers an identifier.
+     *
+     * @param id Identifier
+     * @param scope Scope
+     */
+    private void registerId(
+        SqlIdentifier id,
+        SqlValidatorScope scope)
     {
         for (int i = 0; i < id.names.length; i++) {
             final SqlParserPos subPos = id.getComponentParserPosition(i);
@@ -207,7 +223,7 @@ public class SqlAdvisorValidator
         if (activeNamespaces.add(namespace)) {
             super.validateNamespace(namespace);
         } else {
-            namespace.setRowType(emptyStructType);
+            namespace.setRowType(emptyStructType, emptyStructType);
         }
     }
 

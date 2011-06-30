@@ -546,6 +546,10 @@ public abstract class FarragoReposImpl
     private RefClass findRefClass(Class<? extends RefObject> clazz)
     {
         JmiClassVertex vertex = modelGraph.getVertexForJavaInterface(clazz);
+        if (vertex == null) {
+            // May happen if classpath is inconsistent with model.
+            throw new RuntimeException("no vertex found for " + clazz);
+        }
         return vertex.getRefClass();
     }
 

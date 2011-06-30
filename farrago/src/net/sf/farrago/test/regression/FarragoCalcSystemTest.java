@@ -203,8 +203,8 @@ public class FarragoCalcSystemTest
 
             for (int i = 0; i < n; i++) {
                 SqlTypeName typeName =
-                    (SqlTypeName) families[i].getTypeNames().iterator().next();
-                if (typeName.equals(SqlTypeName.ANY)) {
+                    families[i].getTypeNames().iterator().next();
+                if (typeName == SqlTypeName.ANY) {
                     typeName = SqlTypeName.BOOLEAN;
                 }
 
@@ -256,9 +256,9 @@ public class FarragoCalcSystemTest
         } else if (otc instanceof FamilyOperandTypeChecker) {
             return ((FamilyOperandTypeChecker) otc).getFamilies();
         } else {
-            Integer nOperands =
-                (Integer) otc.getOperandCountRange().getAllowedList().get(0);
-            SqlTypeFamily [] families = new SqlTypeFamily[nOperands.intValue()];
+            int nOperands =
+                otc.getOperandCountRange().getAllowedList().get(0);
+            SqlTypeFamily [] families = new SqlTypeFamily[nOperands];
             Arrays.fill(families, SqlTypeFamily.BOOLEAN);
             return families;
         }

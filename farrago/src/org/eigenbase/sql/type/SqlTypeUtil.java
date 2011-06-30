@@ -197,13 +197,12 @@ public abstract class SqlTypeUtil
         String fieldName)
     {
         if (!type.isStruct()) {
-            if (fieldName == null) {
-                fieldName = "ROW_VALUE";
-            }
             type =
                 typeFactory.createStructType(
-                    new RelDataType[] { type },
-                    new String[] { fieldName });
+                    Collections.singletonList(
+                        Pair.of(
+                            fieldName == null ? "ROW_VALUE" : fieldName,
+                            type)));
         }
         return type;
     }
@@ -286,8 +285,8 @@ public abstract class SqlTypeUtil
         SqlTypeName typeName,
         RelDataType type)
     {
-        return SqlTypeName.ANY.equals(typeName)
-            || typeName.equals(type.getSqlTypeName());
+        return SqlTypeName.ANY == typeName
+            || typeName == type.getSqlTypeName();
     }
 
     /**
@@ -1203,6 +1202,40 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * Returns whether two types are structurally identical, ignoring the names
+     * of fields.
+     *
+     * @param type1 First type
+     * @param type2 Second type
+     * @return Whether types are equal, ignoring field names
+     */
+    public static boolean equalSansNames(RelDataType type1, RelDataType type2)
+    {
+        if (!type1.isStruct()) {
+            return type1.equals(type2);
+        }
+        if (!type2.isStruct()) {
+            return false;
+        }
+        if (type1.isNullable() != type2.isNullable()) {
+            return false;
+        }
+        final List<RelDataTypeField> fields1 = type1.getFieldList();
+        final List<RelDataTypeField> fields2 = type2.getFieldList();
+        if (fields1.size() != fields2.size()) {
+            return false;
+        }
+        for (int i = 0; i < fields1.size(); i++) {
+            final RelDataTypeField field1 = fields1.get(i);
+            final RelDataTypeField field2 = fields2.get(i);
+            if (!equalSansNames(field1.getType(), field2.getType())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Adds a field to a record type at a specified position.
      *
      * <p>For example, if type is <code>(A integer, B boolean)</code>, and
@@ -1288,8 +1321,7 @@ public abstract class SqlTypeUtil
         RelDataTypeFactory typeFactory)
     {
         return typeFactory.createStructType(
-            new RelDataType[0],
-            new String[0]);
+            Collections.<Pair<String, RelDataType>>emptyList());
     }
 
     /**
@@ -1471,23 +1503,7 @@ public abstract class SqlTypeUtil
 
         public RelDataType type()
         {
-            return typeFactory.createStructType(
-                new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return fieldList.size();
-                    }
-
-                    public String getFieldName(int index)
-                    {
-                        return fieldList.get(index).getName();
-                    }
-
-                    public RelDataType getFieldType(int index)
-                    {
-                        return fieldList.get(index).getType();
-                    }
-                });
+            return typeFactory.createStructType(fieldList);
         }
     }
 }

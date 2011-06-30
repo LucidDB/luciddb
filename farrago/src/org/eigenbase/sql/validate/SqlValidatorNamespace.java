@@ -75,7 +75,9 @@ public interface SqlValidatorNamespace
 
     /**
      * Returns the row type of this namespace, which comprises a list of names
-     * and types of the output columns. If the scope's type has not yet been
+     * and types of the output columns, including any applicable system fields.
+     *
+     * <p>If the scope's type has not yet been
      * derived, derives it. Never returns null.
      *
      * @post return != null
@@ -83,16 +85,24 @@ public interface SqlValidatorNamespace
     RelDataType getRowType();
 
     /**
-     * Allows RowType for the namespace to be explicitly set.
+     * Sets the row type of this namespace.
+     *
+     * <p>If {@code rowTypeAsWritten} is null, {@code rowType} is assumed.
+     *
+     * @param rowType Row type for validation purposes. Contains system columns,
+     *     and the order of fields may have been changed
+     * @param rowTypeAsWritten Row type as written in SELECT clause
      */
-    void setRowType(RelDataType rowType);
+    void setRowType(RelDataType rowType, RelDataType rowTypeAsWritten);
 
     /**
-     * Returns the row type of this namespace, sans any system columns.
+     * Returns the row type of this namespace as it was written. Columns are in
+     * the same order as in the SELECT clause (after '*' and 'alias.*' have
+     * been expanded) and no system columns have been added.
      *
-     * @return Row type sans system columns
+     * @return Row type with columns in the order they were written
      */
-    RelDataType getRowTypeSansSystemColumns();
+    RelDataType getRowTypeAsWritten();
 
     /**
      * Validates this namespace.

@@ -159,12 +159,6 @@ public abstract class Bug
     // jvs
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-26">issue
-     * FRG-26</a> is fixed.
-     */
-    public static final boolean Frg26Fixed = false;
-
-    /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-73">issue FRG-73:
      * miscellaneous bugs with nested comments</a> is fixed.
      */
@@ -176,13 +170,6 @@ public abstract class Bug
      * fixed.
      */
     public static final boolean Frg78Fixed = false;
-
-    /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-103">issue
-     * FRG-103: validator allows duplicate target columns in insert</a> is
-     * fixed.
-     */
-    public static final boolean Frg103Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-140">issue

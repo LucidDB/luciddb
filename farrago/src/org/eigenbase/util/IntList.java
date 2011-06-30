@@ -35,8 +35,15 @@ import java.util.*;
 public class IntList
     extends ArrayList<Integer>
 {
+
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the contents of this list as an array of primitive {@code int}
+     * values.
+     *
+     * @return List as int array.
+     */
     public int [] toIntArray()
     {
         return toArray(this);
@@ -69,24 +76,124 @@ public class IntList
      *
      * @return List backed by array
      */
-    public static List<Integer> asList(final int [] args)
+    public static List<Integer> of(final int... args)
     {
-        return new AbstractList<Integer>() {
-            public Integer get(int index)
-            {
-                return args[index];
-            }
+        // use a shared constant for a common case
+        if (args.length == 0) {
+            return Collections.emptyList();
+        }
+        return new PrimitiveIntList(args);
+    }
 
-            public int size()
-            {
-                return args.length;
-            }
+    /**
+     * Returns an immutable list backed by an array of primitive
+     * <code>int</code> values.
+     *
+     * <p>The behavior is analogous to {@link Arrays#asList(Object[])}. Changes
+     * to the backing array are reflected in the list. The list cannot be
+     * modified or extended.
+     *
+     * @param args Array of primitive <code>int</code> values
+     *
+     * @return Immutable list backed by array
+     */
+    public static List<Integer> ofImmutable(final int... args)
+    {
+        switch (args.length) {
+        case 0:
+            return Collections.emptyList();
+        case 1:
+            // Singleton list is immutable and holds an Integer. Values between
+            // 0 and 255 are cached by the Java, therefore require less memory
+            // than an int[1]. Other values require an Integer, which is about
+            // the same size as an int[1].
+            return Collections.singletonList(args[0]);
+        default:
+            return new ImmutablePrimitiveIntList(args);
+        }
+    }
 
-            public Integer set(int index, Integer element)
-            {
-                return args[index] = element;
-            }
-        };
+    /**
+     * Returns an immutable list backed by an array of primitive
+     * <code>int</code> values whose contents are the given list.
+     *
+     * <p>The list is very space-efficient.
+     *
+     * @param argList List of integers
+     *
+     * @return Immutable list of integers
+     */
+    public static List<Integer> ofImmutable(List<Integer> argList)
+    {
+        switch (argList.size()) {
+        case 0:
+            return Collections.emptyList();
+        case 1:
+            // Singleton list is immutable and holds an Integer. Values between
+            // 0 and 255 are cached by the Java, therefore require less memory
+            // than an int[1]. Other values require an Integer, which is about
+            // the same size as an int[1].
+            return Collections.singletonList(argList.get(0));
+        default:
+            return new ImmutablePrimitiveIntList(toArray(argList));
+        }
+    }
+
+    /**
+     * List backed by an array of primitive {@code int} values.
+     */
+    private static class PrimitiveIntList extends AbstractList<Integer>
+    {
+        private final int[] args;
+
+        /**
+         * Creates a PrimitiveIntList.
+         *
+         * @param args Array of integers
+         */
+        protected PrimitiveIntList(int[] args)
+        {
+            this.args = args;
+        }
+
+        public Integer get(int index)
+        {
+            return args[index];
+        }
+
+        public int size()
+        {
+            return args.length;
+        }
+
+        public Integer set(int index, Integer element)
+        {
+            final int previous = args[index];
+            args[index] = element;
+            return previous;
+        }
+    }
+
+    /**
+     * List backed by an array of primitive {@code int} values.
+     */
+    private static final class ImmutablePrimitiveIntList
+        extends PrimitiveIntList
+    {
+        /**
+         * Creates an ImmutablePrimitiveIntList.
+         *
+         * @param args Array of integers
+         */
+        private ImmutablePrimitiveIntList(int[] args)
+        {
+            super(args);
+        }
+
+        public Integer set(int index, Integer element)
+        {
+            throw new UnsupportedOperationException("list is not mutable");
+        }
     }
 }
 

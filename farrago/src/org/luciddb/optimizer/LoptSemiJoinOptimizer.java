@@ -34,6 +34,7 @@ import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -393,6 +394,7 @@ public class LoptSemiJoinOptimizer
                 new RelOptUtil.RexInputConverter(
                     rexBuilder,
                     multiJoin.getMultiJoinFields(),
+                    null,
                     adjustments));
         }
 
@@ -662,10 +664,7 @@ public class LoptSemiJoinOptimizer
         // index lookups on a very large fact table.  Half was chosen as
         // a middle ground based on testing that was done with a large
         // dataset.
-        BitSet dimCols = new BitSet();
-        for (int dimCol : semiJoin.getRightKeys()) {
-            dimCols.set(dimCol);
-        }
+        BitSet dimCols = Util.bitSetOf(semiJoin.getRightKeys());
         double selectivity =
             RelMdUtil.computeSemiJoinSelectivity(factRel, dimRel, semiJoin);
         if (selectivity > .5) {
@@ -742,10 +741,7 @@ public class LoptSemiJoinOptimizer
 
         // Check if the semijoin keys corresponding to the dimension table
         // are unique.  The semijoin will filter out the nulls.
-        BitSet dimKeys = new BitSet();
-        for (Integer key : semiJoin.getRightKeys()) {
-            dimKeys.set(key);
-        }
+        BitSet dimKeys = Util.bitSetOf(semiJoin.getRightKeys());
         RelNode dimRel = multiJoin.getJoinFactor(dimIdx);
         if (!RelMdUtil.areColumnsDefinitelyUniqueWhenNullsFiltered(
                 dimRel,
@@ -760,8 +756,7 @@ public class LoptSemiJoinOptimizer
         BitSet dimProjRefs = multiJoin.getProjFields(dimIdx);
         if (dimProjRefs == null) {
             int nDimFields = multiJoin.getNumFieldsInJoinFactor(dimIdx);
-            dimProjRefs = new BitSet(nDimFields);
-            RelOptUtil.setRexInputBitmap(dimProjRefs, 0, nDimFields);
+            dimProjRefs = Util.bitSetBetween(0, nDimFields);
         }
         if (!RelOptUtil.contains(dimKeys, dimProjRefs)) {
             return;

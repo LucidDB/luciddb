@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.mdr;
 
 import java.util.*;
+import java.util.List;
 
 import javax.jmi.model.*;
 
@@ -32,6 +33,7 @@ import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 
 
@@ -89,19 +91,21 @@ class MedMdrJoinRel
         return rightReference;
     }
 
-    public MedMdrJoinRel clone()
+    @Override
+    public MedMdrJoinRel copy(
+        RexNode conditionExpr,
+        List<RelDataTypeField> systemFieldList,
+        RelNode left,
+        RelNode right)
     {
-        MedMdrJoinRel clone =
-            new MedMdrJoinRel(
-                getCluster(),
-                left.clone(),
-                right.clone(),
-                condition.clone(),
-                joinType,
-                leftOrdinal,
-                rightReference);
-        clone.inheritTraitsFrom(this);
-        return clone;
+        return new MedMdrJoinRel(
+            getCluster(),
+            left,
+            right,
+            conditionExpr,
+            joinType,
+            leftOrdinal,
+            rightReference);
     }
 
     // implement RelNode

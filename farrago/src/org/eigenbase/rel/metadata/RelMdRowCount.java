@@ -90,16 +90,11 @@ public class RelMdRowCount
 
     public Double getRowCount(AggregateRelBase rel)
     {
-        BitSet groupKey = new BitSet();
-        for (int i = 0; i < rel.getGroupCount(); i++) {
-            groupKey.set(i);
-        }
-
         // rowcount is the cardinality of the group by columns
         Double distinctRowCount =
             RelMetadataQuery.getDistinctRowCount(
                 rel.getChild(),
-                groupKey,
+                rel.getGroupSet(),
                 null);
         if (distinctRowCount == null) {
             return RelMetadataQuery.getRowCount(rel.getChild()) / 10;

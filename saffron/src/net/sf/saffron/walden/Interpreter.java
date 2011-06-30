@@ -33,9 +33,10 @@ import openjava.ptree.ParseTree;
 import openjava.tools.parser.ParseException;
 import openjava.tools.parser.Parser;
 
+import org.eigenbase.oj.stmt.OJPreparingStmt;
 import org.eigenbase.relopt.RelOptConnection;
 import org.eigenbase.runtime.VarDecl;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -107,7 +108,7 @@ public class Interpreter
         handler.beforeParse();
         OJStatement.Argument [] arguments =
             (OJStatement.Argument []) argumentList.toArray(
-                new OJStatement.Argument[0]);
+                new OJStatement.Argument[argumentList.size()]);
         OJStatement statement = new OJStatement(connection);
         ClassDeclaration classDecl = statement.init(arguments);
         Environment env = statement.getEnvironment();
@@ -136,7 +137,8 @@ public class Interpreter
             for (int i = 0; i < decls.length; i++) {
                 VarDecl decl = decls[i];
                 argumentList.add(
-                    new OJStatement.Argument(decl.name, decl.clazz, decl.value));
+                    new OJStatement.Argument(
+                        decl.name, decl.clazz, decl.value));
             }
         }
         return true;

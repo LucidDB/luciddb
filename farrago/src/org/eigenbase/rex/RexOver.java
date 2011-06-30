@@ -88,6 +88,9 @@ public class RexOver
         return (SqlAggFunction) getOperator();
     }
 
+    /**
+     * Returns the window specification.
+     */
     public RexWindow getWindow()
     {
         return window;
@@ -135,8 +138,6 @@ public class RexOver
 
     /**
      * Returns whether an expression list contains an OVER clause.
-     *
-     * @deprecated
      */
     public static boolean containsOver(RexNode [] exprs, RexNode expr)
     {
@@ -173,7 +174,10 @@ public class RexOver
     {
         static final RexOver.Finder instance = new RexOver.Finder();
 
-        public Finder()
+        /**
+         * Creates a Finder.
+         */
+        Finder()
         {
             super(true);
         }

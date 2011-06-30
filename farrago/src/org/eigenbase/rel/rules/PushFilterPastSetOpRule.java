@@ -22,6 +22,8 @@
 */
 package org.eigenbase.rel.rules;
 
+import java.util.List;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -71,23 +73,23 @@ public class PushFilterPastSetOpRule
         // create filters on top of each setop child, modifying the filter
         // condition to reference each setop child
         RexBuilder rexBuilder = filterRel.getCluster().getRexBuilder();
-        RelDataTypeField [] origFields = setOpRel.getRowType().getFields();
-        int [] adjustments = new int[origFields.length];
+        List<RelDataTypeField> origFields =
+            setOpRel.getRowType().getFieldList();
+        int [] adjustments = new int[origFields.size()];
         for (int i = 0; i < nSetOpInputs; i++) {
             RexNode newCondition =
                 condition.accept(
                     new RelOptUtil.RexInputConverter(
                         rexBuilder,
                         origFields,
-                        setOpInputs[i].getRowType().getFields(),
+                        setOpInputs[i].getRowType().getFieldList(),
                         adjustments));
             newSetOpInputs[i] =
                 new FilterRel(cluster, setOpInputs[i], newCondition);
         }
 
         // create a new setop whose children are the filters created above
-        SetOpRel newSetOpRel =
-            RelOptUtil.createNewSetOpRel(setOpRel, newSetOpInputs);
+        SetOpRel newSetOpRel = setOpRel.copy(newSetOpInputs);
 
         call.transformTo(newSetOpRel);
     }

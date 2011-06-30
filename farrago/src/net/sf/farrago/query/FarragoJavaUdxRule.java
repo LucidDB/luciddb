@@ -21,8 +21,13 @@
 */
 package net.sf.farrago.query;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.Pair;
 
 
 /**
@@ -72,15 +77,57 @@ public class FarragoJavaUdxRule
                     inputs[i],
                     inputs[i].getTraits().plus(CallingConvention.ITERATOR));
         }
+        final RelDataType outputRowType = callRel.getCall().getType();
         FarragoJavaUdxRel javaTableFunctionRel =
             new FarragoJavaUdxRel(
                 callRel.getCluster(),
                 callRel.getCall(),
-                callRel.getRowType(),
+                outputRowType,
                 null,
-                inputs);
+                inputs,
+                callRel.getInputRowTypes());
         javaTableFunctionRel.setColumnMappings(callRel.getColumnMappings());
-        call.transformTo(javaTableFunctionRel);
+
+        // If there are system fields, the UDX may not provide them. To comply
+        // with the TableFunctionRel's row type, we need to add extra fields by
+        // projecting literals. If the consumer does not use these fields, the
+        // planner may project them away later.
+        RelNode child;
+        if (outputRowType.equals(callRel.getRowType())) {
+            child = javaTableFunctionRel;
+        } else {
+            final List<RelDataTypeField> fields =
+                callRel.getRowType().getFieldList();
+            final List<Pair<String, RexNode>> exprs =
+                new ArrayList<Pair<String, RexNode>>();
+            final RexBuilder rexBuilder =
+                callRel.getCluster().getRexBuilder();
+            List<RelDataTypeField> extraFields =
+                fields.subList(
+                    0, fields.size() - outputRowType.getFieldCount());
+            for (RelDataTypeField extraField : extraFields) {
+                exprs.add(
+                    Pair.of(
+                        extraField.getName(),
+                        rexBuilder.makeZeroLiteral(
+                            extraField.getType(), true)));
+            }
+            int i = 0;
+            for (RelDataTypeField field : outputRowType.getFieldList()) {
+                exprs.add(
+                    Pair.of(
+                        field.getName(),
+                        (RexNode)
+                            rexBuilder.makeInputRef(field.getType(), i++)));
+            }
+            child =
+                CalcRel.createProject(
+                    javaTableFunctionRel,
+                    Pair.projectRight(exprs),
+                    Pair.projectLeft(exprs));
+        }
+
+        call.transformTo(child);
     }
 }
 

@@ -23,6 +23,7 @@
 package org.eigenbase.sql.type;
 
 import java.nio.charset.*;
+import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -196,6 +197,12 @@ public class SqlTypeFactoryImpl
             return super.createTypeWithNullability(type, nullable);
         }
         return canonize(newType);
+    }
+
+    // implement RelDataTypeFactory
+    public List<RelDataTypeField> getSystemFieldList()
+    {
+        return Collections.emptyList();
     }
 
     private void assertBasic(SqlTypeName typeName)

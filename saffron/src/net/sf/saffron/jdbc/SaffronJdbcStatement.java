@@ -287,7 +287,34 @@ public class SaffronJdbcStatement implements Statement
     {
         throw new UnsupportedOperationException();
     }
-}
 
+    // New methods in JDBC 4.0.
+
+
+    public boolean isClosed() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setPoolable(boolean poolable) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean isPoolable() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> T unwrap(Class<T> iface) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean isWrapperFor(Class<?> iface) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+}
 
 // End SaffronJdbcStatement.java

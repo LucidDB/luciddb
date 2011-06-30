@@ -42,14 +42,15 @@ public class PushAggregateThroughUnionRule extends RelOptRule
     public static final PushAggregateThroughUnionRule instance =
         new PushAggregateThroughUnionRule();
 
-    public PushAggregateThroughUnionRule()
+    /**
+     * Private constructor.
+     */
+    private PushAggregateThroughUnionRule()
     {
         super(
             new RelOptRuleOperand(
                 AggregateRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(UnionRel.class, RelOptRule.ANY)
-                }));
+                new RelOptRuleOperand(UnionRel.class, RelOptRule.ANY)));
     }
 
     public void onMatch(RelOptRuleCall call)
@@ -75,15 +76,10 @@ public class PushAggregateThroughUnionRule extends RelOptRule
         RelNode [] newUnionInputs = new RelNode[nUnionInputs];
         RelOptCluster cluster = unionRel.getCluster();
 
-        BitSet groupByKeyMask = new BitSet();
-        for (int i = 0; i < aggRel.getGroupCount(); i++) {
-            groupByKeyMask.set(i);
-        }
-
         List<AggregateCall> transformedAggCalls =
             transformAggCalls(
                 aggRel.getCluster().getTypeFactory(),
-                aggRel.getGroupCount(),
+                aggRel.getGroupSet().cardinality(),
                 aggRel.getAggCallList());
         if (transformedAggCalls == null) {
             // we've detected the presence of something like AVG,
@@ -98,7 +94,7 @@ public class PushAggregateThroughUnionRule extends RelOptRule
             boolean alreadyUnique =
                 RelMdUtil.areColumnsDefinitelyUnique(
                     unionInputs[i],
-                    groupByKeyMask);
+                    aggRel.getGroupSet());
 
             if (alreadyUnique) {
                 newUnionInputs[i] = unionInputs[i];
@@ -108,7 +104,8 @@ public class PushAggregateThroughUnionRule extends RelOptRule
                     new AggregateRel(
                         cluster,
                         unionInputs[i],
-                        aggRel.getGroupCount(),
+                        aggRel.getSystemFieldList(),
+                        aggRel.getGroupSet(),
                         aggRel.getAggCallList());
             }
         }
@@ -126,7 +123,8 @@ public class PushAggregateThroughUnionRule extends RelOptRule
         AggregateRel newTopAggRel = new AggregateRel(
             cluster,
             newUnionRel,
-            aggRel.getGroupCount(),
+            aggRel.getSystemFieldList(),
+            aggRel.getGroupSet(),
             transformedAggCalls);
 
         // In case we transformed any COUNT (which is always NOT NULL)

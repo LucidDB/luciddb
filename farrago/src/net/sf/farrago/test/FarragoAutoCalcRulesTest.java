@@ -48,6 +48,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -242,10 +243,10 @@ public class FarragoAutoCalcRulesTest
                     SqlOperatorBinding opBinding)
                 {
                     assert (opBinding.getOperandCount() == 2);
-                    String [] names = new String[] { "first", "second" };
                     return opBinding.getTypeFactory().createStructType(
-                        opBinding.collectOperandTypes(),
-                        names);
+                        Arrays.<Map.Entry<String, RelDataType>>asList(
+                            Pair.of("first", opBinding.getOperandType(0)),
+                            Pair.of("second", opBinding.getOperandType(1))));
                 }
             };
         opTab.register(jrowFunc);

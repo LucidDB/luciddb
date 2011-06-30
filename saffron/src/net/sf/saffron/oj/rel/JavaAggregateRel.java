@@ -19,6 +19,8 @@
 
 package net.sf.saffron.oj.rel;
 
+import java.util.*;
+
 import openjava.mop.OJClass;
 import openjava.mop.OJField;
 import openjava.mop.Toolbox;
@@ -33,6 +35,7 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.util.Util;
+import org.eigenbase.reltype.RelDataTypeField;
 
 /**
  * <code>JavaAggregateRel</code> implements the {@link AggregateRel} relational
@@ -93,12 +96,13 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
     public JavaAggregateRel(
         RelOptCluster cluster,
         RelNode child,
-        int groupCount,
+        java.util.List<RelDataTypeField> systemFieldList,
+        BitSet groupSet,
         java.util.List<AggregateCall> aggCalls)
     {
         super(
             cluster, CallingConvention.JAVA.singletonSet, child,
-            groupCount, aggCalls);
+            systemFieldList, groupSet, aggCalls);
     }
 
     // implement RelNode
@@ -106,7 +110,11 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
     {
         JavaAggregateRel clone =
             new JavaAggregateRel(
-                getCluster(), getChild(), groupCount, aggCalls);
+                getCluster(),
+                getChild(),
+                systemFieldList,
+                (BitSet) groupSet.clone(),
+                aggCalls);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -185,6 +193,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
                     TypeName.forOJClass(rowType),
                     null)));
         Variable var_groups = implementor.newVariable();
+        final int groupCount = groupSet.cardinality();
         if (groupCount == 1) {
             //       Object groups = keys.next();
             //       row.c0 = (T0) groups;
@@ -233,7 +242,8 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
                             var_row,
                             field.getName()),
                         AssignmentExpression.EQUALS,
-                        implementor.implementResult(aggCalls.get(i), var_aggs))));
+                        implementor.implementResult(
+                            aggCalls.get(i), var_aggs))));
         } else {
             //       Object[] aggs = (Object[]) h.get(groups);
             //       row.c2 = <<agg result code {aggs[0]}>>
@@ -293,6 +303,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
         //   }
         StatementList stmtList = implementor.getStatementList();
         Variable var_groups = implementor.newVariable();
+        final int groupCount = groupSet.cardinality();
         if (groupCount == 1) {
             //   Object groups = <<child variable>>.field4;
             int i = 0;
@@ -355,7 +366,8 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
                     new AssignmentExpression(
                         var_aggs,
                         AssignmentExpression.EQUALS,
-                        implementor.implementStartAndNext(aggCalls.get(i), this))));
+                        implementor.implementStartAndNext(
+                            aggCalls.get(i), this))));
         } else {
             //     aggs = new Object[] {
             //       <<aggs[0] start code>>,
@@ -393,9 +405,9 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
             implementor.implementNext(
                 aggCalls.get(i),
                 this,
-                (aggCalls.size() == 1) ?
-                (Expression) var_aggs :
-                (Expression) new ArrayAccess(
+                (aggCalls.size() == 1)
+                ? (Expression) var_aggs
+                : (Expression) new ArrayAccess(
                     var_aggs,
                     Literal.makeLiteral(i)));
         }

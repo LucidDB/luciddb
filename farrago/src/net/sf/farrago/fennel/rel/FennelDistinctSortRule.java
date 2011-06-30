@@ -73,7 +73,7 @@ public class FennelDistinctSortRule
         }
         RelNode relInput = agg.getChild();
         int n = relInput.getRowType().getFieldList().size();
-        if (agg.getGroupCount() < n) {
+        if (agg.getGroupSet().cardinality() < n) {
             return;
         }
 

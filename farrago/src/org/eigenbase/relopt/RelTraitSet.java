@@ -44,9 +44,7 @@ public class RelTraitSet
     /**
      * Constructs a RelTraitSet with the given set of RelTraits.
      *
-     * @see org.eigenbase.util.Util#deprecated(Object, boolean) ever null?
-     *
-     * @param traits Traits
+     * @param traits Traits; all must be not-null
      */
     public RelTraitSet(RelTrait ... traits)
     {
@@ -54,7 +52,7 @@ public class RelTraitSet
     }
 
     /**
-     * Internal constructor. Does not clone.
+     * Internal constructor. Does not copy the array.
      */
     private RelTraitSet(RelTrait[] traits, boolean b)
     {
@@ -112,7 +110,7 @@ public class RelTraitSet
     /**
      * Retrieves a RelTrait of the given type from the set.
      *
-     * @param traitDef the type of RelTrit to retrieve
+     * @param traitDef the type of RelTrait to retrieve
      *
      * @return the RelTrait, or null if not found
      */
@@ -137,7 +135,7 @@ public class RelTraitSet
     }
 
     /**
-     * Returns a trait set with one trait modified.
+     * Returns a copy of a trait set with one trait modified.
      *
      * <p>Never modifies this trait set.
      *
@@ -167,10 +165,8 @@ public class RelTraitSet
         }
     }
 
-
     /**
-     * Creates a copy of this trait set, assigning all traits from the
-     * other trait set.
+     * Returns a copy of a trait set with several traits modified.
      *
      * <p>This trait set is not modified.</p>
      *

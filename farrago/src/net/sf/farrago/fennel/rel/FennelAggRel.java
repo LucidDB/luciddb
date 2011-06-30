@@ -29,6 +29,7 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
@@ -52,20 +53,21 @@ public class FennelAggRel
      *
      * @param cluster Cluster
      * @param child Child
-     * @param groupCount Size of grouping key
+     * @param systemFieldList List of system fields
+     * @param groupSet Bitset of grouping fields
      * @param aggCalls Collection of calls to aggregate functions
      */
     public FennelAggRel(
         RelOptCluster cluster,
         RelNode child,
-        int groupCount,
+        List<RelDataTypeField> systemFieldList,
+        BitSet groupSet,
         List<AggregateCall> aggCalls)
     {
         super(
             cluster,
             FennelRel.FENNEL_EXEC_CONVENTION.singletonSet,
-            child,
-            groupCount,
+            child, systemFieldList, groupSet,
             aggCalls);
         repos = FennelRelUtil.getRepos(this);
     }
@@ -78,7 +80,8 @@ public class FennelAggRel
             new FennelAggRel(
                 getCluster(),
                 getChild().clone(),
-                groupCount,
+                systemFieldList,
+                (BitSet) groupSet.clone(),
                 aggCalls);
         clone.inheritTraitsFrom(this);
         return clone;
@@ -106,7 +109,7 @@ public class FennelAggRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemSortedAggStreamDef aggStream = repos.newFemSortedAggStreamDef();
-        FennelRelUtil.defineAggStream(aggCalls, groupCount, repos, aggStream);
+        FennelRelUtil.defineAggStream(aggCalls, groupSet, repos, aggStream);
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild(), 0),
             aggStream);

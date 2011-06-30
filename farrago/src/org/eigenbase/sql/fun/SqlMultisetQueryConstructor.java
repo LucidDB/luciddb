@@ -114,7 +114,7 @@ public class SqlMultisetQueryConstructor
         assert null != ns.getRowType();
         return SqlTypeUtil.createMultisetType(
             validator.getTypeFactory(),
-            ns.getRowType(),
+            ns.getRowTypeAsWritten(),
             false);
     }
 

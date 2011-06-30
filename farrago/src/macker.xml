@@ -869,6 +869,7 @@
       <include pattern="namespace.mock.deps" />
       <include pattern="fennel.tuple" />
       <include pattern="ddl.gen" />
+      <include pattern="session.mock" />
       <include pattern="syslib" />
       <include pattern="test" />
     </pattern>

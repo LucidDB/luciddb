@@ -335,7 +335,8 @@ public class RelDecorrelator
         // map from newChildRel
         Map<Integer, Integer> mapNewChildToProjOutputPos =
             new HashMap<Integer, Integer>();
-        int oldGroupKeyCount = rel.getGroupCount();
+        final int sysFieldCount = rel.getSystemFieldList().size();
+        final int oldGroupKeyCount = rel.getGroupSet().cardinality();
 
         // ProjectRel projects the original expressions,
         // plus any correlated variables the child wants to pass along.
@@ -350,10 +351,9 @@ public class RelDecorrelator
 
         int newChildPos;
         int newPos;
-        int newGroupKeyCount;
 
         // oldChildRel has the original group by keys in the front.
-        for (newPos = 0; newPos < oldGroupKeyCount; newPos++) {
+        for (newPos = sysFieldCount; newPos < oldGroupKeyCount; newPos++) {
             newChildPos = childMapOldToNewOutputPos.get(newPos);
 
             fieldType = newChildOutput[newChildPos].getType();
@@ -397,7 +397,7 @@ public class RelDecorrelator
         }
 
         // add the remaining fields
-        newGroupKeyCount = newPos;
+        final int newGroupKeyCount = newPos;
         for (int i = 0; i < newChildOutput.length; i++) {
             if (!mapNewChildToProjOutputPos.containsKey(i)) {
                 fieldType = newChildOutput[i].getType();
@@ -491,7 +491,10 @@ public class RelDecorrelator
             new AggregateRel(
                 rel.getCluster(),
                 newProjectRel,
-                newGroupKeyCount,
+                rel.getSystemFieldList(),
+                Util.bitSetBetween(
+                    sysFieldCount,
+                    newGroupKeyCount),
                 newAggCalls);
 
         mapOldToNewRel.put(rel, newAggregateRel);
@@ -686,7 +689,12 @@ public class RelDecorrelator
                     CalcRel.createProject(
                         newInputRel,
                         mapNewInputRelToOutputPos.get(newInputRel));
-                RelNode distinctRel = RelOptUtil.createDistinctRel(projectRel);
+                RelNode distinctRel =
+                    RelOptUtil.createDistinctRel(
+                        projectRel,
+                        // REVIEW: empty systemFieldList may not always be
+                        // appropriate
+                        Collections.<RelDataTypeField>emptyList());
                 RelOptCluster cluster = distinctRel.getCluster();
 
                 joinedInputRelSet.add(newInputRel);
@@ -696,7 +704,6 @@ public class RelDecorrelator
                 if (resultRel == null) {
                     resultRel = distinctRel;
                 } else {
-                    final Set<String> variablesStopped = Collections.emptySet();
                     resultRel =
                         new JoinRel(
                             cluster,
@@ -704,7 +711,7 @@ public class RelDecorrelator
                             distinctRel,
                             cluster.getRexBuilder().makeLiteral(true),
                             JoinRelType.INNER,
-                            variablesStopped);
+                            Collections.<String>emptySet());
                 }
             }
         }
@@ -1679,7 +1686,7 @@ public class RelDecorrelator
                 if ((isCount != null) && isCount.contains(pos)) {
                     return createCaseExpression(
                         newInputRef,
-                        rexBuilder.makeExactLiteral(new BigDecimal("0")),
+                        rexBuilder.makeExactLiteral(BigDecimal.ZERO),
                         newInputRef);
                 } else {
                     return newInputRef;
@@ -1787,7 +1794,7 @@ public class RelDecorrelator
             AggregateRel aggRel = (AggregateRel) call.rels[2];
 
             // check singleAggRel is single_value agg
-            if ((singleAggRel.getGroupCount() != 0)
+            if ((!singleAggRel.getGroupSet().isEmpty())
                 || (singleAggRel.getAggCallList().size() != 1)
                 || !(singleAggRel.getAggCallList().get(0).getAggregation()
                     instanceof SqlSingleValueAggFunction))
@@ -1804,7 +1811,7 @@ public class RelDecorrelator
             }
 
             // check the input to projRel is an aggregate on the entire input
-            if (aggRel.getGroupCount() != 0) {
+            if (!aggRel.getGroupSet().isEmpty()) {
                 return;
             }
 
@@ -1874,7 +1881,7 @@ public class RelDecorrelator
 
             // check that the agg is of the following type:
             // doing a single_value() on the entire input
-            if ((aggRel.getGroupCount() != 0)
+            if ((!aggRel.getGroupSet().isEmpty())
                 || (aggRel.getAggCallList().size() != 1)
                 || !(aggRel.getAggCallList().get(0).getAggregation()
                     instanceof SqlSingleValueAggFunction))
@@ -1957,7 +1964,7 @@ public class RelDecorrelator
 
                 RexUtil.FieldAccessFinder visitor =
                     new RexUtil.FieldAccessFinder();
-                visitor.apply(correlatedJoinKeys, null);
+                RexUtil.apply(visitor, correlatedJoinKeys, null);
                 List<RexFieldAccess> correlatedKeyList =
                     visitor.getFieldAccessList();
 
@@ -2013,7 +2020,12 @@ public class RelDecorrelator
 
                 // make the new aggRel
                 rightInputRel =
-                    RelOptUtil.createSingleValueAggRel(cluster, rightInputRel);
+                    RelOptUtil.createSingleValueAggRel(
+                        cluster,
+                        rightInputRel,
+                        // REVIEW: empty systemFieldList may not always be
+                        // appropriate
+                        Collections.<RelDataTypeField>emptyList());
 
                 // The last field:
                 //     single_value(true)
@@ -2106,7 +2118,7 @@ public class RelDecorrelator
             }
 
             // check that the agg is on the entire input
-            if (aggRel.getGroupCount() != 0) {
+            if (!aggRel.getGroupSet().isEmpty()) {
                 return;
             }
 
@@ -2266,8 +2278,7 @@ public class RelDecorrelator
                 }
 
                 int nFields = leftInputRel.getRowType().getFieldCount();
-                BitSet allCols = new BitSet(nFields);
-                RelOptUtil.setRexInputBitmap(allCols, 0, nFields);
+                BitSet allCols = Util.bitSetBetween(0, nFields);
 
                 // leftInputRel contains unique keys
                 // i.e. each row is distinct and can group by on all the left
@@ -2394,7 +2405,7 @@ public class RelDecorrelator
             // the join
             nullIndicatorPos = joinOutputProjExprCount - 1;
 
-            int groupbyCount = leftInputFieldCount;
+            final int groupCount = leftInputFieldCount;
 
             List<AggregateCall> newAggCalls = new ArrayList<AggregateCall>();
             k = -1;
@@ -2411,7 +2422,7 @@ public class RelDecorrelator
                     newAggArgs = new ArrayList<Integer>();
 
                     for (Integer aggArg : aggArgs) {
-                        newAggArgs.add(aggArg + groupbyCount);
+                        newAggArgs.add(aggArg + groupCount);
                     }
                 }
 
@@ -2424,34 +2435,39 @@ public class RelDecorrelator
                         aggCall.getName()));
             }
 
+            BitSet groupSet =
+                Util.bitSetBetween(
+                    aggRel.getSystemFieldList().size(),
+                    groupCount);
             AggregateRel newAggRel =
                 new AggregateRel(
                     cluster,
                     joinOutputProjRel,
-                    groupbyCount,
+                    aggRel.getSystemFieldList(),
+                    groupSet,
                     newAggCalls);
 
-            RexNode [] newAggOutputProjExprs = new RexNode[groupbyCount + 1];
-            for (int i = 0; i < groupbyCount; i++) {
-                newAggOutputProjExprs[i] =
+            List<RexNode> newAggOutputProjExprList = new ArrayList<RexNode>();
+            for (int i : Util.toIter(groupSet)) {
+                newAggOutputProjExprList.add(
                     rexBuilder.makeInputRef(
                         newAggRel.getRowType().getFields()[i].getType(),
-                        i);
+                        i));
             }
 
             RexNode newAggOutputProjExpr =
                 removeCorrelationExpr(aggOutputProjExprs[0], false);
-            newAggOutputProjExprs[groupbyCount] =
+            newAggOutputProjExprList.add(
                 rexBuilder.makeCast(
                     cluster.getTypeFactory().createTypeWithNullability(
                         newAggOutputProjExpr.getType(),
                         true),
-                    newAggOutputProjExpr);
+                    newAggOutputProjExpr));
 
             RelNode newAggOutputProjRel =
                 CalcRel.createProject(
                     newAggRel,
-                    newAggOutputProjExprs,
+                    newAggOutputProjExprList,
                     null);
 
             call.transformTo(newAggOutputProjRel);
@@ -2564,7 +2580,7 @@ public class RelDecorrelator
             }
 
             // check that the agg is on the entire input
-            if (aggRel.getGroupCount() != 0) {
+            if (!aggRel.getGroupSet().isEmpty()) {
                 return;
             }
 

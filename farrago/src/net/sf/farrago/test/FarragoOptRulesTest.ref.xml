@@ -46,14 +46,14 @@ ProjectRel(EXPR$0=[1])
         </Resource>
         <Resource name="planBefore">
             <![CDATA[
-AggregateRel(groupCount=[1])
+AggregateRel(group=[{0}])
   ProjectRel(DEPTNO=[$0])
     TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
 ]]>
         </Resource>
         <Resource name="planAfter">
             <![CDATA[
-FennelAggRel(groupCount=[1])
+FennelAggRel(group=[{0}])
   FennelSortRel(key=[[0]], discardDuplicates=[false])
     ProjectRel(DEPTNO=[$0])
       TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
@@ -796,7 +796,7 @@ ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5
         </Resource>
         <Resource name="planBefore">
             <![CDATA[
-AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])
+AggregateRel(group=[{0}], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])
   ProjectRel(NAME=[$1], EMPNO=[$0])
     UnionRel(all=[true])
       ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
@@ -808,18 +808,16 @@ AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[CAST($2):BIGINT NOT NULL])
-  AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[SUM($2)])
+  AggregateRel(group=[{0}], EXPR$1=[SUM($1)], EXPR$2=[SUM($2)])
     UnionRel(all=[true])
-      AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])
+      AggregateRel(group=[{0}], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])
         ProjectRel(NAME=[$1], EMPNO=[$0])
-          ProjectRel(EMPNO=[$0], NAME=[$1])
-            ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
-              TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
-      AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])
+          ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
+            TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      AggregateRel(group=[{0}], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])
         ProjectRel(NAME=[$1], EMPNO=[$0])
-          ProjectRel(EMPNO=[$0], NAME=[$1])
-            ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
-              TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+          ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
+            TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
 ]]>
         </Resource>
     </TestCase>

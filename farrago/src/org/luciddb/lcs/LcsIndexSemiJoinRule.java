@@ -34,6 +34,7 @@ import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -234,11 +235,14 @@ public class LcsIndexSemiJoinRule
         }
         if (RelMdUtil.areColumnsDefinitelyUniqueWhenNullsFiltered(
                 rightRel,
-                rightJoinCols))
+                Util.bitSetOf(rightOrdinals)))
         {
             distinctRel = distInput;
         } else {
-            distinctRel = RelOptUtil.createDistinctRel(distInput);
+            distinctRel =
+                RelOptUtil.createDistinctRel(
+                    distInput,
+                    origRowScan.getTable().getSystemFieldList());
         }
 
         // then sort the result so we will search the index in key order
@@ -304,15 +308,13 @@ public class LcsIndexSemiJoinRule
         RexNode [] rhsExps,
         FarragoTypeFactory typeFactory)
     {
-        RelDataType [] leftType = new RelDataType[nKeys];
-        String [] leftFieldNames = new String[nKeys];
+        List<RelDataTypeField> list =
+            new ArrayList<RelDataTypeField>(nKeys);
         for (int i = 0; i < nKeys; i++) {
-            leftType[i] = leftFields[leftKeys.get(keyOrder.get(i))].getType();
-            leftFieldNames[i] =
-                leftFields[leftKeys.get(keyOrder.get(i))].getName();
+            list.add(leftFields[leftKeys.get(keyOrder.get(i))]);
         }
         RelDataType leftStructType =
-            typeFactory.createStructType(leftType, leftFieldNames);
+            typeFactory.createStructType(list);
         RexNode [] castExps =
             RexUtil.generateCastExpressions(
                 rexBuilder,

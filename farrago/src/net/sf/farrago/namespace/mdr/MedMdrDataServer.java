@@ -241,7 +241,13 @@ public class MedMdrDataServer
     public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
-        planner.addRule(new MedMdrJoinRule());
+        planner.addRule(MedMdrJoinRule.INSTANCE);
+        if (false) {
+            // Disabled, for now. PushProjectPastJoinRule is enabled by default,
+            // and together the two rules generates too many combinations. In
+            // particular, unitsql/optimizer/index.sql takes hours to finish.
+            planner.addRule(MedMdrJoinRule.PROJECT_INSTANCE);
+        }
     }
 
     // implement FarragoAllocation

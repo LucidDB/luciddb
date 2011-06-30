@@ -192,6 +192,11 @@ public abstract class AbstractRelOptPlanner
         return 0;
     }
 
+    public boolean isRelMetadataDiligent()
+    {
+        return true;
+    }
+
     public void setImportance(RelNode rel, double importance)
     {
     }

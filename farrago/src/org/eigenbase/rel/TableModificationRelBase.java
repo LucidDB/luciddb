@@ -46,7 +46,7 @@ public abstract class TableModificationRelBase
      */
     public enum Operation
     {
-        INSERT, UPDATE, DELETE, MERGE;
+        INSERT, UPDATE, DELETE, MERGE
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -175,7 +175,9 @@ public abstract class TableModificationRelBase
                             updateColumnList)
                     });
         } else {
-            inputRowType = table.getRowType();
+            inputRowType =
+                RelOptUtil.getRowTypeIncludingSystemFields(
+                    getCluster().getTypeFactory(), table, true);
         }
 
         if (flattened) {

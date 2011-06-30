@@ -140,7 +140,7 @@ public class SqlCallBinding
         final RelDataType type = validator.deriveType(scope, operand);
         final SqlValidatorNamespace namespace = validator.getNamespace(operand);
         if (namespace != null) {
-            return namespace.getRowTypeSansSystemColumns();
+            return namespace.getRowTypeAsWritten();
         }
         return type;
     }
@@ -151,9 +151,7 @@ public class SqlCallBinding
         if (!SqlUtil.isCallTo(operand, SqlStdOperatorTable.cursorConstructor)) {
             return null;
         }
-        final SqlCall cursorCall = (SqlCall) operand;
-        final SqlNode query = cursorCall.operands[0];
-        return validator.deriveType(scope, query);
+        return validator.getCursorRowType((SqlCall) operand);
     }
 
     // implement SqlOperatorBinding

@@ -118,7 +118,8 @@ public abstract class RemoveEmptyRule
         new RemoveEmptyRule(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                (RelTrait) null,
+                (RelOptRuleOperand.Predicate) null,
+                false,
                 new RelOptRuleOperand(
                     EmptyRel.class)),
             "Project")
@@ -147,7 +148,8 @@ public abstract class RemoveEmptyRule
         new RemoveEmptyRule(
             new RelOptRuleOperand(
                 FilterRel.class,
-                (RelTrait) null,
+                (RelOptRuleOperand.Predicate) null,
+                false,
                 new RelOptRuleOperand(
                     EmptyRel.class)),
             "Filter")

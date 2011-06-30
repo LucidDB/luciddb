@@ -67,7 +67,7 @@ public class RelOptRuleOperand
     public int [] solveOrder;
     public int ordinalInParent;
     public int ordinalInRule;
-    private final RelTrait trait;
+    private final Predicate predicate;
     private final Class<? extends RelNode> clazz;
     private final RelOptRuleOperand [] children;
     public final boolean matchAnyChildren;
@@ -99,20 +99,21 @@ public class RelOptRuleOperand
      * of the matched child.</p>
      *
      * @param clazz Class of relational expression to match (must not be null)
-     * @param trait Trait to match, or null to match any trait
+     * @param predicate Predicate to apply to relational expression after
+     *     matching its class, or null to match any relational expression
      * @param matchAnyChild Whether child operands can be matched in any order
      * @param children Child operands; or null, meaning match any number of
      * children
      */
     public RelOptRuleOperand(
         Class<? extends RelNode> clazz,
-        RelTrait trait,
+        Predicate predicate,
         boolean matchAnyChild,
         RelOptRuleOperand ... children)
     {
         assert (clazz != null);
         this.clazz = clazz;
-        this.trait = trait;
+        this.predicate = predicate;
         this.children = children;
         if (children != null) {
             for (int i = 0; i < this.children.length; i++) {
@@ -123,36 +124,24 @@ public class RelOptRuleOperand
     }
 
     /**
-     * Creates an operand which matches a given trait and matches child operands
-     * in the order they appear.
+     * Creates an operand that matches a predicate and any number of children.
      *
      * @param clazz Class of relational expression to match (must not be null)
-     * @param trait Trait to match, or null to match any trait
-     * @param children Child operands; must not be null
-     */
-    public RelOptRuleOperand(
-        Class<? extends RelNode> clazz,
-        RelTrait trait,
-        RelOptRuleOperand ... children)
-    {
-        this(clazz, trait, false, children);
-        assert children != null;
-    }
-
-    /**
-     * Creates an operand that matches a given trait and any number of children.
-     *
-     * @param clazz Class of relational expression to match (must not be null)
-     * @param trait Trait to match, or null to match any trait
+     * @param predicate Predicate to apply to relational expression after
+     *     matching its class, or null to match any relational expression
      * @param dummy Dummy argument to distinguish this constructor from other
      * overloaded forms
      */
     public RelOptRuleOperand(
         Class<? extends RelNode> clazz,
-        RelTrait trait,
+        Predicate predicate,
         Dummy dummy)
     {
-        this(clazz, trait, false, (RelOptRuleOperand []) null);
+        this(
+            clazz,
+            predicate,
+            false,
+            (RelOptRuleOperand []) null);
         Util.discard(dummy);
     }
 
@@ -235,7 +224,7 @@ public class RelOptRuleOperand
         int h = clazz.hashCode();
         h = Util.hash(
             h,
-            trait.hashCode());
+            predicate.hashCode());
         h = Util.hashArray(h, children);
         return h;
     }
@@ -246,13 +235,8 @@ public class RelOptRuleOperand
             return false;
         }
         RelOptRuleOperand that = (RelOptRuleOperand) obj;
-
-        boolean equalTraits =
-            (this.trait != null) ? this.trait.equals(that.trait)
-            : (that.trait == null);
-
         return (this.clazz == that.clazz)
-            && equalTraits
+            && Util.equal(this.predicate, that.predicate)
             && Arrays.equals(this.children, that.children);
     }
 
@@ -280,13 +264,258 @@ public class RelOptRuleOperand
      */
     public boolean matches(RelNode rel)
     {
-        if (!clazz.isInstance(rel)) {
-            return false;
+        return clazz.isInstance(rel)
+               && ((predicate == null)
+                   || predicate.evaluate(rel));
+    }
+
+    /**
+     * Creates a predicate that matches relational expressions that have a
+     * given trait.
+     *
+     * @param trait Trait
+     * @return Predicate that matches relexps with a given trait
+     */
+    public static Predicate predicate(final RelTrait trait)
+    {
+        return trait == null ? null : new TraitPredicate(trait);
+    }
+
+    /**
+     * Returns a predicate that matches a relational expression that if its
+     * class is precisely the given class. Instances of subclasses do not pass.
+     *
+     * @param clazz Class
+     * @return Predicate that matches relexps of exactly the given class
+     */
+    public static Predicate preciseInstance(Class<? extends RelNode> clazz)
+    {
+        return new PreciseInstancePredicate(clazz);
+    }
+
+    /**
+     * Returns a predicate that matches a relational expression that is not
+     * a subclass of a given class.
+     *
+     * @param clazz Class
+     * @return Predicate that matches relexps not a subclass of given class
+     */
+    public static Predicate notInstance(Class<? extends RelNode> clazz)
+    {
+        return new NotInstancePredicate(clazz);
+    }
+
+    /**
+     * Returns a predicate that matches a relational expression only if it
+     * has (or does not have) system fields.
+     *
+     * <p>Typically this predicate is used in rules that transform joins.
+     * Rules are often only applicable if the join does not have system fields.
+     * Usually rules wait until {@link org.eigenbase.relopt.RelOptRule#onMatch}
+     * to apply side-conditions, but joins do not usually have system fields, so
+     * it's efficient to apply it as early as possible. This avoids cluttering
+     * the volcano planner's rule queue.
+     *
+     * @param requireSysFields If true, matches only joins that have one or
+     * more system fields; if false, matches only joins that have no system
+     * fields
+     *
+     * @return Predicate that matches relexps if they have system fields
+     */
+    public static Predicate hasSystemFields(boolean requireSysFields)
+    {
+        return requireSysFields
+               ? HasSystemFieldsPredicate.TRUE
+               : HasSystemFieldsPredicate.FALSE;
+    }
+
+    /**
+     * Returns a predicate that evaluates to true only if all sub-predicates
+     * evaluate to true.
+     *
+     * @param predicates List of predicates
+     * @return Predicate that computes logical AND of child predicates
+     */
+    public static Predicate and(
+        Predicate... predicates)
+    {
+        return new AndPredicate(predicates.clone());
+    }
+
+    /**
+     * Predicate on a relational expression.
+     */
+    public interface Predicate {
+        /**
+         * Evaluates the predicate.
+         *
+         * @param rel Relational expression
+         * @return Result of evaluating the predicate
+         */
+        boolean evaluate(RelNode rel);
+    }
+
+    /**
+     * Helper for {@link RelOptRuleOperand#predicate(RelTrait)}.
+     */
+    private static class TraitPredicate implements Predicate
+    {
+        private final RelTrait trait;
+
+        public TraitPredicate(RelTrait trait)
+        {
+            assert trait != null;
+            this.trait = trait;
         }
-        if ((trait != null) && !rel.getTraits().contains(trait)) {
-            return false;
+
+        public boolean evaluate(RelNode rel)
+        {
+            return rel.getTraits().contains(trait);
         }
-        return true;
+
+        public int hashCode()
+        {
+            return trait.hashCode();
+        }
+
+        public boolean equals(Object obj)
+        {
+            return obj instanceof TraitPredicate
+                && trait.equals(((TraitPredicate) obj).trait);
+        }
+    }
+
+    /**
+     * Helper for {@link RelOptRuleOperand#notInstance(Class)}.
+     */
+    private static class NotInstancePredicate implements Predicate
+    {
+        private final Class<? extends RelNode> clazz;
+
+        NotInstancePredicate(Class<? extends RelNode> clazz)
+        {
+            this.clazz = clazz;
+        }
+
+        public boolean evaluate(RelNode rel)
+        {
+            return !clazz.isInstance(rel);
+        }
+
+        public int hashCode()
+        {
+            return clazz.hashCode();
+        }
+
+        public boolean equals(Object obj)
+        {
+            return obj instanceof NotInstancePredicate
+                   && clazz.equals(((NotInstancePredicate) obj).clazz);
+        }
+    }
+
+    /**
+     * Helper for {@link RelOptRuleOperand#hasSystemFields(boolean)}.
+     */
+    private static class HasSystemFieldsPredicate
+        implements Predicate
+    {
+        private final boolean requireSysFields;
+
+        public static final Predicate TRUE = new HasSystemFieldsPredicate(true);
+
+        public static final Predicate FALSE =
+            new HasSystemFieldsPredicate(false);
+
+        private HasSystemFieldsPredicate(boolean requireSysFields)
+        {
+            this.requireSysFields = requireSysFields;
+        }
+
+        public boolean evaluate(RelNode rel)
+        {
+            return rel.getSystemFieldList().isEmpty() != requireSysFields;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return requireSysFields ? 1234 : 1235;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            return obj instanceof HasSystemFieldsPredicate
+                && requireSysFields
+                   == ((HasSystemFieldsPredicate) obj).requireSysFields;
+        }
+    }
+
+    /**
+     * Helper for {@link RelOptRuleOperand#and(Predicate...)}.
+     */
+    private static class AndPredicate implements Predicate
+    {
+        private final Predicate[] predicates;
+
+        AndPredicate(Predicate[] predicates)
+        {
+            this.predicates = predicates;
+        }
+
+        public boolean evaluate(RelNode rel)
+        {
+            for (Predicate predicate : predicates) {
+                if (!predicate.evaluate(rel)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public int hashCode()
+        {
+            return Arrays.hashCode(predicates);
+        }
+
+        public boolean equals(Object obj)
+        {
+            return (obj instanceof AndPredicate)
+                && Arrays.equals(predicates, ((AndPredicate) obj).predicates);
+        }
+    }
+
+    /**
+     * Helper for {@link RelOptRuleOperand#and(Predicate...)}.
+     */
+    private static class PreciseInstancePredicate
+        implements Predicate
+    {
+        private final Class<? extends RelNode> clazz;
+
+        PreciseInstancePredicate(Class<? extends RelNode> clazz)
+        {
+            this.clazz = clazz;
+        }
+
+        public boolean evaluate(RelNode rel)
+        {
+            return rel.getClass() == clazz;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return clazz.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            return obj instanceof PreciseInstancePredicate
+                && clazz == ((PreciseInstancePredicate) obj).clazz;
+        }
     }
 }
 

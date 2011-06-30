@@ -26,7 +26,6 @@ import java.util.*;
 
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.session.*;
@@ -90,12 +89,19 @@ public class ReposDefaultValueFactory
             return false;
         }
 
+        final int sysFieldCount = table.getSystemFieldList().size();
+        if (iColumn < sysFieldCount) {
+            // Typically, system fields are generated, so user cannot specify
+            // a value for them. Derived class may override.
+            return true;
+        }
+
         if (table instanceof FarragoQueryColumnSet) {
             FarragoQueryColumnSet queryColumnSet =
                 (FarragoQueryColumnSet) table;
             CwmColumn column =
                 (CwmColumn) queryColumnSet.getCwmColumnSet().getFeature().get(
-                    iColumn);
+                    iColumn - sysFieldCount);
             if (column instanceof FemStoredColumn) {
                 return ((FemStoredColumn) column).isGeneratedAlways();
             }
@@ -108,14 +114,17 @@ public class ReposDefaultValueFactory
         RelOptTable table,
         int iColumn)
     {
-        if (!(table instanceof FarragoQueryColumnSet)) {
+        final int sysFieldCount = table.getSystemFieldList().size();
+        if (!(table instanceof FarragoQueryColumnSet)
+            || iColumn < sysFieldCount)
+        {
             return farragoPreparingStmt.sqlToRelConverter.getRexBuilder()
                 .constantNull();
         }
         FarragoQueryColumnSet queryColumnSet = (FarragoQueryColumnSet) table;
         CwmColumn column =
             (CwmColumn) queryColumnSet.getCwmColumnSet().getFeature().get(
-                iColumn);
+                iColumn - sysFieldCount);
         if (column instanceof FemStoredColumn) {
             FemStoredColumn storedColumn = (FemStoredColumn) column;
             FemSequenceGenerator sequence = storedColumn.getSequence();

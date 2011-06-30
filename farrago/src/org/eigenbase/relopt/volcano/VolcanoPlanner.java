@@ -161,6 +161,13 @@ public class VolcanoPlanner
      */
     private String originalRootString;
 
+    /**
+     * @see #isRelMetadataDiligent()
+     */
+    private boolean relMetadataDiligent = true;
+
+    private History history;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -206,20 +213,6 @@ public class VolcanoPlanner
         };
     }
 
-    // REVIEW: SWZ: 3/1/2005: No one calls this.  Remove?
-    // todo: pre-compute
-    public RelOptRuleOperand [] getConversionOperands(
-        CallingConvention toConvention)
-    {
-        List<RelOptRuleOperand> list = new ArrayList<RelOptRuleOperand>();
-        for (RelOptRuleOperand operand : allOperands) {
-            if (operand.getRule().getOutConvention() == toConvention) {
-                list.add(operand);
-            }
-        }
-        return list.toArray(new RelOptRuleOperand[list.size()]);
-    }
-
     // implement RelOptPlanner
     public boolean isRegistered(RelNode rel)
     {
@@ -228,7 +221,7 @@ public class VolcanoPlanner
 
     public void setRoot(RelNode rel)
     {
-        this.root = registerImpl(rel, null);
+        this.root = ensureRegistered(rel, null, null);
         this.originalRootString = RelOptUtil.toString(root);
 
         // Making a node the root changes its importance.
@@ -354,7 +347,7 @@ public class VolcanoPlanner
         assert !rel.getTraits().equals(toTraits)
             : "pre: !rel.getTraits().equals(toTraits)";
 
-        RelNode rel2 = ensureRegistered(rel, null);
+        RelNode rel2 = ensureRegistered(rel, null, null);
         if (rel2.getTraits().equals(toTraits)) {
             return rel2;
         }
@@ -396,7 +389,7 @@ public class VolcanoPlanner
         // REVIEW: SWZ: 3/5/2005: Why is (was) this only done for abstract
         // converters?  Seems to me, the caller has to register the
         // conversion in the end anyway.
-        return register(converter, rel);
+        return register(converter, rel, null);
     }
 
     public RelOptPlanner chooseDelegate()
@@ -436,6 +429,13 @@ public class VolcanoPlanner
      */
     public RelNode findBestExp()
     {
+        if (tracer.isLoggable(Level.FINE)) {
+            history = new History();
+            addListener(history);
+        } else {
+            history = null;
+        }
+
         int cumulativeTicks = 0;
         for (VolcanoPlannerPhase phase : VolcanoPlannerPhase.values()) {
             setInitialImportance();
@@ -510,9 +510,13 @@ public class VolcanoPlanner
         if (tracer.isLoggable(Level.FINER)) {
             StringWriter sw = new StringWriter();
             final PrintWriter pw = new PrintWriter(sw);
-            dump(pw);
+            dump(pw, true);
             pw.flush();
             tracer.finer(sw.toString());
+        }
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.fine(
+                "Best rel:" + Util.lineSeparator + bestPlanString());
         }
         return root.buildCheapestPlan(this);
     }
@@ -620,9 +624,10 @@ SUBSET_LOOP:
         return VolcanoCost.ZERO;
     }
 
-    public RelNode register(
+    public RelSubset register(
         RelNode rel,
-        RelNode equivRel)
+        RelNode equivRel,
+        RelOptRuleCall call)
     {
         assert !isRegistered(rel) : "pre: isRegistered(rel)";
         final RelSet set;
@@ -637,32 +642,42 @@ SUBSET_LOOP:
                 true);
             set = getSet(equivRel);
         }
-        final RelSubset subset = registerImpl(rel, set);
+        final RelSubset subset = registerImpl(rel, set, call);
 
         if (tracer.isLoggable(Level.FINE)) {
             validate();
         }
 
+        // Give the rule call credit for spawning this rel. Then we can find its
+        // ancestors, viz the operand rel nodes to the rule call.
+        if (call != null
+            && ((VolcanoRuleCall) call).generatedRelList != null)
+        {
+            ((VolcanoRuleCall) call).generatedRelList.add(rel);
+        }
+
         return subset;
     }
 
-    public RelNode ensureRegistered(RelNode rel, RelNode equivRel)
+    public RelSubset ensureRegistered(
+        RelNode rel,
+        RelNode equivRel,
+        RelOptRuleCall call)
     {
         final RelSubset subset = mapRel2Subset.get(rel);
-        if (subset != null) {
-            if (equivRel != null) {
-                final RelSubset equivSubset = getSubset(equivRel);
-                if (equivSubset != subset) {
-                    assert subset.set != equivSubset.set
-                        : "Same set, different subsets means rel and equivRel"
-                        + " have different traits, and that's an error";
-                    merge(subset.set, equivSubset.set);
-                }
-            }
-            return subset;
-        } else {
-            return register(rel, equivRel);
+        if (subset == null) {
+            return register(rel, equivRel, call);
         }
+        if (equivRel != null) {
+            final RelSubset equivSubset = getSubset(equivRel);
+            if (equivSubset != subset) {
+                assert subset.set != equivSubset.set
+                    : "Same set, different subsets means rel and equivRel"
+                    + " have different traits, and that's an error";
+                merge(subset.set, equivSubset.set);
+            }
+        }
+        return subset;
     }
 
     /**
@@ -683,6 +698,8 @@ SUBSET_LOOP:
                         + "] is in wrong set [" + set + "]");
                 }
                 for (RelNode rel : subset.rels) {
+                    assert rel.isValid(true);
+
                     final RelSubset subset2 = getSubset(rel);
                     if ((subset2 != subset) && false) {
                         throw new AssertionError(
@@ -886,7 +903,7 @@ SUBSET_LOOP:
                 i++; // couldn't convert this; move on to the next
             } else {
                 if (!isRegistered(converted)) {
-                    registerImpl(converted, set);
+                    registerImpl(converted, set, null);
                 }
                 set.abstractConverters.remove(converter); // success
             }
@@ -910,6 +927,32 @@ SUBSET_LOOP:
      */
     public void dump(PrintWriter pw)
     {
+        dump(pw, false);
+    }
+
+    /**
+     * Dumps the internal state of this VolcanoPlanner, optionally including the
+     * history of each node, to a writer.
+     *
+     * @param pw Print writer
+     *
+     * @param withHistory Whether to include the history of each node
+     *
+     * @see #normalizePlan(String)
+     */
+    public void dump(PrintWriter pw, boolean withHistory)
+    {
+        if (relMetadataDiligent) {
+            // Set non-diligent for the duration of the dump. Otherwise metadata
+            // queries to find row-count etc. can cause the dump to take hours.
+            try {
+                relMetadataDiligent = false;
+                dump(pw, withHistory);
+                return;
+            } finally {
+                relMetadataDiligent = true;
+            }
+        }
         pw.println("Root: " + root.getDescription());
         pw.println("Original rel:");
         pw.println(originalRootString);
@@ -926,9 +969,15 @@ SUBSET_LOOP:
                 }
             });
         for (RelSet set : sets) {
-            pw.println(
-                "Set#" + set.id
-                + ", type: " + set.subsets.get(0).getRowType());
+            StringBuilder buf = new StringBuilder();
+            buf.append("Set#")
+                .append(set.id)
+                .append(", type: ")
+                .append(set.subsets.get(0).getRowType());
+            if (withHistory && history != null) {
+                history.getSetHistory(buf, set);
+            }
+            pw.println(buf.toString());
             int j = -1;
             for (RelSubset subset : set.subsets) {
                 ++j;
@@ -944,34 +993,86 @@ SUBSET_LOOP:
                 }
                 for (RelNode rel : subset.rels) {
                     // "\t\trel#34:JavaProject(rel#32:JavaFilter(...), ...)"
-                    pw.print("\t\t" + rel.getDescription());
-                    for (RelNode input : rel.getInputs()) {
-                        RelSubset inputSubset =
-                            getSubset(
-                                input,
-                                input.getTraits());
-                        RelSet inputSet = inputSubset.set;
-                        if (input instanceof RelSubset) {
-                            assert inputSubset.rels.size() > 0;
-                            input = inputSubset.rels.get(0);
-                            assert inputSubset.getTraits().equals(
-                                input.getTraits());
-                            assert inputSet.rels.contains(input);
-                            assert inputSet.subsets.contains(inputSubset);
-                        }
-                    }
-                    Double importance = relImportances.get(rel);
-                    if (importance != null) {
-                        pw.print(", importance=" + importance);
-                    }
-                    pw.print(
-                        ", rowcount="
-                        + RelMetadataQuery.getRowCount(rel));
-                    pw.println(", cumulative cost=" + getCost(rel));
+                    pw.print("\t\t");
+                    dumpRel(pw, rel, withHistory);
                 }
             }
         }
         pw.println();
+    }
+
+    /**
+     * Dumps a relational expression, and all of its planning state, to a
+     * writer.
+     *
+     * @param pw Writer
+     * @param rel Relational expression
+     * @param withHistory Whether to include node's history
+     */
+    private void dumpRel(PrintWriter pw, RelNode rel, boolean withHistory)
+    {
+        pw.print(rel.getDescription());
+        for (RelNode input : rel.getInputs()) {
+            RelSubset inputSubset =
+                getSubset(
+                    input,
+                    input.getTraits());
+            RelSet inputSet = inputSubset.set;
+            if (input instanceof RelSubset) {
+                assert inputSubset.rels.size() > 0;
+                input = inputSubset.rels.get(0);
+                assert inputSubset.getTraits().equals(
+                    input.getTraits());
+                assert inputSet.rels.contains(input);
+                assert inputSet.subsets.contains(inputSubset);
+            }
+        }
+        Double importance = relImportances.get(rel);
+        StringBuilder buf = new StringBuilder();
+        if (importance != null) {
+            buf.append(", importance=").append(importance);
+        }
+        buf.append(", rowcount=")
+            .append(RelMetadataQuery.getRowCount(rel))
+            .append(", cumulative cost=")
+            .append(getCost(rel));
+        if (withHistory && history != null) {
+            history.nodeHistory(buf, rel);
+        }
+        pw.println(buf.toString());
+    }
+
+    /**
+     * Returns a string describing the best plan found. The "best plan" consists
+     * of the cheapest relational expression in the root subset, and the best
+     * relational expression in the subset that forms each input, and so forth.
+     * The string is indented to indicate children. Each relational expression
+     * includes planner state such as cost and importance.
+     *
+     * @return Best plan, formatted in an indented tree
+     */
+    private String bestPlanString()
+    {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        bestPlan(root, 0, pw);
+        pw.flush();
+        return sw.toString();
+    }
+
+    private void bestPlan(RelSubset subset, int depth, PrintWriter pw)
+    {
+        pw.print(Util.spaces(depth * 2));
+        pw.print(subset);
+        pw.print(" ");
+        if (subset.best == null) {
+            pw.println("null");
+        } else {
+            dumpRel(pw, subset.best, false);
+            for (RelNode input : subset.best.getInputs()) {
+                bestPlan((RelSubset) input, depth + 1, pw);
+            }
+        }
     }
 
     /**
@@ -989,18 +1090,29 @@ SUBSET_LOOP:
         if (fixupInputs(rel)) {
             assert mapDigestToRel.remove(oldDigest) == rel;
             final String newDigest = rel.recomputeDigest();
-            tracer.finer(
-                "Rename #" + rel.getId() + " from '" + oldDigest
-                + "' to '" + newDigest + "'");
+            if (tracer.isLoggable(Level.FINER)) {
+                tracer.finer(
+                    "Rename #"
+                    + rel.getId()
+                    + " from '"
+                    + oldDigest
+                    + "' to '"
+                    + newDigest
+                    + "'");
+            }
             final RelNode equivRel = mapDigestToRel.put(newDigest, rel);
             if (equivRel != null) {
                 assert equivRel != rel;
 
                 // There's already an equivalent with the same name, and we
                 // just knocked it out. Put it back, and forget about 'rel'.
-                tracer.finer(
-                    "After renaming rel#" + rel.getId()
-                    + ", it is now equivalent to rel#" + equivRel.getId());
+                if (tracer.isLoggable(Level.FINER)) {
+                    tracer.finer(
+                        "After renaming rel#"
+                        + rel.getId()
+                        + ", it is now equivalent to rel#"
+                        + equivRel.getId());
+                }
                 mapDigestToRel.put(
                     equivRel.getDigest(),
                     equivRel);
@@ -1166,6 +1278,10 @@ SUBSET_LOOP:
             set2 = t;
         }
 
+        if (history != null) {
+            history.mergeSet(registerCount, set, set2);
+        }
+
         // Merge.
         set.mergeWith(this, set2);
 
@@ -1185,17 +1301,19 @@ SUBSET_LOOP:
      * equivalence set. If an identical expression is already registered, we
      * don't need to register this one and nor should we queue up rule matches.
      *
-     * @param rel relational expression to register. Must be either a {@link
-     * RelSubset}, or an unregistered {@link RelNode}
+     * @param rel relational expression to register. Must be either a
+     *     {@link org.eigenbase.relopt.volcano.RelSubset},
+     *     or an unregistered {@link org.eigenbase.rel.RelNode}
      * @param set set that rel belongs to, or <code>null</code>
-     *
+     * @param call Planner rule call; provides historical context for tracing
      * @return the equivalence-set
      *
      * @pre rel instanceof RelSubset || !isRegistered(rel)
      */
     private RelSubset registerImpl(
         RelNode rel,
-        RelSet set)
+        RelSet set,
+        RelOptRuleCall call)
     {
         assert (rel instanceof RelSubset) || !isRegistered(rel)
             : "pre: rel instanceof RelSubset || !isRegistered(rel)"
@@ -1233,7 +1351,7 @@ SUBSET_LOOP:
         }
 
         // Ensure that its sub-expressions are registered.
-        rel.onRegister(this);
+        rel.onRegister(this, call);
 
         // If it is equivalent to an existing expression, return the set that
         // the equivalent expression belongs to.
@@ -1244,18 +1362,29 @@ SUBSET_LOOP:
         } else if (equivExp == rel) {
             return getSubset(rel);
         } else {
+            // If the equivalent rel had been marked with importance 0, well,
+            // it's now important again.
+            Double d = relImportances.get(equivExp);
+            if (d != null && d == 0d) {
+                relImportances.remove(equivExp);
+            }
+
             assert (equivExp.getTraits().equals(traits)
                 && (equivExp.getClass() == rel.getClass()));
-            assert RelOptUtil.areRowTypesEqual(
+            assert RelOptUtil.equal(
+                "equiv",
                 equivExp.getRowType(),
+                "rel",
                 rel.getRowType(),
-                false);
+                true);
             RelSet equivSet = getSet(equivExp);
             if (equivSet != null) {
                 if (tracer.isLoggable(Level.FINER)) {
                     tracer.finer(
-                        "Register: rel#" + rel.getId()
-                        + " is equivalent to " + equivExp.getDescription());
+                        "Register: rel#"
+                        + rel.getId()
+                        + " is equivalent to "
+                        + equivExp.getDescription());
                 }
                 return registerSubset(
                     set,
@@ -1273,7 +1402,10 @@ SUBSET_LOOP:
             {
                 if (tracer.isLoggable(Level.FINER)) {
                     tracer.finer(
-                        "Register #" + rel.getId() + " " + digest
+                        "Register #"
+                        + rel.getId()
+                        + " "
+                        + digest
                         + " (and merge sets, because it is a conversion)");
                 }
                 merge(set, childSet);
@@ -1397,9 +1529,14 @@ SUBSET_LOOP:
             && (set.equivalentSet == null)
             && (subset.set.equivalentSet == null))
         {
-            tracer.finer(
-                "Register #" + subset.getId() + " " + subset
-                + ", and merge sets");
+            if (tracer.isLoggable(Level.FINER)) {
+                tracer.finer(
+                    "Register #"
+                    + subset.getId()
+                    + " "
+                    + subset
+                    + ", and merge sets");
+            }
             merge(set, subset.set);
             registerCount++;
         }
@@ -1409,12 +1546,25 @@ SUBSET_LOOP:
     // implement RelOptPlanner
     public void addListener(RelOptListener newListener)
     {
-        // TODO jvs 6-Apr-2006:  new superclass AbstractRelOptPlanner
-        // now defines a multicast listener; just need to hook it in
-        if (listener != null) {
-            throw Util.needToImplement("multiple VolcanoPlanner listeners");
+        listener = addListener(listener, newListener);
+    }
+
+    private static RelOptListener addListener(
+        RelOptListener listener,
+        RelOptListener newListener)
+    {
+        if (listener == null) {
+            return newListener;
         }
-        listener = newListener;
+        MulticastRelOptListener multi;
+        if (listener instanceof MulticastRelOptListener) {
+            multi = (MulticastRelOptListener) listener;
+        } else {
+            multi = new MulticastRelOptListener();
+            multi.addListener(listener);
+        }
+        multi.addListener(newListener);
+        return multi;
     }
 
     // implement RelOptPlanner
@@ -1432,6 +1582,12 @@ SUBSET_LOOP:
         } else {
             return subset.timestamp;
         }
+    }
+
+    @Override
+    public boolean isRelMetadataDiligent()
+    {
+        return relMetadataDiligent;
     }
 
     /**
@@ -1518,6 +1674,98 @@ SUBSET_LOOP:
                     getOperand0(),
                     rels);
             volcanoPlanner.ruleQueue.addMatch(match);
+        }
+    }
+
+    /**
+     * Maintains a history of the planning state.
+     */
+    private class History implements RelOptListener {
+        private final Map<RelNode, String> nodeHistory =
+            new HashMap<RelNode, String>();
+        private Map<RelSet, List<Pair<Integer, RelSet>>> merges =
+            new HashMap<RelSet, List<Pair<Integer, RelSet>>>();
+
+        public void relEquivalenceFound(RelEquivalenceEvent event)
+        {
+            // not currently recorded
+        }
+
+        public void ruleAttempted(RuleAttemptedEvent event)
+        {
+            // not currently recorded
+        }
+
+        public void ruleProductionSucceeded(RuleProductionEvent event)
+        {
+            VolcanoRuleCall call = (VolcanoRuleCall) event.getRuleCall();
+            for (RelNode rel : call.generatedRelList) {
+                nodeHistory.put(
+                    rel,
+                    "created at " + registerCount + " from " + call);
+            }
+        }
+
+        public void relDiscarded(RelDiscardedEvent event)
+        {
+            // not currently recorded -- only occurs in hep planner
+        }
+
+        public void relChosen(RelChosenEvent event)
+        {
+            // not currently recorded -- only occurs in hep planner
+        }
+
+        /**
+         * TODO: add mergeSet to {@link RelOptListener} interface.
+         *
+         * @param tick Clock tick within planning process
+         * @param target Set being merged into
+         * @param merged Set being merged
+         */
+        void mergeSet(
+            int tick,
+            RelSet target,
+            RelSet merged)
+        {
+            List<Pair<Integer, RelSet>> list = merges.get(target);
+            if (list == null) {
+                list = new ArrayList<Pair<Integer, RelSet>>();
+                merges.put(target, list);
+            }
+            list.add(Pair.of(tick, merged));
+        }
+
+        void nodeHistory(StringBuilder buf, RelNode node) {
+            buf.append(", history: ").append(nodeHistory.get(node));
+        }
+
+        void getSetHistory(StringBuilder buf, RelSet set) {
+            List<Pair<Integer, RelSet>> pairs = merges.get(set);
+            if (pairs != null) {
+                buf.append(", history: ");
+                getSetHistoryRecurse(buf, set, pairs);
+            }
+        }
+
+        private void getSetHistoryRecurse(
+            StringBuilder buf,
+            RelSet set,
+            List<Pair<Integer, RelSet>> pairs)
+        {
+            int i = 0;
+            for (Pair<Integer, RelSet> pair : pairs) {
+                if (i++ > 0) {
+                    buf.append(", ");
+                }
+                buf.append("merged " + pair.right + " at " + pair.left);
+                List<Pair<Integer, RelSet>> pairs1 = merges.get(pair.right);
+                if (pairs1 != null) {
+                    buf.append(" (");
+                    getSetHistoryRecurse(buf, pair.right, pairs1);
+                    buf.append(")");
+                }
+            }
         }
     }
 }

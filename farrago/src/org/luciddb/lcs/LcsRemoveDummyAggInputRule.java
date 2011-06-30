@@ -28,7 +28,7 @@ import org.eigenbase.rex.*;
 /**
  * LcsRemoveDummyAggInputRule removes the dummy project(TRUE) added by
  * SqlToRelConverter.createAggImpl in the case of COUNT(*).  This
- * is needed in order for LcsIndexAggRule to fire.
+ * is needed in order for {@link LcsIndexAggRule} to fire.
  *
  * @author John Sichi
  * @version $Id$
@@ -45,7 +45,12 @@ public class LcsRemoveDummyAggInputRule
                     new RelOptRuleOperand(
                         LcsRowScanRel.class, ANY))));
 
-    public LcsRemoveDummyAggInputRule(
+    /**
+     * Creates the singleton.
+     *
+     * @param operand Rule operand
+     */
+    private LcsRemoveDummyAggInputRule(
         RelOptRuleOperand operand)
     {
         super(operand);
@@ -74,7 +79,8 @@ public class LcsRemoveDummyAggInputRule
         AggregateRel newAgg = new AggregateRel(
             agg.getCluster(),
             rowScan,
-            agg.getGroupCount(),
+            agg.getSystemFieldList(),
+            agg.getGroupSet(),
             agg.getAggCallList());
         call.transformTo(newAgg);
     }

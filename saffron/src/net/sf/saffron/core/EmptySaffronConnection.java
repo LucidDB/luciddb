@@ -19,6 +19,8 @@
 
 package net.sf.saffron.core;
 
+import java.util.*;
+
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;

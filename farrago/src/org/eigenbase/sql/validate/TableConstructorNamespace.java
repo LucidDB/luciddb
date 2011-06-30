@@ -23,6 +23,7 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.CompositeList;
 
 
 /**
@@ -65,7 +66,15 @@ public class TableConstructorNamespace
 
     protected RelDataType validateImpl()
     {
-        return validator.getTableConstructorRowType(values, scope);
+        RelDataType rowTypeAsWritten =
+            validator.getTableConstructorRowType(values, scope);
+        setRowType(
+            validator.getTypeFactory().createStructType(
+                CompositeList.of(
+                    validator.getSystemFields(),
+                    rowTypeAsWritten.getFieldList())),
+            rowTypeAsWritten);
+        return rowType;
     }
 
     public SqlNode getNode()

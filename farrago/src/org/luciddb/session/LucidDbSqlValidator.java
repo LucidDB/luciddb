@@ -111,7 +111,7 @@ public class LucidDbSqlValidator
                 ((MedAbstractColumnSet) targetTable).getCwmColumnSet());
 
         SqlNodeList updateList = updateCall.getTargetColumnList();
-        SqlSelect sourceSelect = updateCall.getSourceSelect();
+        SqlSelect sourceSelect = updateCall.getSource();
         SqlNodeList selectList = sourceSelect.getSelectList();
 
         // map the target columns to their corresponding column number

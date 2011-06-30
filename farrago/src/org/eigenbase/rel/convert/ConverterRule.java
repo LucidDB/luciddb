@@ -56,13 +56,16 @@ public abstract class ConverterRule
      * @pre out != null
      */
     public ConverterRule(
-        Class clazz,
+        Class<? extends RelNode> clazz,
         RelTrait in,
         RelTrait out,
         String description)
     {
         super(
-            new ConverterRelOptRuleOperand(clazz, in),
+            new RelOptRuleOperand(
+                clazz,
+                new ConverterRuleOperandPredicate(in),
+                ANY),
             description == null
                 ? "ConverterRule<in=" + in + ",out=" + out + ">"
                 : description);
@@ -125,27 +128,42 @@ public abstract class ConverterRule
 
     //~ Inner Classes ----------------------------------------------------------
 
-    private static class ConverterRelOptRuleOperand
-        extends RelOptRuleOperand
+    /**
+     * Predicate that ensures that a relexp only matches the rule if it is
+     * of the correct trait.
+     */
+    private static class ConverterRuleOperandPredicate
+        implements RelOptRuleOperand.Predicate
     {
-        public ConverterRelOptRuleOperand(Class clazz, RelTrait in)
+        private final RelTrait trait;
+        private final RelTraitDef traitDef;
+
+        ConverterRuleOperandPredicate(RelTrait trait)
         {
-            super(clazz, in, RelOptRule.ANY);
+            assert trait != null;
+            this.trait = trait;
+            this.traitDef = trait.getTraitDef();
         }
 
-        public boolean matches(RelNode rel)
+        public boolean evaluate(RelNode rel)
         {
             // Don't apply converters to converters that operate
             // on the same RelTraitDef -- otherwise we get
             // an n^2 effect.
-            if (rel instanceof ConverterRel) {
-                if (((ConverterRule) getRule()).getTraitDef()
-                    == ((ConverterRel) rel).getTraitDef())
-                {
-                    return false;
-                }
-            }
-            return super.matches(rel);
+            return rel.getTraits().contains(trait)
+                && !(rel instanceof ConverterRel
+                     && traitDef == ((ConverterRel) rel).getTraitDef());
+        }
+
+        public int hashCode()
+        {
+            return trait.hashCode();
+        }
+
+        public boolean equals(Object obj)
+        {
+            return obj instanceof ConverterRuleOperandPredicate
+                && trait.equals(((ConverterRuleOperandPredicate) obj).trait);
         }
     }
 }

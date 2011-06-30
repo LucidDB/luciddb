@@ -2045,7 +2045,7 @@ Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesInit
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[CURRENCY, CURRENCY]])'
-'    LhxAggRel(groupCount=[2])'
+'    LhxAggRel(group=[{0, 1}])'
 '      FennelRenameRel(fieldNames=[[CURRENCY, $f1]])'
 '        FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY0) NOT NULL])'
 '          FennelNestedLoopJoinRel(joinType=[LEFT], leftJoinKeys=[[1]], joinKeyParamIds=[[2]])'

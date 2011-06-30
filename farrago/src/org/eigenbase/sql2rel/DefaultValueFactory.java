@@ -43,8 +43,21 @@ public interface DefaultValueFactory
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Whether a column is always generated. If a column is always generated,
-     * then non-generated values cannot be inserted into the column.
+     * Returns whether a column is always generated. If a column is always
+     * generated, then non-generated values cannot be inserted into the column.
+     *
+     * <p>The column ordinal is 0-based, and references system columns before
+     * regular columns. If a table has 2 system columns and 8 regular columns,
+     * {@code iColumn} can be in the range 0..9. 0 denotes system column #0,
+     * 1 denotes system column #0, 2 denotes real column #0, and so forth.
+     *
+     * <p>The default implementation assumes that system coumns are always
+     * generated.
+     *
+     * @param table Table containing the column
+     * @param iColumn Ordinal of the column in the table
+     *
+     * @return whether a column is always generated
      */
     public boolean isGeneratedAlways(
         RelOptTable table,
@@ -54,8 +67,13 @@ public interface DefaultValueFactory
      * Creates an expression which evaluates to the default value for a
      * particular column.
      *
-     * @param table the table containing the column
-     * @param iColumn the 0-based offset of the column in the table
+     * <p>The column ordinal is 0-based, and references system columns before
+     * regular columns. If a table has 2 system columns and 8 regular columns,
+     * {@code iColumn} can be in the range 0..9. 0 denotes system column #0,
+     * 1 denotes system column #0, 2 denotes real column #0, and so forth.
+     *
+     * @param table Table containing the column
+     * @param iColumn Ordinal of the column in the table
      *
      * @return default value expression
      */

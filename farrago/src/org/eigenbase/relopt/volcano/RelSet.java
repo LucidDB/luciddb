@@ -91,6 +91,11 @@ class RelSet
 
     //~ Methods ----------------------------------------------------------------
 
+    public String toString()
+    {
+        return "Set#" + id;
+    }
+
     /**
      * Returns all of the {@link RelNode}s which reference {@link RelNode}s in
      * this set.

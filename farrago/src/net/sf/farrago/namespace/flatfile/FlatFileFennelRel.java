@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.namespace.flatfile;
 
+import java.util.Collections;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.rel.*;
@@ -65,6 +67,15 @@ public class FlatFileFennelRel
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a FlatFileFennelRel.
+     *
+     * @param cluster Cluster
+     * @param columnSet Column set
+     * @param connection Connection
+     * @param schemaType Schema type
+     * @param params Parameters
+     */
     protected FlatFileFennelRel(
         FlatFileColumnSet columnSet,
         RelOptCluster cluster,
@@ -82,6 +93,16 @@ public class FlatFileFennelRel
         this.params = params;
     }
 
+    /**
+     * Creates a FlatFileFennelRel with an explicit row type.
+     *
+     * @param cluster Cluster
+     * @param columnSet Column set
+     * @param connection Connection
+     * @param schemaType Schema type
+     * @param params Parameters
+     * @param rowType Row type
+     */
     protected FlatFileFennelRel(
         FlatFileColumnSet columnSet,
         RelOptCluster cluster,
@@ -180,14 +201,14 @@ public class FlatFileFennelRel
                 errorText);
         RelDataType errorType =
             typeFactory.createStructType(
-                new RelDataType[] { errorText },
-                new String[] { "ROW_TEXT" });
+                Collections.singletonList(
+                    Pair.of("ROW_TEXT", errorText)));
         implementor.setErrorRecordType(this, streamDef, errorType);
 
         return streamDef;
     }
 
-    private String encodeChar(char c)
+    private static String encodeChar(char c)
     {
         return (c == 0) ? "" : Character.toString(c);
     }

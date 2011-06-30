@@ -395,7 +395,7 @@ public class RelSubset
                         pw.println(
                             "Node [" + subset.getDescription()
                             + "] could not be implemented; planner state:");
-                        planner.dump(pw);
+                        planner.dump(pw, true);
                         pw.flush();
                         tracer.warning(sw.toString());
                     }

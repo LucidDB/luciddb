@@ -99,11 +99,10 @@ public class SqlToOpenjavaConverter
         final SqlNode from = query.getFrom();
         final SqlNodeList groupList = query.getGroup();
         final SqlNodeList orderList = query.getOrderList();
-        final SqlNodeList selectList = query.getSelectList();
         final SqlNode where = query.getWhere();
         final SqlValidatorScope selectScope = validator.getSelectScope(query);
         final ExpressionList convertedSelectList =
-            convertSelectList(selectScope, selectList, query);
+            convertSelectList(selectScope, query);
         final SqlValidatorScope groupScope = validator.getGroupScope(query);
         final ExpressionList convertedGroup =
             convertGroup(groupScope, groupList);
@@ -115,7 +114,8 @@ public class SqlToOpenjavaConverter
         final ExpressionList convertedOrder =
             convertOrder(orderScope, orderList);
         QueryExpression queryExpression =
-            new QueryExpression(convertedSelectList, true, convertedGroup,
+            new QueryExpression(
+                convertedSelectList, true, convertedGroup,
                 convertedFrom, convertedWhere, convertedOrder);
         if (query.isDistinct()) {
             throw new UnsupportedOperationException(
@@ -242,7 +242,8 @@ public class SqlToOpenjavaConverter
                             conditionExp = exp;
                         } else {
                             conditionExp =
-                                new BinaryExpression(conditionExp,
+                                new BinaryExpression(
+                                    conditionExp,
                                     BinaryExpression.LOGICAL_AND, exp);
                         }
                     }
@@ -259,7 +260,8 @@ public class SqlToOpenjavaConverter
                     rightExp, leftExp,
                     ParserConstants.LEFT, conditionExp);
             } else {
-                return new JoinExpression(leftExp, rightExp,
+                return new JoinExpression(
+                    leftExp, rightExp,
                     convertedJoinType, conditionExp);
             }
         case SELECT:
@@ -442,7 +444,8 @@ public class SqlToOpenjavaConverter
             // TODO:  when column-aliases are supported and provided, use them
             Expression value = convertExpression(scope, operands[i]);
             Expression alias =
-                new AliasedExpression(value,
+                new AliasedExpression(
+                    value,
                     validator.deriveAlias(operands[i], i));
             selectList.add(alias);
         }
@@ -453,10 +456,10 @@ public class SqlToOpenjavaConverter
 
     private ExpressionList convertSelectList(
         SqlValidatorScope scope,
-        SqlNodeList selectList, SqlSelect select)
+        SqlSelect select)
     {
         ExpressionList list = new ExpressionList();
-        selectList = validator.expandStar(selectList, select, false);
+        SqlNodeList selectList = validator.getExpandedSelectList(select);
         for (int i = 0; i < selectList.size(); i++) {
             final SqlNode node = selectList.get(i);
             Expression expression = convertExpression(scope, node);
@@ -491,7 +494,8 @@ public class SqlToOpenjavaConverter
                 expr = queryExpr;
             } else {
                 expr =
-                    new BinaryExpression(expr, BinaryExpression.UNION,
+                    new BinaryExpression(
+                        expr, BinaryExpression.UNION,
                         queryExpr);
             }
         }

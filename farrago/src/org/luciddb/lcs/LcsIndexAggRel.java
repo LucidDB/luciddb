@@ -29,6 +29,7 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
@@ -45,18 +46,20 @@ public class LcsIndexAggRel
     /**
      * Creates an LcsIndexAggRel.
      *
-     * @param cluster
-     * @param child
-     * @param groupCount
-     * @param aggCalls
+     * @param cluster Cluster
+     * @param child Child
+     * @param systemFieldList List of system fields
+     * @param groupSet Bitset of grouping fields
+     * @param aggCalls Collection of calls to aggregate functions
      */
     public LcsIndexAggRel(
         RelOptCluster cluster,
         RelNode child,
-        int groupCount,
+        List<RelDataTypeField> systemFieldList,
+        BitSet groupSet,
         List<AggregateCall> aggCalls)
     {
-        super(cluster, child, groupCount, aggCalls);
+        super(cluster, child, systemFieldList, groupSet, aggCalls);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -68,7 +71,8 @@ public class LcsIndexAggRel
             new LcsIndexAggRel(
                 getCluster(),
                 getChild(),
-                groupCount,
+                systemFieldList,
+                groupSet,
                 aggCalls);
         clone.inheritTraitsFrom(this);
         return clone;
@@ -79,7 +83,7 @@ public class LcsIndexAggRel
     {
         FemLbmSortedAggStreamDef aggStream =
             repos.newFemLbmSortedAggStreamDef();
-        FennelRelUtil.defineAggStream(aggCalls, groupCount, repos, aggStream);
+        FennelRelUtil.defineAggStream(aggCalls, groupSet, repos, aggStream);
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild(), 0),
             aggStream);

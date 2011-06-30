@@ -54,9 +54,31 @@ public enum MappingType
     //            ordinal source target function inverse
     //            ======= ====== ====== ======== =================
 
+    /**
+     * A bijection is a mapping where every source has a target and every
+     * target is a source.
+     *
+     * <p>The range and domain must have the same cardinality (if they are
+     * finite).
+     *
+     * <p>If the range and domain are the same set, a bijection represents a
+     * reordering of elements. For example, f: {0, 1, 2, 3} &rarr; {0, 1, 2, 3},
+     * f(0) = 2, f(1) = 1, f(2) = 3, f(3) = 0.
+     *
+     * <p>Its inverse is also a bijection.
+     *
+     * <p>Infinite example: f: N &rarr N, f(n) = n - 1
+     */
     //                  0      1      1 true     0 Bijection
     Bijection,
 
+    /**
+     * A surjection is a mapping where every source has a target, and a target
+     * has no more than one source.
+     *
+     * <p>Example: f: {0, 1, 2} &rarr; {0, 1}, with f(0) = nothing, f(1) = 0,
+     * f(2) = 1.
+     */
     //                  1   <= 1      1 true     4 InverseSurjection
     Surjection,
 
@@ -76,13 +98,28 @@ public enum MappingType
     /**
      * A partial surjection has no more than one source for any target, and no
      * more than one target for any source.
+     *
+     * <p>Its inverse is also a partial surjection.
      */
     //                  5   <= 1   <= 1 partial  5 PartialSurjection
     PartialSurjection,
 
+    /**
+     * A partial injection has no more than one target for any source, and
+     * every source has at least one target.
+     *
+     * <p>Example: f: {0, 1, 2} &rarr; {0, 1}, with f(0) = nothing, f(1) = 0,
+     * f(2) = 0.
+     */
     //                  6   >= 1   <= 1 partial  9 InversePartialInjection
     PartialInjection,
 
+    /**
+     * A partial function has no more than one target for any source.
+     *
+     * <p>Example: f: {0, 1, 2} &rarr; {0, 1}, with f(0) = nothing, f(1) = 0,
+     * f(2) = 0.
+     */
     //                  7    any   <= 1 partial  13 InversePartialFunction
     PartialFunction,
 

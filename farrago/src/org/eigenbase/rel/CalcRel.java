@@ -189,7 +189,8 @@ public final class CalcRel
     {
         assert (fieldNames == null)
             || (fieldNames.length == exprs.length)
-            : "fieldNames=" + fieldNames + ", exprs=" + exprs;
+            : "fieldNames=" + Arrays.asList(fieldNames)
+            + ", exprs=" + Arrays.asList(exprs);
         final RelOptCluster cluster = child.getCluster();
         RexProgramBuilder builder =
             new RexProgramBuilder(
@@ -360,25 +361,23 @@ public final class CalcRel
                 return permute(rel, permutation2, null);
             }
         }
-        final List<RelDataType> outputTypeList = new ArrayList<RelDataType>();
-        final List<String> outputNameList = new ArrayList<String>();
+        final List<Pair<String, RelDataType>> outputTypeList =
+            new ArrayList<Pair<String, RelDataType>>();
         final List<RexNode> exprList = new ArrayList<RexNode>();
         final List<RexLocalRef> projectRefList = new ArrayList<RexLocalRef>();
         final RelDataTypeField [] fields = rel.getRowType().getFields();
         for (int i = 0; i < permutation.getTargetCount(); i++) {
-            int target = permutation.getTarget(i);
-            final RelDataTypeField targetField = fields[target];
-            outputTypeList.add(targetField.getType());
-            outputNameList.add(
-                ((fieldNames == null)
-                    || (fieldNames.size() <= i)
-                    || (fieldNames.get(i) == null)) ? targetField.getName()
-                : fieldNames.get(i));
-            exprList.add(
-                rel.getCluster().getRexBuilder().makeInputRef(
-                    fields[i].getType(),
-                    i));
             final int source = permutation.getSource(i);
+            outputTypeList.add(
+                Pair.of(
+                    ((fieldNames == null)
+                    || (fieldNames.size() <= i)
+                    || (fieldNames.get(i) == null))
+                    ? fields[source].getName()
+                    : fieldNames.get(i),
+                fields[source].getType()));
+            exprList.add(
+                RelOptUtil.createInputRef(rel, i));
             projectRefList.add(
                 new RexLocalRef(
                     source,
@@ -391,8 +390,7 @@ public final class CalcRel
                 projectRefList,
                 null,
                 rel.getCluster().getTypeFactory().createStructType(
-                    outputTypeList,
-                    outputNameList));
+                    outputTypeList));
         return new CalcRel(
             rel.getCluster(),
             rel.getTraits(),

@@ -70,9 +70,10 @@ public class RemoveTrivialProjectRule
                 project.getRowType(),
                 childRowType))
         {
+            call.failed("not identity projection");
             return;
         }
-        child = call.getPlanner().register(child, project);
+        child = call.getPlanner().register(child, project, call);
         child =
             convert(
                 child,

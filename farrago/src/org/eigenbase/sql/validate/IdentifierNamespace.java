@@ -124,8 +124,25 @@ public class IdentifierNamespace
             }
         }
 
-        // Validation successful.
-        return rowType;
+        // The row type of this namespace is the fields of the table preceded
+        // by the set of system fields. As far as the namespace is concerned,
+        // all system fields are available.
+        //
+        // For example, if ROWID were a system field similar to Oracle's ROWID,
+        // then all relations would have a ROWID for validation purposes. But if
+        // you tried to use the ROWID field of a view based on a join it would
+        // say that ROWID is not valid in this context. So, the
+        // IdentifierNamespace representing that view would have a ROWID column,
+        // but the RelOptTable would not.
+        final List<RelDataTypeField> systemFieldList =
+            validator.getSystemFields();
+        final RelDataType rowTypeIncludingSysFields =
+            validator.getTypeFactory().createStructType(
+                CompositeList.of(
+                    systemFieldList,
+                    rowType.getFieldList()));
+        setRowType(rowTypeIncludingSysFields, rowType);
+        return rowTypeIncludingSysFields;
     }
 
     public SqlIdentifier getId()
@@ -143,14 +160,6 @@ public class IdentifierNamespace
         return table;
     }
 
-    public SqlValidatorNamespace resolve(
-        String name,
-        SqlValidatorScope [] ancestorOut,
-        int [] offsetOut)
-    {
-        return null;
-    }
-
     public List<Pair<SqlNode, SqlMonotonicity>> getMonotonicExprs()
     {
         return monotonicExprs;
@@ -161,6 +170,7 @@ public class IdentifierNamespace
         final SqlValidatorTable table = getTable();
         return table.getMonotonicity(columnName);
     }
+
 }
 
 // End IdentifierNamespace.java

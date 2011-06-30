@@ -69,6 +69,13 @@ class MedMdrClassExtentRel
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a MedMdrClassExtentRel.
+     *
+     * @param cluster Cluster
+     * @param mdrClassExtent Column set
+     * @param connection Connection
+     */
     public MedMdrClassExtentRel(
         RelOptCluster cluster,
         MedMdrClassExtent mdrClassExtent,

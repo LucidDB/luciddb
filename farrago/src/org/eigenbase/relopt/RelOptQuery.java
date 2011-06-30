@@ -167,37 +167,27 @@ public class RelOptQuery
     //~ Inner Interfaces -------------------------------------------------------
 
     /**
-     * Contains the information necessary to repeat a call to {@link
-     * org.eigenbase.sql2rel.SqlToRelConverter.Blackboard#lookup}.
+     * Contains the information necessary to repeat a call to look up a
+     * correlating variable.
+     *
+     * <p>For example, when resolving
+     *
+     * <pre>
+     * select *
+     * from dept
+     * where exists (
+     *   select *
+     *   from emp
+     *   where deptno = dept.deptno
+     *   and specialty = 'Karate')</pre>
+     *
+     * the expression <code>dept.deptno</code> would be handled using a
+     * deferred lookup for <code>dept</code> (because the sub-query is
+     * validated before the outer query) and the translator would call
+     * <code>getFieldAccess("DEPTNO")</code> on that lookup.
      */
     public interface DeferredLookup
     {
-        /**
-         * Creates an expression which accesses a particular field of this
-         * lookup.
-         *
-         * <p>For example, when resolving
-         *
-         * <pre>
-         * select *
-         * from dept
-         * where exists (
-         *   select *
-         *   from emp
-         *   where deptno = dept.deptno
-         *   and specialty = 'Karate')</pre>
-         *
-         * the expression <code>dept.deptno</code> would be handled using a
-         * deferred lookup for <code>dept</code> (because the sub-query is
-         * validated before the outer query) and the translator would call
-         * <code>getFieldAccess("DEPTNO")</code> on that lookup.
-         *
-         * @param name Name of field
-         *
-         * @return Expression which retrieves the given field of this lookup's
-         * correlating variable
-         */
-        RexFieldAccess getFieldAccess(String name);
     }
 }
 

@@ -1856,10 +1856,10 @@ SqlNodeList OrderBy(boolean accept) :
                 getPos(),
                 EigenbaseResource.instance().IllegalOrderBy.ex());
         }
+        pos = getPos();
     }
     <BY> e = OrderItem()
     {
-        pos = getPos();
         list = startList(e);
     }
     (
@@ -1868,7 +1868,7 @@ SqlNodeList OrderBy(boolean accept) :
         LOOKAHEAD(2) <COMMA> e = OrderItem() { list.add(e); }
     ) *
     {
-        return new SqlNodeList(list, pos);
+        return new SqlNodeList(list, pos.plus(getPos()));
     }
 }
 

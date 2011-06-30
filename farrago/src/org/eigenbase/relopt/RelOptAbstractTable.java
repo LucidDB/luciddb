@@ -26,6 +26,7 @@ import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -41,24 +42,44 @@ public abstract class RelOptAbstractTable
 {
     //~ Instance fields --------------------------------------------------------
 
-    protected RelOptSchema schema;
-    protected RelDataType rowType;
-    protected String name;
+    protected final RelOptSchema schema;
+    protected final RelDataType rowType;
+    protected final List<RelDataTypeField> systemFieldList;
+    protected final String name;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a RelOptAbstractTable.
+     *
+     * @param schema Schema (may be null)
+     * @param name Table name
+     * @param rowType Type for rows stored in table (not including system
+     *     fields)
+     * @param systemFieldList List of system fields (may be empty, not null)
+     */
     protected RelOptAbstractTable(
         RelOptSchema schema,
         String name,
-        RelDataType rowType)
+        RelDataType rowType,
+        List<RelDataTypeField> systemFieldList)
     {
         this.schema = schema;
         this.name = name;
         this.rowType = rowType;
+        this.systemFieldList = systemFieldList;
+        assert name != null;
+        assert rowType != null;
+        assert systemFieldList != null;
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the name of this table.
+     *
+     * @return Table name
+     */
     public String getName()
     {
         return name;
@@ -79,11 +100,6 @@ public abstract class RelOptAbstractTable
         return rowType;
     }
 
-    public void setRowType(RelDataType rowType)
-    {
-        this.rowType = rowType;
-    }
-
     public RelOptSchema getRelOptSchema()
     {
         return schema;
@@ -91,7 +107,12 @@ public abstract class RelOptAbstractTable
 
     public List<RelCollation> getCollationList()
     {
-        return Collections.<RelCollation>emptyList();
+        return Collections.emptyList();
+    }
+
+    public List<RelDataTypeField> getSystemFieldList()
+    {
+        return systemFieldList;
     }
 }
 

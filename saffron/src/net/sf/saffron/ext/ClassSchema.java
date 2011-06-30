@@ -20,6 +20,7 @@
 package net.sf.saffron.ext;
 
 import java.lang.reflect.Field;
+import java.util.*;
 
 import net.sf.saffron.oj.*;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
@@ -27,7 +28,6 @@ import net.sf.saffron.oj.rel.ExpressionReaderRel;
 import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.CalcRel;
@@ -64,7 +64,9 @@ public class ClassSchema implements RelOptSchema
         }
         final Class rowType = Util.guessRowType(field.getType());
         RelDataType type = getTypeFactory().createJavaType(rowType);
-        return new RelOptAbstractTable(this, name, type) {
+        return new RelOptAbstractTable(
+            this, name, type, Collections.<RelDataTypeField>emptyList())
+        {
                 public RelNode toRel(
                     RelOptCluster cluster,
                     RelOptConnection connection)

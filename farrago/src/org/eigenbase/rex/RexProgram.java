@@ -31,6 +31,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util.mapping.*;
 
 
 /**
@@ -249,7 +250,7 @@ public class RexProgram
                 buf.append(", ");
             }
             buf.append(termList.get(i)).append("=[").append(valueList.get(i))
-            .append("]");
+                .append("]");
         }
         buf.append(")");
         return buf.toString();
@@ -725,7 +726,7 @@ loop:
         }
         refCounts = new int[exprs.length];
         ReferenceCounter refCounter = new ReferenceCounter();
-        apply(refCounter, exprs, null);
+        RexUtil.apply(refCounter, exprs, null);
         if (condition != null) {
             refCounter.visitLocalRef(condition);
         }
@@ -736,24 +737,14 @@ loop:
     }
 
     /**
-     * Applies a visitor to an array of expressions and, if specified, a single
-     * expression.
-     *
-     * @param visitor Visitor
-     * @param exprs Array of expressions
-     * @param expr Single expression, may be null
+     * @deprecated See {@link RexUtil#apply}; please remove next release
      */
     public static void apply(
         RexVisitor<Void> visitor,
         RexNode [] exprs,
         RexNode expr)
     {
-        for (int i = 0; i < exprs.length; i++) {
-            exprs[i].accept(visitor);
-        }
-        if (expr != null) {
-            expr.accept(visitor);
-        }
+        RexUtil.apply(visitor, exprs, expr);
     }
 
     /**
@@ -772,6 +763,9 @@ loop:
     /**
      * Returns the input field that an output field is populated from, or -1 if
      * it is populated from an expression.
+     *
+     * @param outputOrdinal Ordinal of output field
+     * @return Input field that output fields is populated from; or -1
      */
     public int getSourceField(int outputOrdinal)
     {
@@ -795,6 +789,61 @@ loop:
                 return -1;
             }
         }
+    }
+
+    /**
+     * Returns the expression from which a given output field is calculated.
+     * Intermediate expressions are expanded; the result is in terms of
+     * {@link RexLiteral} and {@link RexInputRef} leaves, combined using
+     * {@link RexCall} nodes.
+     *
+     * @param outputOrdinal Ordinal of projected expression
+     * @return Source expressed in terms of literals and input expressions
+     */
+    public RexNode getSourceExpression(int outputOrdinal)
+    {
+        assert (outputOrdinal >= 0) && (outputOrdinal < this.projects.length);
+        return sourceOf(projects[outputOrdinal]);
+    }
+
+    /**
+     * Helper for {@link #getSourceExpression(int)}.
+     *
+     * @param expr Expression
+     * @return Source expressed in terms of literals and input expressions
+     */
+    private RexNode sourceOf(RexNode expr)
+    {
+        if (RexUtil.isCallTo(expr, SqlStdOperatorTable.inFennelFunc)) {
+            // drill through identity function
+            return sourceOf(((RexCall) expr).getOperands()[0]);
+        }
+        if (expr instanceof RexLocalRef) {
+            return sourceOf(exprs[((RexLocalRef) expr).index]);
+        }
+        if (expr instanceof RexInputRef) {
+            return expr;
+        }
+        if (expr instanceof RexLiteral) {
+            return expr;
+        }
+        if (expr instanceof RexCall) {
+            RexCall call = (RexCall) expr;
+            final List<RexNode> newOperands = new ArrayList<RexNode>();
+            for (RexNode operand : call.getOperands()) {
+                newOperands.add(sourceOf(operand));
+            }
+            return call.clone(
+                call.getType(),
+                newOperands.toArray(new RexNode[newOperands.size()]));
+        }
+        if (expr instanceof RexFieldAccess) {
+            RexFieldAccess fieldAccess = (RexFieldAccess) expr;
+            return new RexFieldAccess(
+                sourceOf(fieldAccess.getReferenceExpr()),
+                fieldAccess.getField());
+        }
+        throw Util.newInternal("unknown expression type: " + expr);
     }
 
     /**
@@ -834,13 +883,14 @@ loop:
 
     /**
      * Returns the set of correlation variables used (read) by this program.
+     * The set is sorted, for determinism.
      *
      * @return set of correlation variable names
      */
-    public HashSet<String> getCorrelVariableNames()
+    public SortedSet<String> getCorrelVariableNames()
     {
-        final HashSet<String> paramIdSet = new HashSet<String>();
-        apply(
+        final SortedSet<String> paramIdSet = new TreeSet<String>();
+        RexUtil.apply(
             new RexVisitorImpl<Void>(true) {
                 public Void visitCorrelVariable(
                     RexCorrelVariable correlVariable)
@@ -875,6 +925,81 @@ loop:
             return false;
         }
         return true;
+    }
+
+    /**
+     * Creates a program, with identical behavior to this, over a permuted
+     * subset of the input fields.
+     *
+     * <p>The {@code mapping} parameter describes the permutation of source
+     * fields. Suppose that field #0 has been removed (because it not used)
+     * and field #1 is now field #0. Then mapping.getTarget(0) will throw, and
+     * mapping.getTarget(1) will return 0.
+     *
+     * @param typeFactory Type factory
+     * @param mapping Input field mapping
+     */
+    public RexProgram permuteInputs(
+        RelDataTypeFactory typeFactory,
+        final Mappings.SourceMapping mapping)
+    {
+        final int sourceCount = mapping.getSourceCount();
+        assert sourceCount == inputRowType.getFieldCount();
+        final int targetCount = mapping.getTargetCount();
+        RelDataType newInputRowType =
+            typeFactory.createStructType(
+                new AbstractList<RelDataTypeField>()
+                {
+                    public RelDataTypeField get(int index)
+                    {
+                        return inputRowType.getFieldList().get(
+                            mapping.getSource(index));
+                    }
+
+                    public int size()
+                    {
+                        return mapping.getTargetCount();
+                    }
+                }
+            );
+
+        List<RexNode> newExprList = new ArrayList<RexNode>();
+        for (RelDataTypeField field : newInputRowType.getFieldList()) {
+            newExprList.add(
+                new RexInputRef(newExprList.size(), field.getType()));
+        }
+        final int lostFieldCount = sourceCount - targetCount;
+        Mappings.TargetMapping extendedMapping =
+            Mappings.create(
+                MappingType.Surjection,
+                exprs.length,
+                exprs.length - lostFieldCount);
+        for (IntPair o : mapping) {
+            extendedMapping.set(o.source, o.target);
+        }
+        final RexPermutationShuttle shuttle =
+            new RexPermutationShuttle(extendedMapping);
+        for (int i = sourceCount; i < exprs.length; ++i) {
+            extendedMapping.set(i, i - lostFieldCount);
+            final RexNode expr = exprs[i];
+            final RexNode newExpr = expr.accept(shuttle);
+            newExprList.add(newExpr);
+        }
+        final RexVisitor<RexLocalRef> localShuttle =
+            (RexVisitor<RexLocalRef>) (RexVisitor) shuttle;
+        RexLocalRef[] newProjects = RexUtil.apply(localShuttle, projects);
+        RexLocalRef newCondition;
+        if (condition == null) {
+            newCondition = null;
+        } else {
+            newCondition = condition.accept(localShuttle);
+        }
+        return new RexProgram(
+            newInputRowType,
+            newExprList.toArray(new RexNode[newExprList.size()]),
+            newProjects,
+            newCondition,
+            outputRowType);
     }
 
     //~ Inner Classes ----------------------------------------------------------

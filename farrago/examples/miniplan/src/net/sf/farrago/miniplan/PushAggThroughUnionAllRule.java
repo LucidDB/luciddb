@@ -106,7 +106,8 @@ public class PushAggThroughUnionAllRule extends RelOptRule
                     new AggregateRel(
                         cluster,
                         unionInputs[i],
-                        aggRel.getGroupCount(),
+                        aggRel.getSystemFieldList(),
+                        aggRel.getGroupSet(),
                         aggRel.getAggCallList());
             }
         }
@@ -124,7 +125,8 @@ public class PushAggThroughUnionAllRule extends RelOptRule
         AggregateRel newTopAggRel = new AggregateRel(
             cluster,
             newUnionRel,
-            aggRel.getGroupCount(),
+            aggRel.getSystemFieldList(),
+            aggRel.getGroupSet(),
             aggRel.getAggCallList());
 
         call.transformTo(newTopAggRel);

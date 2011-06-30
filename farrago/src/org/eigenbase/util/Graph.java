@@ -267,12 +267,7 @@ public class Graph<T>
         private static <T> String toString(Arc<T> [] arcs)
         {
             StringBuilder buf = new StringBuilder("{");
-            for (int i = 0; i < arcs.length; i++) {
-                if (i > 0) {
-                    buf.append(", ");
-                }
-                buf.append(arcs[i].toString());
-            }
+            Util.appendList(buf, arcs);
             buf.append("}");
             return buf.toString();
         }

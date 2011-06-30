@@ -110,22 +110,20 @@ public final class CorrelatorRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public CorrelatorRel clone()
+    @Override
+    public JoinRelBase copy(
+        RexNode conditionExpr,
+        List<RelDataTypeField> systemFieldList,
+        RelNode left,
+        RelNode right)
     {
-        CorrelatorRel clone =
-            new CorrelatorRel(
-                getCluster(),
-                left.clone(),
-                right.clone(),
-                new ArrayList<Correlation>(correlations),
-                joinType);
-        clone.inheritTraitsFrom(this);
-        return clone;
-    }
-
-    protected RelDataType deriveRowType()
-    {
-        return super.deriveRowType();
+        return new CorrelatorRel(
+            getCluster(),
+            left,
+            right,
+            conditionExpr,
+            new ArrayList<Correlation>(correlations),
+            joinType);
     }
 
     public void explain(RelOptPlanWriter pw)

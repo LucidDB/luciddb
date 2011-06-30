@@ -222,8 +222,10 @@ class RuleQueue
      */
     public void boostImportance(Collection<RelSubset> subsets, double factor)
     {
-        tracer.finer("boostImportance(" + factor + ", " + subsets + ")");
-        ArrayList<RelSubset> boostRemovals = new ArrayList<RelSubset>();
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer("boostImportance(" + factor + ", " + subsets + ")");
+        }
+        List<RelSubset> boostRemovals = new ArrayList<RelSubset>();
         Iterator<RelSubset> iter = boostedSubsets.iterator();
         while (iter.hasNext()) {
             RelSubset subset = iter.next();
@@ -413,20 +415,9 @@ class RuleQueue
         return importance;
     }
 
-    private void dump()
-    {
-        if (tracer.isLoggable(Level.FINER)) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            dump(pw);
-            pw.flush();
-            tracer.finer(sw.toString());
-        }
-    }
-
     private void dump(PrintWriter pw)
     {
-        planner.dump(pw);
+        planner.dump(pw, false);
         pw.print("Importances: {");
         final RelSubset [] subsets =
             subsetImportances.keySet().toArray(
@@ -447,12 +438,19 @@ class RuleQueue
      */
     VolcanoRuleMatch popMatch(VolcanoPlannerPhase phase)
     {
-        dump();
-        assert (hasNextMatch(phase));
+        if (tracer.isLoggable(Level.FINEST)) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            dump(pw);
+            pw.flush();
+            tracer.finest(sw.toString());
+        }
+
+        assert hasNextMatch(phase);
 
         PhaseMatchList phaseMatchList = matchListMap.get(phase);
-        assert (phaseMatchList != null) : "Used match list for phase " + phase
-            + " after phase complete";
+        assert phaseMatchList != null
+            : "Used match list for phase " + phase + " after phase complete";
 
         List<VolcanoRuleMatch> matchList = phaseMatchList.list;
 

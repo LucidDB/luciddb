@@ -30,7 +30,6 @@ import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
 import openjava.ptree.Variable;
 
-import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
@@ -229,14 +228,8 @@ public abstract class RelOptUtil
 
     public static String toString(RelNode [] a)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        for (int i = 0; i < a.length; i++) {
-            if (i > 0) {
-                sb.append(", ");
-            }
-            sb.append(a[i].toString());
-        }
+        StringBuilder sb = new StringBuilder("{");
+        Util.appendList(sb, a);
         sb.append("}");
         return sb.toString();
     }
@@ -244,6 +237,8 @@ public abstract class RelOptUtil
     /**
      * Returns a list of the names of the fields in a given struct type. The
      * list is immutable.
+     *
+     * <p>The list is immutable.
      *
      * @param type Struct type
      *
@@ -254,17 +249,9 @@ public abstract class RelOptUtil
      */
     public static List<String> getFieldNameList(final RelDataType type)
     {
-        return new AbstractList<String>() {
-            public String get(int index)
-            {
-                return type.getFieldList().get(index).getName();
-            }
-
-            public int size()
-            {
-                return type.getFieldCount();
-            }
-        };
+        return type.isStruct()
+           ? Pair.projectKeys(type.getFieldList())
+           : Collections.<String>emptyList();
     }
 
     /**
@@ -290,6 +277,8 @@ public abstract class RelOptUtil
      * Returns a list of the types of the fields in a given struct type. The
      * list is immutable.
      *
+     * <p>The list is immutable.
+     *
      * @param type Struct type
      *
      * @return List of field types
@@ -299,17 +288,9 @@ public abstract class RelOptUtil
      */
     public static List<RelDataType> getFieldTypeList(final RelDataType type)
     {
-        return new AbstractList<RelDataType>() {
-            public RelDataType get(int index)
-            {
-                return type.getFieldList().get(index).getType();
-            }
-
-            public int size()
-            {
-                return type.getFieldCount();
-            }
-        };
+        return type.isStruct()
+           ? Pair.projectValues(type.getFieldList())
+           : Collections.<RelDataType>emptyList();
     }
 
     /**
@@ -329,22 +310,6 @@ public abstract class RelOptUtil
             types[i] = fields[i].getType();
         }
         return types;
-    }
-
-    /**
-     * Collects the names and types of the fields in a given struct type.
-     */
-    public static void collectFields(
-        RelDataType type,
-        List<String> fieldNameList,
-        List<RelDataType> typeList)
-    {
-        final RelDataTypeField [] fields = type.getFields();
-        for (int i = 0; i < fields.length; i++) {
-            final RelDataTypeField field = fields[i];
-            typeList.add(field.getType());
-            fieldNameList.add(field.getName());
-        }
     }
 
     public static RelDataType createTypeFromProjection(
@@ -372,6 +337,19 @@ public abstract class RelOptUtil
             });
     }
 
+    /**
+     * Returns whether two types are equal, optionally including field names
+     * in the match.
+     *
+     * <p>See also {@link #equal}, which calls this method and optionally fails.
+     *
+     * @see #eq
+     *
+     * @param rowType1 First type
+     * @param rowType2 Second type
+     * @param compareNames Whether to compare names
+     * @return Whether types are equal
+     */
     public static boolean areRowTypesEqual(
         RelDataType rowType1,
         RelDataType rowType2,
@@ -433,6 +411,41 @@ public abstract class RelOptUtil
     }
 
     /**
+     * Returns the type of rows available in a table. Consists of
+     * the system fields followed by the regular fields.
+     *
+     * <p>The {@code actual} parameter controls whether possible or actual
+     * system fields are included. All tables in a schema will have the same set
+     * of possible fields, but not all of those fields will be available in a
+     * particular table. For example, ROWID is a possible system field for both
+     * tables and views, but it is only available for tables.
+     *
+     * @param typeFactory Type factory
+     * @param table Table
+     * @param actual If true, returns the actual fields;
+     *   if false, returns the possible fields
+     * @return Row type of the table, including possible or actual system fields
+     */
+    public static RelDataType getRowTypeIncludingSystemFields(
+        RelDataTypeFactory typeFactory,
+        RelOptTable table,
+        boolean actual)
+    {
+        final RelDataType rowType = table.getRowType();
+        final List<RelDataTypeField> systemFieldList =
+            actual
+            ? table.getSystemFieldList()
+            : typeFactory.getSystemFieldList();
+        if (systemFieldList.isEmpty()) {
+            return rowType;
+        }
+        return typeFactory.createStructType(
+            CompositeList.of(
+                systemFieldList,
+                rowType.getFieldList()));
+    }
+
+    /**
      * Creates a plan suitable for use in <code>EXISTS</code> or <code>IN</code>
      * statements. See {@link
      * org.eigenbase.sql2rel.SqlToRelConverter#convertExists} Note: this
@@ -440,9 +453,7 @@ public abstract class RelOptUtil
      * net.sf.farrago.fennel.rel. The last two arguments do not apply to
      * those invocations and can be removed from the method.
      *
-     * <p>
-     *
-     * @param cluster
+     * @param cluster Cluster
      * @param seekRel A query rel, for example the resulting rel from 'select *
      * from emp' or 'values (1,2,3)' or '('Foo', 34)'.
      * @param conditions May be null
@@ -511,7 +522,10 @@ public abstract class RelOptUtil
                 new AggregateRel(
                     ret.getCluster(),
                     ret,
-                    0,
+                    // REVIEW: empty systemFieldList may not always be
+                    // appropriate
+                    Collections.<RelDataTypeField>emptyList(),
+                    new BitSet(), // intentionally empty
                     Collections.singletonList(aggCall));
         }
 
@@ -557,6 +571,10 @@ public abstract class RelOptUtil
                 }
             }
 
+            // REVIEW: empty systemFieldList may not always be appropriate
+            final List<RelDataTypeField> systemFieldList =
+                Collections.emptyList();
+
             if (needsOuterJoin) {
                 // First insert an Agg on top of the subquery
                 // agg does not like no agg functions so just pretend it is
@@ -592,7 +610,10 @@ public abstract class RelOptUtil
                     new AggregateRel(
                         ret.getCluster(),
                         ret,
-                        newProjFieldCount - 1,
+                        systemFieldList,
+                        Util.bitSetBetween(
+                            systemFieldList.size(),
+                            newProjFieldCount - 1),
                         Collections.singletonList(aggCall));
             } else {
                 final List<AggregateCall> aggCalls = Collections.emptyList();
@@ -600,7 +621,10 @@ public abstract class RelOptUtil
                     new AggregateRel(
                         ret.getCluster(),
                         ret,
-                        ret.getRowType().getFieldCount(),
+                        systemFieldList,
+                        Util.bitSetBetween(
+                            systemFieldList.size(),
+                            ret.getRowType().getFieldCount()),
                         aggCalls);
             }
         }
@@ -747,19 +771,24 @@ public abstract class RelOptUtil
      * Creates an AggregateRel which removes all duplicates from the result of
      * an underlying rel.
      *
+     * @param cluster Cluster that this relational expression belongs to
+     *
      * @param rel underlying rel
+     *
+     * @param systemFieldList List of system fields
      *
      * @return rel implementing SingleValueAgg
      */
     public static RelNode createSingleValueAggRel(
         RelOptCluster cluster,
-        RelNode rel)
+        RelNode rel,
+        List<RelDataTypeField> systemFieldList)
     {
         // assert (rel.getRowType().getFieldCount() == 1);
         int aggCallCnt = rel.getRowType().getFieldCount();
         List<AggregateCall> aggCalls = new ArrayList<AggregateCall>();
 
-        for (int i = 0; i < aggCallCnt; i++) {
+        for (int i = systemFieldList.size(); i < aggCallCnt; i++) {
             RelDataType returnType =
                 SqlStdOperatorTable.singleValueOperator.inferReturnType(
                     cluster.getRexBuilder().getTypeFactory(),
@@ -779,7 +808,8 @@ public abstract class RelOptUtil
         return new AggregateRel(
             rel.getCluster(),
             rel,
-            0,
+            systemFieldList,
+            new BitSet(),
             aggCalls);
     }
 
@@ -788,18 +818,21 @@ public abstract class RelOptUtil
      * an underlying rel.
      *
      * @param rel underlying rel
-     *
+     * @param systemFieldList List of system fields
      * @return rel implementing DISTINCT
      */
     public static RelNode createDistinctRel(
-        RelNode rel)
+        RelNode rel,
+        List<RelDataTypeField> systemFieldList)
     {
-        List<AggregateCall> aggCalls = Collections.emptyList();
         return new AggregateRel(
             rel.getCluster(),
             rel,
-            rel.getRowType().getFieldCount(),
-            aggCalls);
+            systemFieldList,
+            Util.bitSetBetween(
+                systemFieldList.size(),
+                rel.getRowType().getFieldCount()),
+            Collections.<AggregateCall>emptyList());
     }
 
     public static boolean analyzeSimpleEquiJoin(
@@ -1030,21 +1063,43 @@ public abstract class RelOptUtil
         final int firstRightField = sysFieldCount + leftFieldCount;
         final int totalFieldCount = firstRightField + rightFieldCount;
 
-        final RelDataTypeField [] leftFields =
-            leftRel.getRowType().getFields();
-        final RelDataTypeField [] rightFields =
-            rightRel.getRowType().getFields();
+        final List<RelDataTypeField> leftFields =
+            leftRel.getRowType().getFieldList();
+        final List<RelDataTypeField> rightFields =
+            rightRel.getRowType().getFieldList();
 
         RexBuilder rexBuilder = leftRel.getCluster().getRexBuilder();
         RelDataTypeFactory typeFactory = leftRel.getCluster().getTypeFactory();
 
         // adjustment array
+        //
+        // Example, consider a join between
+        // left (1 sys field + 2 fields) and
+        // right (1 sys field + 3 fields) to create
+        // out (1 sys field + 5 fields)
+        //
+        // left: {LS, L1, L2}
+        // right: {RS, R1, R2, R3}
+        // out: {S, L1, L2, R1, R2, R3}
+        //
+        // Out #  Out field Ordinal in input Adj
+        // ====== ========= ================ ===
+        //      0 S                      N/A N/A
+        //      1 L1                       1   0
+        //      2 L2                       2   0
+        //      3 R1                       1  -2
+        //      4 R2                       2  -2
+        //      5 R3                       3  -2
+
         int [] adjustments = new int[totalFieldCount];
+        for (int i = 0; i < sysFieldCount; i++) {
+            adjustments[i] = 0;
+        }
         for (int i = firstLeftField; i < firstRightField; i++) {
-            adjustments[i] = -firstLeftField;
+            adjustments[i] = -sysFieldCount;
         }
         for (int i = firstRightField; i < totalFieldCount; i++) {
-            adjustments[i] = -firstRightField;
+            adjustments[i] = -(sysFieldCount + leftFieldCount);
         }
 
         if (condition instanceof RexCall) {
@@ -1715,10 +1770,10 @@ public abstract class RelOptUtil
     public static RelDataType createDmlRowType(RelDataTypeFactory typeFactory)
     {
         return typeFactory.createStructType(
-            new RelDataType[] {
-                typeFactory.createSqlType(SqlTypeName.BIGINT)
-            },
-            new String[] { "ROWCOUNT" });
+            Collections.singletonList(
+                Pair.of(
+                    "ROWCOUNT",
+                    typeFactory.createSqlType(SqlTypeName.BIGINT))));
     }
 
     /**
@@ -1744,9 +1799,9 @@ public abstract class RelOptUtil
     /**
      * Returns whether two types are equal using '='.
      *
-     * @param desc1
+     * @param desc1 Description of first argument
      * @param type1 First type
-     * @param desc2
+     * @param desc2 Description of second argument
      * @param type2 Second type
      * @param fail Whether to assert if they are not equal
      *
@@ -2033,21 +2088,6 @@ public abstract class RelOptUtil
     }
 
     /**
-     * Sets a bit in a bitmap for each RexInputRef in a RelNode
-     *
-     * @param bitmap bitmap to be set
-     * @param start starting bit to set, corresponding to first field in the
-     * RelNode
-     * @param end the bit one beyond the last to be set
-     */
-    public static void setRexInputBitmap(BitSet bitmap, int start, int end)
-    {
-        for (int i = start; i < end; i++) {
-            bitmap.set(i);
-        }
-    }
-
-    /**
      * Returns true if all bits set in the second parameter are also set in the
      * first
      *
@@ -2061,6 +2101,8 @@ public abstract class RelOptUtil
         BitSet tmp = new BitSet();
         tmp.or(y);
         tmp.andNot(x);
+        assert tmp.isEmpty() == (tmp.cardinality() == 0)
+            : "beware jdk bug!";
         return tmp.isEmpty();
     }
 
@@ -2094,20 +2136,24 @@ public abstract class RelOptUtil
     {
         RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
         boolean filterPushed = false;
-        RelDataTypeField [] joinFields = joinRel.getRowType().getFields();
-        int nTotalFields = joinFields.length;
-
-        int nFieldsLeft = joinRel.getInputs()[0].getRowType().getFieldCount();
-        BitSet leftBitmap = new BitSet(nFieldsLeft);
-        BitSet rightBitmap = new BitSet(nTotalFields - nFieldsLeft);
+        List<RelDataTypeField> joinFields = joinRel.getRowType().getFieldList();
+        final int nTotalFields = joinFields.size();
+        final int nSysFields = joinRel.getSystemFieldList().size();
+        final List<RelDataTypeField> leftFields =
+            joinRel.getInputs()[0].getRowType().getFieldList();
+        final int nFieldsLeft = leftFields.size();
+        final List<RelDataTypeField> rightFields =
+            joinRel.getInputs()[1].getRowType().getFieldList();
+        final int nFieldsRight = rightFields.size();
+        assert nTotalFields == nSysFields + nFieldsLeft + nFieldsRight;
 
         // set the reference bitmaps for the left and right children
-        RelOptUtil.setRexInputBitmap(leftBitmap, 0, nFieldsLeft);
-        RelOptUtil.setRexInputBitmap(rightBitmap, nFieldsLeft, nTotalFields);
+        BitSet leftBitmap =
+            Util.bitSetBetween(nSysFields, nSysFields + nFieldsLeft);
+        BitSet rightBitmap =
+            Util.bitSetBetween(nSysFields + nFieldsLeft, nTotalFields);
 
         ListIterator<RexNode> filterIter = filters.listIterator();
-        RelDataTypeField [] rightFields =
-            joinRel.getInputs()[1].getRowType().getFields();
         while (filterIter.hasNext()) {
             RexNode filter = (RexNode) filterIter.next();
 
@@ -2125,7 +2171,21 @@ public abstract class RelOptUtil
 
                 // ignore filters that always evaluate to true
                 if (!filter.isAlwaysTrue()) {
-                    leftFilters.add(filter);
+                    // adjust the field references in the filter to reflect
+                    // that fields in the left now shift over by the number
+                    // of system fields
+                    final RexNode shiftedFilter =
+                        shiftFilter(
+                            nSysFields,
+                            nSysFields + nFieldsLeft,
+                            -nSysFields,
+                            rexBuilder,
+                            joinFields,
+                            nTotalFields,
+                            leftFields,
+                            filter);
+
+                    leftFilters.add(shiftedFilter);
                 }
                 filterIter.remove();
 
@@ -2144,20 +2204,17 @@ public abstract class RelOptUtil
                     // child, the types of the source should match the dest
                     // so we don't need to explicitly pass the destination
                     // fields to RexInputConverter
-                    int [] adjustments = new int[nTotalFields];
-                    for (int i = 0; i < nFieldsLeft; i++) {
-                        adjustments[i] = 0;
-                    }
-                    for (int i = nFieldsLeft; i < nTotalFields; i++) {
-                        adjustments[i] = -nFieldsLeft;
-                    }
-                    rightFilters.add(
-                        filter.accept(
-                            new RelOptUtil.RexInputConverter(
-                                rexBuilder,
-                                joinFields,
-                                rightFields,
-                                adjustments)));
+                    final RexNode shilftedFilter =
+                        shiftFilter(
+                            nSysFields + nFieldsLeft,
+                            nTotalFields,
+                            -(nSysFields + nFieldsLeft),
+                            rexBuilder,
+                            joinFields,
+                            nTotalFields,
+                            rightFields,
+                            filter);
+                    rightFilters.add(shilftedFilter);
                 }
                 filterIter.remove();
 
@@ -2176,11 +2233,33 @@ public abstract class RelOptUtil
         return filterPushed;
     }
 
+    private static RexNode shiftFilter(
+        int start,
+        int end,
+        int offset,
+        RexBuilder rexBuilder,
+        List<RelDataTypeField> joinFields,
+        int nTotalFields,
+        List<RelDataTypeField> rightFields,
+        RexNode filter)
+    {
+        int [] adjustments = new int[nTotalFields];
+        for (int i = start; i < end; i++) {
+            adjustments[i] = offset;
+        }
+        return filter.accept(
+            new RexInputConverter(
+                rexBuilder,
+                joinFields,
+                rightFields,
+                adjustments));
+    }
+
     /**
      * Splits a filter into two lists, depending on whether or not the filter
      * only references its child input
      *
-     * @param nChildFields number of fields in the child
+     * @param childBitmap Fields in the child
      * @param predicate filters that will be split
      * @param pushable returns the list of filters that can be pushed to the
      * child input
@@ -2188,7 +2267,7 @@ public abstract class RelOptUtil
      * the child input
      */
     public static void splitFilters(
-        int nChildFields,
+        BitSet childBitmap,
         RexNode predicate,
         List<RexNode> pushable,
         List<RexNode> notPushable)
@@ -2199,8 +2278,6 @@ public abstract class RelOptUtil
 
         // for each filter, if the filter only references the child inputs,
         // then it can be pushed
-        BitSet childBitmap = new BitSet(nChildFields);
-        RelOptUtil.setRexInputBitmap(childBitmap, 0, nChildFields);
         for (RexNode filter : filterList) {
             BitSet filterRefs = new BitSet();
             filter.accept(new RelOptUtil.InputFinder(filterRefs));
@@ -2362,38 +2439,14 @@ public abstract class RelOptUtil
      * @param newSetOpInputs the input children
      *
      * @return new SetOpRel
+     *
+     * @deprecated Use {@link SetOpRel#copy(org.eigenbase.rel.RelNode...)}
      */
     public static SetOpRel createNewSetOpRel(
         SetOpRel setOpRel,
         RelNode [] newSetOpInputs)
     {
-        SetOpRel newSetOpRel = null;
-        RelOptCluster cluster = setOpRel.getCluster();
-        if (setOpRel instanceof UnionRel) {
-            newSetOpRel =
-                new UnionRel(
-                    cluster,
-                    newSetOpInputs,
-                    !setOpRel.isDistinct());
-        } else if (setOpRel instanceof IterConcatenateRel) {
-            newSetOpRel =
-                new IterConcatenateRel(
-                    cluster,
-                    newSetOpInputs);
-        } else if (setOpRel instanceof IntersectRel) {
-            newSetOpRel =
-                new IntersectRel(
-                    cluster,
-                    newSetOpInputs,
-                    !setOpRel.isDistinct());
-        } else if (setOpRel instanceof MinusRel) {
-            newSetOpRel =
-                new MinusRel(
-                    cluster,
-                    newSetOpInputs,
-                    !setOpRel.isDistinct());
-        }
-        return newSetOpRel;
+        return setOpRel.copy(newSetOpInputs);
     }
 
     /**
@@ -2457,7 +2510,8 @@ public abstract class RelOptUtil
         // between the ProjectRel and the MultiJoinRel, the projection needs
         // to include those filter references.
         BitSet inputRefs = new BitSet(multiJoin.getRowType().getFieldCount());
-        new RelOptUtil.InputFinder(inputRefs).apply(
+        RexUtil.apply(
+            new InputFinder(inputRefs),
             project.getProjectExps(),
             multiJoin.getPostJoinFilter());
 
@@ -2474,11 +2528,7 @@ public abstract class RelOptUtil
         int currInput = -1;
         int startField = 0;
         int nFields = 0;
-        for (
-            int bit = inputRefs.nextSetBit(0);
-            bit >= 0;
-            bit = inputRefs.nextSetBit(bit + 1))
-        {
+        for (int bit : Util.toIter(inputRefs)) {
             while (bit >= (startField + nFields)) {
                 startField += nFields;
                 currInput++;
@@ -2628,15 +2678,6 @@ public abstract class RelOptUtil
             rexRefSet.set(inputRef.getIndex());
             return null;
         }
-
-        /**
-         * Applies this visitor to an array of expressions and an optional
-         * single expression.
-         */
-        public void apply(RexNode [] exprs, RexNode expr)
-        {
-            RexProgram.apply(this, exprs, expr);
-        }
     }
 
     /**
@@ -2647,14 +2688,13 @@ public abstract class RelOptUtil
         extends RexShuttle
     {
         protected final RexBuilder rexBuilder;
-        private final RelDataTypeField [] srcFields;
-        protected final RelDataTypeField [] destFields;
-        private final RelDataTypeField [] leftDestFields;
-        private final RelDataTypeField [] rightDestFields;
-        private final int nLeftDestFields;
+        private final List<RelDataTypeField> srcFields;
+        protected final List<RelDataTypeField> destFields;
         private final int [] adjustments;
 
         /**
+         * Creates a RexInputConverter.
+         *
          * @param rexBuilder builder for creating new RexInputRefs
          * @param srcFields fields where the RexInputRefs originally originated
          * from; if null, a new RexInputRef is always created, referencing the
@@ -2662,65 +2702,18 @@ public abstract class RelOptUtil
          * @param destFields fields that the new RexInputRefs will be
          * referencing; if null, use the type information from the source field
          * when creating the new RexInputRef
-         * @param leftDestFields in the case where the destination is a join,
-         * these are the fields from the left join input
-         * @param rightDestFields in the case where the destination is a join,
-         * these are the fields from the right join input
          * @param adjustments the amount to adjust each field by
          */
-        private RexInputConverter(
+        public RexInputConverter(
             RexBuilder rexBuilder,
-            RelDataTypeField [] srcFields,
-            RelDataTypeField [] destFields,
-            RelDataTypeField [] leftDestFields,
-            RelDataTypeField [] rightDestFields,
+            List<RelDataTypeField> srcFields,
+            List<RelDataTypeField> destFields,
             int [] adjustments)
         {
             this.rexBuilder = rexBuilder;
             this.srcFields = srcFields;
             this.destFields = destFields;
             this.adjustments = adjustments;
-            this.leftDestFields = leftDestFields;
-            this.rightDestFields = rightDestFields;
-            if (leftDestFields == null) {
-                nLeftDestFields = 0;
-            } else {
-                assert (destFields == null);
-                nLeftDestFields = leftDestFields.length;
-            }
-        }
-
-        public RexInputConverter(
-            RexBuilder rexBuilder,
-            RelDataTypeField [] srcFields,
-            RelDataTypeField [] leftDestFields,
-            RelDataTypeField [] rightDestFields,
-            int [] adjustments)
-        {
-            this(
-                rexBuilder,
-                srcFields,
-                null,
-                leftDestFields,
-                rightDestFields,
-                adjustments);
-        }
-
-        public RexInputConverter(
-            RexBuilder rexBuilder,
-            RelDataTypeField [] srcFields,
-            RelDataTypeField [] destFields,
-            int [] adjustments)
-        {
-            this(rexBuilder, srcFields, destFields, null, null, adjustments);
-        }
-
-        public RexInputConverter(
-            RexBuilder rexBuilder,
-            RelDataTypeField [] srcFields,
-            int [] adjustments)
-        {
-            this(rexBuilder, srcFields, null, null, null, adjustments);
         }
 
         public RexNode visitInputRef(RexInputRef var)
@@ -2730,20 +2723,13 @@ public abstract class RelOptUtil
 
             RelDataType type;
             if (destFields != null) {
-                type = destFields[destIndex].getType();
-            } else if (leftDestFields != null) {
-                if (destIndex < nLeftDestFields) {
-                    type = leftDestFields[destIndex].getType();
-                } else {
-                    type =
-                        rightDestFields[destIndex - nLeftDestFields].getType();
-                }
+                type = destFields.get(destIndex).getType();
             } else {
-                type = srcFields[srcIndex].getType();
+                type = srcFields.get(srcIndex).getType();
             }
             if ((adjustments[srcIndex] != 0)
                 || (srcFields == null)
-                || (type != srcFields[srcIndex].getType()))
+                || (type != srcFields.get(srcIndex).getType()))
             {
                 return rexBuilder.makeInputRef(type, destIndex);
             } else {

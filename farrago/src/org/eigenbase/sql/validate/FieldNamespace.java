@@ -57,7 +57,7 @@ class FieldNamespace
 
     //~ Methods ----------------------------------------------------------------
 
-    public void setRowType(RelDataType rowType)
+    public void setRowType(RelDataType rowType, RelDataType rowTypeAsWritten)
     {
         throw new UnsupportedOperationException();
     }

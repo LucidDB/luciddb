@@ -169,6 +169,26 @@ public abstract class RelOptRuleCall
      * this.rels[0].getTraitSet()</code>.
      */
     public abstract void transformTo(RelNode rel);
+
+    /**
+     * Called by a rule to indicate that the rule failed (that is, did not
+     * manage to generate a successor).
+     *
+     * <p>In some implementations of the planner, the reason will appear in the
+     * trace log if trace level is set to FINE or above. The default
+     * implementation does nothing.
+     *
+     * <p>Calling this method is optional.
+     *
+     * <p>For reasons of performance and memory usage, we recommend that the
+     * reason is a constant string, especially if the rule is one that is called
+     * very frequently.
+     *
+     * @param reason Reason why rule failed to generate successors.
+     */
+    public void failed(String reason)
+    {
+    }
 }
 
 // End RelOptRuleCall.java

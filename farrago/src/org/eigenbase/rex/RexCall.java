@@ -181,13 +181,7 @@ public class RexCall
             // "SYSTEM_USER", not "SYSTEM_USER()".
         } else {
             sb.append("(");
-            for (int i = 0; i < operands.length; i++) {
-                if (i > 0) {
-                    sb.append(", ");
-                }
-                RexNode operand = operands[i];
-                sb.append(operand.toString());
-            }
+            Util.appendList(sb, operands);
             sb.append(")");
         }
         if (withType) {

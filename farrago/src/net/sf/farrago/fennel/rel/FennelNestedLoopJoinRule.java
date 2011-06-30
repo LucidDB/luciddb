@@ -482,7 +482,7 @@ public class FennelNestedLoopJoinRule
                     extraPreds.accept(
                         new RelOptUtil.RexInputConverter(
                             joinInputs[0].getCluster().getRexBuilder(),
-                            joinRowType.getFields(),
+                            joinRowType.getFieldList(),
                             null,
                             adjustments));
             }
@@ -1004,7 +1004,8 @@ public class FennelNestedLoopJoinRule
             residualCondition.accept(
                 new RelOptUtil.RexInputConverter(
                     rexBuilder,
-                    joinFields,
+                    Arrays.asList(joinFields),
+                    null,
                     adjustments));
 
         RelNode filterRel =

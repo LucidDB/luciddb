@@ -25,9 +25,7 @@ package net.sf.farrago.namespace.ftrs;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -55,7 +53,9 @@ class FtrsTable
         Properties tableProps,
         Map<String, Properties> columnPropMap)
     {
-        super(localName, null, rowType, tableProps, columnPropMap);
+        super(
+            localName, null, rowType, Collections.<RelDataTypeField>emptyList(),
+            tableProps, columnPropMap);
     }
 
     //~ Methods ----------------------------------------------------------------

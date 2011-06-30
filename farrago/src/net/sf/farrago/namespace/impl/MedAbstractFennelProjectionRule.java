@@ -183,6 +183,8 @@ public abstract class MedAbstractFennelProjectionRule
     /**
      * Creates new RelNodes replacing/removing the original project/row scan
      *
+     *
+     * @param call
      * @param projectedScan new scan that is now projected
      * @param origProject original projection
      * @param needRename true if fields from the row scan need to be renamed
@@ -193,7 +195,7 @@ public abstract class MedAbstractFennelProjectionRule
      * @return new RelNode
      */
     public RelNode createNewRelNode(
-        RelNode projectedScan,
+        RelOptRuleCall call, RelNode projectedScan,
         ProjectRel origProject,
         boolean needRename,
         ProjectRel newProject)
@@ -205,14 +207,14 @@ public abstract class MedAbstractFennelProjectionRule
                 origProject.getTraits().plus(FennelRel.FENNEL_EXEC_CONVENTION);
             if (!traits.equals(projectedScan.getTraits())) {
                 RelNode mergedProjectedScan = convert(projectedScan, traits);
-                RelOptPlanner planner =
-                    projectedScan.getCluster().getPlanner();
+                RelOptPlanner planner = call.getPlanner();
                 // register projectedScan == mergedProjectedScan
                 // so mergedProjectedScan will have a set later on
                 projectedScan =
                     planner.ensureRegistered(
                         mergedProjectedScan,
-                        projectedScan);
+                        projectedScan,
+                        call);
             }
             scanRel =
                 new FennelRenameRel(

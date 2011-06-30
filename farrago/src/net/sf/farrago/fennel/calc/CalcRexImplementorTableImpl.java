@@ -316,7 +316,7 @@ public class CalcRexImplementorTableImpl
         CalcProgramBuilder.RegisterDescriptor rd =
             translator.getCalcRegisterDescriptor(typeNode);
         if (rd.getType().isExact()
-            && !rd.getType().equals(CalcProgramBuilder.OpType.Int8))
+            && rd.getType() != OpType.Int8)
         {
             RelDataType oldType = typeNode.getType();
             RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
@@ -372,7 +372,7 @@ public class CalcRexImplementorTableImpl
         CalcProgramBuilder.RegisterDescriptor rd =
             translator.getCalcRegisterDescriptor(typeNode);
         if (rd.getType().isApprox()
-            && !rd.getType().equals(CalcProgramBuilder.OpType.Double))
+            && rd.getType() != OpType.Double)
         {
             RelDataType oldType = typeNode.getType();
             RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
@@ -1223,9 +1223,7 @@ public class CalcRexImplementorTableImpl
             call = call.clone();
             for (int i = 0; i < call.operands.length; i++) {
                 RexNode operand = call.operands[i];
-                if (!operand.getType().getSqlTypeName().equals(
-                        SqlTypeName.DOUBLE))
-                {
+                if (operand.getType().getSqlTypeName() != SqlTypeName.DOUBLE) {
                     RelDataType oldType = operand.getType();
                     RelDataTypeFactory fac =
                         translator.rexBuilder.getTypeFactory();
@@ -2181,7 +2179,7 @@ public class CalcRexImplementorTableImpl
             String endOfCase = translator.newLabel();
             String next;
             boolean elseClauseOptimizedAway = false;
-            for (int i = 0; i < (call.operands.length - 1); i += 2) {
+            for (int i = 0; i < call.operands.length - 1; i += 2) {
                 if (i != 0) {
                     // NEW SCOPE
                     translator.newScope();
@@ -2192,10 +2190,8 @@ public class CalcRexImplementorTableImpl
                 next = translator.newLabel();
                 CalcReg compareResult =
                     translator.implementNode(call.operands[i]);
-                assert (compareResult.getOpType().equals(
-                    CalcProgramBuilder.OpType.Bool));
-                if (!compareResult.getRegisterType().equals(
-                        CalcProgramBuilder.RegisterSetType.Literal))
+                assert compareResult.getOpType() == OpType.Bool;
+                if (compareResult.getRegisterType() != RegisterSetType.Literal)
                 {
                     translator.builder.addLabelJumpFalse(next, compareResult);
 
@@ -2380,20 +2376,22 @@ public class CalcRexImplementorTableImpl
 
             regList.add(translator.implementNode(call.operands[1]));
             assert (regList.size() > 1);
-            boolean castToVarchar = false;
-            if (!CalcProgramBuilder.OpType.Char.equals(
-                    resultRegister.getOpType()))
-            {
-                assert (CalcProgramBuilder.OpType.Varchar.equals(
-                    resultRegister.getOpType()));
+            final boolean castToVarchar;
+            switch (resultRegister.getOpType()) {
+            case Char:
+                castToVarchar = false;
+                break;
+            case Varchar:
                 castToVarchar = true;
+                break;
+            default:
+                throw Util.unexpected(resultRegister.getOpType());
             }
             for (int i = 1; i < regList.size(); i++) {
                 CalcReg reg = regList.get(i);
 
                 if (castToVarchar
-                    && !reg.getOpType().equals(
-                        CalcProgramBuilder.OpType.Varchar))
+                    && reg.getOpType() != OpType.Varchar)
                 {
                     // cast to varchar call must be of type varchar.
                     CalcReg newReg =

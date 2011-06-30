@@ -139,6 +139,28 @@ public final class ProjectRel
         }
         return permutation;
     }
+
+    /**
+     * Returns whether this project is trivial. (A trivial project returns
+     * the fields of the input in the same order.)
+     *
+     * @return whether this project is trivial
+     */
+    public boolean isTrivial()
+    {
+        if (exps.length != rowType.getFieldCount()) {
+            return false;
+        }
+        for (int i = 0; i < exps.length; i++) {
+            RexNode exp = exps[i];
+            if (!(exp instanceof RexInputRef)
+                || ((RexInputRef) exp).getIndex() != i)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 // End ProjectRel.java

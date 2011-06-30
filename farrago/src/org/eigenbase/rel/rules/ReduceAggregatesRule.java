@@ -34,8 +34,18 @@ import org.eigenbase.util.*;
 
 
 /**
- * Rule to reduce aggregates to simpler forms. Currently only AVG(x) to
- * SUM(x)/COUNT(x), but eventually will handle others such as STDDEV.
+ * Rule to reduce aggregates to simpler forms.
+ *
+ * <p>Aggregates handled:
+ * <ul>
+ * <li>AVG(x) &rarr; SUM(x) / COUNT(x)
+ * <li>STDEV_POP(x) &rarr; SQRT((SUM(x ^ 2) - SUM(x) ^ 2 / COUNT(x)) / COUNT(x))
+ * <li>STDEV_SAMP(x) &rarr; SQRT((SUM(x ^ 2) - SUM(x) ^ 2 / COUNT(x))
+ *                                / COUNT(x - 1))
+ * <li>VAR_POP(x) &rarr; (SUM(x ^ 2) - SUM(x) ^ 2 / COUNT(x)) / COUNT(x)
+ * <li>VAR_SAMP(x) &rarr; (SUM(x ^ 2) - SUM(x) ^ 2 / COUNT(x))
+ *                                / COUNT(x - 1)
+ * </ul>
  *
  * @author John V. Sichi
  * @version $Id$
@@ -54,6 +64,9 @@ public class ReduceAggregatesRule
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Protected constructor; use the singleton.
+     */
     protected ReduceAggregatesRule(RelOptRuleOperand operand)
     {
         super(operand);
@@ -86,7 +99,8 @@ public class ReduceAggregatesRule
 
     /**
      * Reduces all calls to AVG, STDDEV_POP, STDDEV_SAMP, VAR_POP, VAR_SAMP in
-     * the aggregates list to.
+     * the aggregates list to simpler expressions. (AVG(x) becomes SUM(x) /
+     * COUNT(x), etc.)
      *
      * <p>It handles newly generated common subexpressions since this was done
      * at the sql2rel stage.
@@ -98,16 +112,21 @@ public class ReduceAggregatesRule
         RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
 
         List<AggregateCall> oldCalls = oldAggRel.getAggCallList();
-        final int nGroups = oldAggRel.getGroupCount();
-
+        final int sysFieldCount = oldAggRel.getSystemFieldList().size();
         List<AggregateCall> newCalls = new ArrayList<AggregateCall>();
         Map<AggregateCall, RexNode> aggCallMapping =
             new HashMap<AggregateCall, RexNode>();
 
         List<RexNode> projList = new ArrayList<RexNode>();
 
-        // pass through group key
-        for (int i = 0; i < nGroups; ++i) {
+        // project system fields and group key fields
+        for (int i = 0; i < sysFieldCount; ++i) {
+            projList.add(
+                rexBuilder.makeInputRef(
+                    getFieldType(oldAggRel, i),
+                    i));
+        }
+        for (int i : Util.toIter(oldAggRel.getGroupSet())) {
             projList.add(
                 rexBuilder.makeInputRef(
                     getFieldType(oldAggRel, i),
@@ -209,10 +228,12 @@ public class ReduceAggregatesRule
         } else {
             // anything else:  preserve original call
             RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
-            final int nGroups = oldAggRel.getGroupCount();
+            final int nGroups = oldAggRel.getGroupSet().cardinality();
+            final int sysFieldCount = oldAggRel.getSystemFieldList().size();
+            final int prefixFieldCount = sysFieldCount + nGroups;
             return rexBuilder.addAggCall(
                 oldCall,
-                nGroups,
+                prefixFieldCount,
                 newCalls,
                 aggCallMapping);
         }
@@ -224,7 +245,9 @@ public class ReduceAggregatesRule
         List<AggregateCall> newCalls,
         Map<AggregateCall, RexNode> aggCallMapping)
     {
-        final int nGroups = oldAggRel.getGroupCount();
+        final int prefixFieldCount =
+            oldAggRel.getGroupCount()
+            + oldAggRel.getSystemFieldList().size();
         RelDataTypeFactory typeFactory =
             oldAggRel.getCluster().getTypeFactory();
         RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
@@ -260,13 +283,13 @@ public class ReduceAggregatesRule
         RexNode numeratorRef =
             rexBuilder.addAggCall(
                 sumCall,
-                nGroups,
+                prefixFieldCount,
                 newCalls,
                 aggCallMapping);
         RexNode denominatorRef =
             rexBuilder.addAggCall(
                 countCall,
-                nGroups,
+                prefixFieldCount,
                 newCalls,
                 aggCallMapping);
         final RexNode divideRef =
@@ -298,7 +321,9 @@ public class ReduceAggregatesRule
         //     (sum(x * x) - sum(x) * sum(x) / count(x))
         //     / nullif(count(x) - 1, 0),
         //     .5)
-        final int nGroups = oldAggRel.getGroupCount();
+        final int nGroups = oldAggRel.getGroupSet().cardinality();
+        final int sysFieldCount = oldAggRel.getSystemFieldList().size();
+        final int prefixFieldCount = sysFieldCount + nGroups;
         RelDataTypeFactory typeFactory =
             oldAggRel.getCluster().getTypeFactory();
         final RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
@@ -330,7 +355,7 @@ public class ReduceAggregatesRule
         final RexNode sumArgSquared =
             rexBuilder.addAggCall(
                 sumArgSquaredAggCall,
-                nGroups,
+                prefixFieldCount,
                 newCalls,
                 aggCallMapping);
 
@@ -344,7 +369,7 @@ public class ReduceAggregatesRule
         final RexNode sumArg =
             rexBuilder.addAggCall(
                 sumArgAggCall,
-                nGroups,
+                prefixFieldCount,
                 newCalls,
                 aggCallMapping);
 
@@ -364,7 +389,7 @@ public class ReduceAggregatesRule
         final RexNode countArg =
             rexBuilder.addAggCall(
                 countArgAggCall,
-                nGroups,
+                prefixFieldCount,
                 newCalls,
                 aggCallMapping);
 
@@ -449,11 +474,21 @@ public class ReduceAggregatesRule
         List<AggregateCall> newCalls)
     {
         return new AggregateRel(
-            oldAggRel.getCluster(), inputRel,
-            oldAggRel.getGroupCount(),
+            oldAggRel.getCluster(),
+            inputRel,
+            oldAggRel.getSystemFieldList(),
+            oldAggRel.getGroupSet(),
             newCalls);
     }
 
+    /**
+     * Returns the type of the {@code i}th field in a relational expression's
+     * row type.
+     *
+     * @param relNode Relational expression
+     * @param i Ordinal of field
+     * @return Type of field
+     */
     private RelDataType getFieldType(RelNode relNode, int i)
     {
         final RelDataTypeField inputField = relNode.getRowType().getFields()[i];

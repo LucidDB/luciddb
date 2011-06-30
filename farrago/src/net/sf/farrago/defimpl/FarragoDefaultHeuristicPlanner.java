@@ -135,7 +135,7 @@ public class FarragoDefaultHeuristicPlanner
         // tables.  The reason we do this here is so that we don't
         // disturb the carefully hand-coded joins in the catalog views.
         // TODO:  loosen up
-        builder.addRuleByDescription("MedMdrJoinRule");
+        builder.addRuleByDescription("MedMdrJoinRule:Vanilla");
 
         // Eliminate AGG(DISTINCT x) now, because this transformation
         // may introduce new joins which need to be optimized further on.

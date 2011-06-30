@@ -23,7 +23,7 @@ ProjectRel(EXPR$0=[$0])
     <TestCase name="testGroup">
         <Resource name="plan">
             <![CDATA[
-AggregateRel(groupCount=[1])
+AggregateRel(group=[{0}])
   ProjectRel(DEPTNO=[$7])
     TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
@@ -43,7 +43,7 @@ ProjectRel(DEPTNO=[$0])
     <TestCase name="testGroupJustOneAgg">
         <Resource name="plan">
             <![CDATA[
-AggregateRel(groupCount=[1], SUM_SAL=[SUM($1)])
+AggregateRel(group=[{0}], SUM_SAL=[SUM($1)])
   ProjectRel(DEPTNO=[$7], SAL=[$5])
     TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
@@ -64,7 +64,7 @@ ProjectRel(DEPTNO=[$0], EXPR$1=[$1])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[*(2, $3)])
-  AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[SUM($2)], agg#2=[COUNT($1)])
+  AggregateRel(group=[{0}], EXPR$1=[SUM($1)], EXPR$2=[SUM($2)], agg#2=[COUNT($1)])
     ProjectRel(DEPTNO=[$7], SAL=[$5], $f2=[+(3, $5)])
       TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
@@ -86,7 +86,7 @@ ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[*(2, $3)])
             <![CDATA[
 ProjectRel(EXPR$0=[$0])
   FilterRel(condition=[>($1, 10)])
-    AggregateRel(groupCount=[0], EXPR$0=[SUM($0)], agg#1=[SUM($1)])
+    AggregateRel(group=[{}], EXPR$0=[SUM($0)], agg#1=[SUM($1)])
       ProjectRel($f0=[+($5, $5)], SAL=[$5])
         TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
@@ -108,7 +108,7 @@ ProjectRel(EXPR$0=[$0])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(NAME=[$0])
-  AggregateRel(groupCount=[1])
+  AggregateRel(group=[{0}])
     ProjectRel(NAME=[$1])
       TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
@@ -130,9 +130,9 @@ ProjectRel(NAME=[$0])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(NAME=[$1], FOO=[$2])
-  ProjectRel(DEPTNO=[$1], NAME=[$0], FOO=[$3])
-    AggregateRel(groupCount=[3], FOO=[COUNT($1)])
-      ProjectRel(NAME=[$1], DEPTNO=[$0], $f2=[$1])
+  ProjectRel(DEPTNO=[$1], NAME=[$0], FOO=[$2])
+    AggregateRel(group=[{0, 1}], FOO=[COUNT($1)])
+      ProjectRel(NAME=[$1], DEPTNO=[$0])
         TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
@@ -148,25 +148,25 @@ ProjectRel(NAME=[$1], FOO=[$2])
         TableAccessRel(table=[[SALES, DEPT]])
 ]]>
         </Resource>
+        <Resource name="planTrimmed">
+            <![CDATA[
+ProjectRel(NAME=[$0], FOO=[$2])
+  AggregateRel(group=[{0, 1}], FOO=[COUNT($1)])
+    ProjectRel(NAME=[$1], DEPTNO=[$0])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
     </TestCase>
     <TestCase name="testAggDistinct">
         <Resource name="plan">
             <![CDATA[
-AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[SUM(DISTINCT $1)], EXPR$3=[COUNT()])
+AggregateRel(group=[{0}], EXPR$1=[SUM($1)], EXPR$2=[SUM(DISTINCT $1)], EXPR$3=[COUNT()])
   ProjectRel(DEPTNO=[$7], SAL=[$5])
     TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
         <Resource name="sql">
             <![CDATA[select deptno, sum(sal), sum(distinct sal), count(*) from emp group by deptno]]>
-        </Resource>
-        <Resource name="plan">
-            <![CDATA[
-ProjectRel(DEPTNO=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
-  AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(DISTINCT 1)], agg#2=[COUNT()])
-    ProjectRel($f0=[$7], $f1=[$5])
-      TableAccessRel(table=[[SALES, EMP]])
-]]>
         </Resource>
     </TestCase>
     <TestCase name="testUnnest">
@@ -337,7 +337,7 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
   FilterRel(condition=[IS TRUE($9)])
     JoinRel(condition=[true], joinType=[left])
       TableAccessRel(table=[[CATALOG, SALES, EMP]])
-      AggregateRel(groupCount=[0], agg#0=[MIN($0)])
+      AggregateRel(group=[{}], agg#0=[MIN($0)])
         ProjectRel($f0=[true])
           ProjectRel(EXPR$0=[1])
             FilterRel(condition=[=($0, 55)])
@@ -367,7 +367,7 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
   FilterRel(condition=[IS TRUE($9)])
     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])
       TableAccessRel(table=[[CATALOG, SALES, EMP]])
-      AggregateRel(groupCount=[0], agg#0=[MIN($0)])
+      AggregateRel(group=[{}], agg#0=[MIN($0)])
         ProjectRel($f0=[true])
           ProjectRel(EXPR$0=[1])
             FilterRel(condition=[=($cor0.DEPTNO, $0)])
@@ -788,7 +788,7 @@ ProjectRel(EXPR$0=[1])
         </Resource>
         <Resource name="plan">
             <![CDATA[
-AggregateRel(groupCount=[1])
+AggregateRel(group=[{0}])
   ProjectRel(EXPR$0=[+($5, 5)])
     TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
@@ -800,9 +800,9 @@ AggregateRel(groupCount=[1])
         </Resource>
         <Resource name="plan">
             <![CDATA[
-AggregateRel(groupCount=[1])
+AggregateRel(group=[{0}])
   ProjectRel(EXPR$0=[$1])
-    AggregateRel(groupCount=[1], EXPR$0=[SUM($1)])
+    AggregateRel(group=[{0}], EXPR$0=[SUM($1)])
       ProjectRel(DEPTNO=[$7], SAL=[$5])
         TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
@@ -852,7 +852,7 @@ ProjectRel(EMPNO=[$0])
   JoinRel(condition=[=($9, $10)], joinType=[inner])
     ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$7])
       TableAccessRel(table=[[CATALOG, SALES, EMP]])
-    AggregateRel(groupCount=[1])
+    AggregateRel(group=[{0}])
       ValuesRel(tuples=[[{ 10 }, { 20 }, { 30 }, { 40 }, { 50 }, { 60 }, { 70 }, { 80 }, { 90 }, { 100 }, { 110 }, { 120 }, { 130 }, { 140 }, { 150 }, { 160 }, { 170 }, { 180 }, { 190 }, { 200 }, { 210 }, { 220 }, { 230 }]])
 ]]>
         </Resource>
@@ -867,7 +867,7 @@ ProjectRel(EMPNO=[$0])
   JoinRel(condition=[=($9, $10)], joinType=[inner])
     ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$7])
       TableAccessRel(table=[[CATALOG, SALES, EMP]])
-    AggregateRel(groupCount=[1])
+    AggregateRel(group=[{0}])
       ProjectRel(DEPTNO=[$0])
         TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
@@ -1044,7 +1044,7 @@ ProjectRel(EMPNO=[$0], SAL=[$1])
 ProjectRel(DEPTNO=[$0], EXPR$1=[$1])
   SortRel(sort0=[$2], sort1=[$3], dir0=[Descending], dir1=[Ascending])
     ProjectRel(DEPTNO=[$0], EXPR$1=[$1], EXPR$2=[*($0, $2)], EXPR$3=[$3])
-      AggregateRel(groupCount=[1], EXPR$1=[COUNT()], agg#1=[SUM($1)], agg#2=[MIN($2)])
+      AggregateRel(group=[{0}], EXPR$1=[COUNT()], agg#1=[SUM($1)], agg#2=[MIN($2)])
         ProjectRel(DEPTNO=[$7], SAL=[$5], EMPNO=[$0])
           TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
@@ -1058,7 +1058,7 @@ ProjectRel(DEPTNO=[$0], EXPR$1=[$1])
             <![CDATA[
 ProjectRel(EMPNO=[$0], EXPR$1=[$1])
   SortRel(sort0=[$2], dir0=[Ascending])
-    AggregateRel(groupCount=[3])
+    AggregateRel(group=[{0, 1, 2}])
       ProjectRel(EMPNO=[$0], EXPR$1=[+($7, 1)], EXPR$2=[+(+($7, 1), $0)])
         TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
@@ -1293,7 +1293,7 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[$0], DEPTNO=[$1], EXPR$2=[$0])
-  AggregateRel(groupCount=[2])
+  AggregateRel(group=[{0, 1}])
     ProjectRel(EXPR$0=[$0], DEPTNO=[$1])
       ProjectRel(EXPR$0=[+($5, 5)], DEPTNO=[$7], EXPR$2=[+($5, 5)])
         FilterRel(condition=[<($7, 10)])
@@ -1309,7 +1309,7 @@ where empno > 10]]>
         </Resource>
         <Resource name="plan">
             <![CDATA[
-AggregateRel(groupCount=[0], EXPR$0=[COUNT()], EXPR$1=[SUM($0)])
+AggregateRel(group=[{}], EXPR$0=[COUNT()], EXPR$1=[SUM($0)])
   ProjectRel(SAL=[$5])
     FilterRel(condition=[>($0, 10)])
       TableAccessRel(table=[[CATALOG, SALES, EMP]])
@@ -1406,6 +1406,389 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
     TableAccessRel(table=[[CATALOG, SALES, EMP]])
     ProjectRel(DEPTNO=[$0], ENAME=[$1])
       TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testValues">
+        <Resource name="sql">
+            <![CDATA[VALUES (1, 'a'), (2, 'b')]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0], EXPR$1=[$1])
+  ValuesRel(tuples=[[{ 1, 'a' }, { 2, 'b' }]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testValuesWithNullInSubquery">
+        <Resource name="sql">
+            <![CDATA[SELECT y, x FROM (
+ VALUES (1, 'a'), (2, 'b'), (CAST(NULL AS INTEGER), 'cd')
+) AS t (x, y)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(Y=[$1], X=[$0])
+  ValuesRel(tuples=[[{ 1, 'a ' }, { 2, 'b ' }, { null, 'cd' }]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testValuesWithNull">
+        <Resource name="sql">
+            <![CDATA[VALUES (1, 'a'), (2, 'b'), (CAST(NULL AS INTEGER), 'cd')]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0], EXPR$1=[$1])
+  ValuesRel(tuples=[[{ 1, 'a ' }, { 2, 'b ' }, { null, 'cd' }]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testTrimProjectOnFilter">
+        <Resource name="sql">
+            <![CDATA[select empno + deptno from (
+  select * from emp)
+where empno > sal]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, $2)])
+  FilterRel(condition=[>($0, $1)])
+    ProjectRel(EMPNO=[$0], SAL=[$5], DEPTNO=[$7])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderBy">
+        <Resource name="sql">
+            <![CDATA[select empno+1 from sales.emp order by empno desc]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
+  SortRel(sort0=[$1], dir0=[Descending])
+    ProjectRel(EXPR$0=[+($0, 1)], EMPNO=[$0])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+        <Resource name="planTrimmed">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
+  SortRel(sort0=[$1], dir0=[Descending])
+    ProjectRel(EXPR$0=[+($0, 1)], EMPNO=[$0])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testInUncorrelatedSubqueryTrimmed">
+        <Resource name="sql">
+            <![CDATA[select empno from emp where deptno in (select deptno from dept)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0])
+  JoinRel(condition=[=($1, $2)], joinType=[inner])
+    ProjectRel($f0=[$0], $f9=[$7])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    AggregateRel(group=[{0}])
+      ProjectRel(DEPTNO=[$0])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testProjectOnProjectTrimmed">
+        <Resource name="sql">
+            <![CDATA[select empno + deptno from (
+select * from emp)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, $7)])
+  ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+        <Resource name="planTrimmed">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, $1)])
+  ProjectRel(EMPNO=[$0], DEPTNO=[$7])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testProjectOnFilterTrimmed">
+        <Resource name="sql">
+            <![CDATA[select empno + deptno from (
+  select * from emp)
+where empno > sal]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, $7)])
+  FilterRel(condition=[>($0, $5)])
+    ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+        <Resource name="planTrimmed">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, $2)])
+  FilterRel(condition=[>($0, $1)])
+    ProjectRel(EMPNO=[$0], SAL=[$5], DEPTNO=[$7])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testUnionTrimmed">
+        <Resource name="sql">
+            <![CDATA[select a + 3 from (
+  select empno as a, sal as b, ename as c from emp
+  union all
+  select deptno, deptno, name from dept)
+where a > b]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, 3)])
+  FilterRel(condition=[>($0, $1)])
+    UnionRel(all=[true])
+      ProjectRel(A=[$0], B=[$5], C=[$1])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      ProjectRel(DEPTNO=[$0], DEPTNO0=[$0], NAME=[$1])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+        <Resource name="planTrimmed">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, 3)])
+  FilterRel(condition=[>($0, $1)])
+    UnionRel(all=[true])
+      ProjectRel(A=[$0], B=[$5])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      ProjectRel(DEPTNO=[$0], DEPTNO0=[$0])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJoinTrimmed">
+        <Resource name="sql">
+            <![CDATA[select d.deptno + e.sal
+from emp as e join dept as d on e.deptno = d.deptno
+where e.deptno > 10]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($9, $5)])
+  FilterRel(condition=[>($7, 10)])
+    JoinRel(condition=[=($7, $9)], joinType=[inner])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+        <Resource name="planTrimmed">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($9, $5)])
+  FilterRel(condition=[>($7, 10)])
+    JoinRel(condition=[=($7, $9)], joinType=[inner])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJoinSubqueryTrimmed">
+        <Resource name="sql">
+            <![CDATA[select d.deptno + e.sal
+from (select * from emp) as e
+join (select * from dept) as d on e.deptno = d.deptno
+where e.deptno > 10]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($9, $5)])
+  FilterRel(condition=[>($7, 10)])
+    JoinRel(condition=[=($7, $9)], joinType=[inner])
+      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      ProjectRel(DEPTNO=[$0], NAME=[$1])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+        <Resource name="planTrimmed">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($2, $0)])
+  FilterRel(condition=[>($1, 10)])
+    JoinRel(condition=[=($1, $2)], joinType=[inner])
+      ProjectRel(SAL=[$5], DEPTNO=[$7])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      ProjectRel(DEPTNO=[$0])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderTrimmed">
+        <Resource name="sql">
+            <![CDATA[select deptno, ename from (
+ select *
+ from emp
+ order by deptno + empno)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(DEPTNO=[$7], ENAME=[$1])
+  ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+    SortRel(sort0=[$9], dir0=[Ascending])
+      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], EXPR$9=[+($7, $0)])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+        <Resource name="planTrimmed">
+            <![CDATA[
+ProjectRel(DEPTNO=[$1], ENAME=[$0])
+  ProjectRel(ENAME=[$0], DEPTNO=[$1])
+    SortRel(sort0=[$2], dir0=[Ascending])
+      ProjectRel(ENAME=[$1], DEPTNO=[$7], EXPR$9=[+($7, $0)])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testProjectNonUnique">
+        <Resource name="sql">
+            <![CDATA[select empno as a, empno as x, deptno as y, 1 as a
+from emp]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(A=[$0], X=[$0], Y=[$7], A0=[1])
+  TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSubqueryEquals">
+        <Resource name="sql">
+            <![CDATA[select * from dept where deptno = (
+  select min(deptno) from emp where slacker)
+order by name]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+SortRel(sort0=[$1], dir0=[Ascending])
+  ProjectRel(DEPTNO=[$0], NAME=[$1])
+    FilterRel(condition=[=($0, $2)])
+      JoinRel(condition=[true], joinType=[left])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+        AggregateRel(group=[{}], EXPR$0=[MIN($0)])
+          ProjectRel(DEPTNO=[$7])
+            FilterRel(condition=[$8])
+              TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testGroupUnionValues">
+        <Resource name="sql">
+            <![CDATA[SELECT sum(x) FROM (SELECT 0 AS x FROM (VALUES (1)) UNION ALL SELECT CAST(null AS INTEGER) AS x FROM (VALUES (1)) UNION ALL SELECT 2 AS x FROM (VALUES (1)) UNION ALL SELECT 2 AS x FROM (VALUES (1)))]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+AggregateRel(group=[{}], EXPR$0=[SUM($0)])
+  UnionRel(all=[true])
+    UnionRel(all=[true])
+      UnionRel(all=[true])
+        ProjectRel(X=[0])
+          ValuesRel(tuples=[[{ 1 }]])
+        ProjectRel(X=[CAST(null):INTEGER])
+          ValuesRel(tuples=[[{ 1 }]])
+      ProjectRel(X=[2])
+        ValuesRel(tuples=[[{ 1 }]])
+    ProjectRel(X=[2])
+      ValuesRel(tuples=[[{ 1 }]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testUnionEmptyTrimmed">
+        <Resource name="sql">
+            <![CDATA[select count(*) from (
+  select empno as a, sal as b, ename as c from emp
+  union all
+  select deptno, deptno, name from dept)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+AggregateRel(group=[{}], EXPR$0=[COUNT()])
+  ProjectRel($f0=[true])
+    UnionRel(all=[true])
+      ProjectRel(A=[$0], B=[$5], C=[$1])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      ProjectRel(DEPTNO=[$0], DEPTNO0=[$0], NAME=[$1])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+        <Resource name="planTrimmed">
+            <![CDATA[
+AggregateRel(group=[{}], EXPR$0=[COUNT()])
+  ProjectRel(DUMMY=[0])
+    UnionRel(all=[true])
+      ProjectRel(C=[$1])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      ProjectRel(NAME=[$1])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testValuesTrimmed">
+        <Resource name="sql">
+            <![CDATA[SELECT d, b FROM (
+  VALUES
+    (1, 2, 3, 4),
+    (5, 6, 7, 8)) AS t (a, b, c, d)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(D=[$3], B=[$1])
+  ValuesRel(tuples=[[{ 1, 2, 3, 4 }, { 5, 6, 7, 8 }]])
+]]>
+        </Resource>
+        <Resource name="planTrimmed">
+            <![CDATA[
+ProjectRel(D=[$1], B=[$0])
+  ValuesRel(tuples=[[{ 2, 4 }, { 6, 8 }]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testHavingSubquery">
+        <Resource name="sql">
+            <![CDATA[select sum(sal + sal) from emp
+group by deptno
+having sum(sal) > (select sum(sal - 1) from emp)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[$1])
+  FilterRel(condition=[>($2, $3)])
+    JoinRel(condition=[true], joinType=[left])
+      AggregateRel(group=[{0}], EXPR$0=[SUM($1)], agg#1=[SUM($2)])
+        ProjectRel(DEPTNO=[$7], $f1=[+($5, $5)], SAL=[$5])
+          TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      AggregateRel(group=[{}], EXPR$0=[SUM($0)])
+        ProjectRel($f0=[-($5, 1)])
+          TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJoinValues">
+        <Resource name="sql">
+            <![CDATA[select *
+from (values (1)) as va(i),
+(values (4, 4)) as vb(x, j) where j = x]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(I=[$0], X=[$1], J=[$2])
+  FilterRel(condition=[=($2, $1)])
+    JoinRel(condition=[true], joinType=[inner])
+      ProjectRel(EXPR$0=[$0])
+        ValuesRel(tuples=[[{ 1 }]])
+      ProjectRel(EXPR$0=[$0], EXPR$1=[$1])
+        ValuesRel(tuples=[[{ 4, 4 }]])
 ]]>
         </Resource>
     </TestCase>

@@ -64,13 +64,6 @@ public interface FarragoMedColumnSet
      * @return the name of this ColumnSet
      */
     public String getName();
-
-    /**
-     * Sets the row type of this ColumnSet.
-     *
-     * @param rowType Row type
-     */
-    void setRowType(RelDataType rowType);
 }
 
 // End FarragoMedColumnSet.java

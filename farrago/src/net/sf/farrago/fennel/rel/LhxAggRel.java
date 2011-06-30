@@ -29,6 +29,7 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
@@ -60,7 +61,8 @@ public class LhxAggRel
      *
      * @param cluster Cluster
      * @param child Child
-     * @param groupCount Size of grouping key
+     * @param systemFieldList List of system fields
+     * @param groupSet Bitset of grouping fields
      * @param aggCalls Collection of calls to aggregate functions
      * @param numInputRows Row count of the input
      * @param cndGroupByKey Cardinality of the grouping key
@@ -68,7 +70,8 @@ public class LhxAggRel
     public LhxAggRel(
         RelOptCluster cluster,
         RelNode child,
-        int groupCount,
+        List<RelDataTypeField> systemFieldList,
+        BitSet groupSet,
         List<AggregateCall> aggCalls,
         long numInputRows,
         long cndGroupByKey)
@@ -77,7 +80,8 @@ public class LhxAggRel
             cluster,
             FennelRel.FENNEL_EXEC_CONVENTION.singletonSet,
             child,
-            groupCount,
+            systemFieldList,
+            groupSet,
             aggCalls);
         this.numInputRows = numInputRows;
         this.cndGroupByKey = cndGroupByKey;
@@ -91,7 +95,8 @@ public class LhxAggRel
             new LhxAggRel(
                 getCluster(),
                 getChild().clone(),
-                groupCount,
+                systemFieldList,
+                (BitSet) groupSet.clone(),
                 aggCalls,
                 numInputRows,
                 cndGroupByKey);
@@ -122,7 +127,7 @@ public class LhxAggRel
     {
         final FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemLhxAggStreamDef aggStream = repos.newFemLhxAggStreamDef();
-        FennelRelUtil.defineAggStream(aggCalls, groupCount, repos, aggStream);
+        FennelRelUtil.defineAggStream(aggCalls, groupSet, repos, aggStream);
         aggStream.setNumRows(numInputRows);
         aggStream.setCndGroupByKeys(cndGroupByKey);
 

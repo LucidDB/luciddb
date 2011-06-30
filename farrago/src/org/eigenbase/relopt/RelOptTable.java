@@ -50,16 +50,34 @@ public interface RelOptTable
 
     /**
      * Returns an estimate of the number of rows in the table.
+     *
+     * @return Estimate of the number of rows in the table
      */
     double getRowCount();
 
     /**
      * Describes the type of rows returned by this table.
+     *
+     * <p>Does not include system columns. (See {@link #getSystemFieldList()}.)
+     *
+     * @return Row type
      */
     RelDataType getRowType();
 
     /**
+     * Returns a list of system fields.
+     *
+     * <p>These are not included in the row type of the table, but are available
+     * to an accessor of the table.
+     *
+     * @return List of system fields; may be empty, never null
+     */
+    List<RelDataTypeField> getSystemFieldList();
+
+    /**
      * Returns the {@link RelOptSchema} this table belongs to.
+     *
+     * @return schema that this table belongs to
      */
     RelOptSchema getRelOptSchema();
 
@@ -73,12 +91,13 @@ public interface RelOptTable
      * applying {@link org.eigenbase.relopt.RelOptRule rules} to transform it
      * into more efficient access methods for this table.</p>
      *
-     * @param cluster the cluster the relational expression will belong to
-     * @param connection the parse tree of the expression which evaluates to a
-     * connection object
+     * <p>Cluster and connection must not be null; result is never null.
      *
-     * @pre cluster != null
-     * @pre connection != null
+     * @param cluster Cluster the relational expression will belong to
+     * @param connection Parse tree of the expression which evaluates to a
+     *     connection object
+     *
+     * @return Converted relational expression
      */
     RelNode toRel(
         RelOptCluster cluster,
@@ -89,7 +108,8 @@ public interface RelOptTable
      * returned from this table.
      *
      * @see RelNode#getCollationList()
-     * @post return != null
+     *
+     * @return List of applicable physical orderings; may be empty, never null
      */
     public List<RelCollation> getCollationList();
 }

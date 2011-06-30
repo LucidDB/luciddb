@@ -30,6 +30,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.util.CompositeList;
 
 
 /**
@@ -413,8 +414,9 @@ outerForLoop:
                 new RelOptUtil.RexInputConverter(
                     rexBuilder,
                     multiJoin.getMultiJoinFields(),
-                    leftRel.getRowType().getFields(),
-                    rightRel.getRowType().getFields(),
+                    CompositeList.of(
+                        leftRel.getRowType().getFieldList(),
+                        rightRel.getRowType().getFieldList()),
                     adjustments));
 
         return areSelfJoinKeysUnique(leftRel, rightRel, joinFilters);
@@ -496,7 +498,7 @@ outerForLoop:
         List<Integer> newJoinOrder = new ArrayList<Integer>();
         joinTree.getTreeOrder(newJoinOrder);
         int nJoinFactors = multiJoin.getNumJoinFactors();
-        RelDataTypeField [] fields = multiJoin.getMultiJoinFields();
+        List<RelDataTypeField> fields = multiJoin.getMultiJoinFields();
 
         // create a mapping from each factor to its field offset in the join
         // ordering
@@ -536,7 +538,7 @@ outerForLoop:
                 }
                 newProjExprs[currField] =
                     rexBuilder.makeInputRef(
-                        fields[currField].getType(),
+                        fields.get(currField).getType(),
                         newOffset);
                 currField++;
             }
@@ -647,9 +649,7 @@ outerForLoop:
         int nFields,
         BitSet joinKeys)
     {
-        ListIterator<RexNode> filterIter = filters.listIterator();
-        while (filterIter.hasNext()) {
-            RexNode joinFilter = filterIter.next();
+        for (RexNode joinFilter : filters) {
             BitSet filterFactors =
                 multiJoin.getFactorsRefByJoinFilter(joinFilter);
 
@@ -1144,7 +1144,7 @@ outerForLoop:
                 newCondition,
                 factorToAdd,
                 origJoinOrder,
-                joinTree.getJoinTree().getRowType().getFields());
+                joinTree.getJoinTree().getRowType().getFieldList());
 
         // determine if additional filters apply as a result of adding the
         // new factor, provided this isn't a left or right outer join; for
@@ -1334,8 +1334,11 @@ outerForLoop:
                         new RelOptUtil.RexInputConverter(
                             rexBuilder,
                             multiJoin.getMultiJoinFields(),
-                            leftTree.getJoinTree().getRowType().getFields(),
-                            rightTree.getJoinTree().getRowType().getFields(),
+                            CompositeList.of(
+                                leftTree.getJoinTree().getRowType()
+                                    .getFieldList(),
+                                rightTree.getJoinTree().getRowType()
+                                    .getFieldList()),
                             adjustments));
             }
         }
@@ -1350,6 +1353,7 @@ outerForLoop:
     /**
      * Adjusts a filter to reflect a newly added factor in the middle of an
      * existing join tree
+     *
      *
      * @param multiJoin join factors being optimized
      * @param left left subtree of the join
@@ -1370,7 +1374,7 @@ outerForLoop:
         RexNode condition,
         int factorAdded,
         List<Integer> origJoinOrder,
-        RelDataTypeField [] origFields)
+        List<RelDataTypeField> origFields)
     {
         List<Integer> newJoinOrder = new ArrayList<Integer>();
         left.getTreeOrder(newJoinOrder);
@@ -1428,8 +1432,9 @@ outerForLoop:
                     new RelOptUtil.RexInputConverter(
                         rexBuilder,
                         origFields,
-                        left.getJoinTree().getRowType().getFields(),
-                        right.getJoinTree().getRowType().getFields(),
+                        CompositeList.of(
+                            left.getJoinTree().getRowType().getFieldList(),
+                            right.getJoinTree().getRowType().getFieldList()),
                         adjustments));
         }
 
@@ -1817,8 +1822,11 @@ outerForLoop:
                         new RelOptUtil.RexInputConverter(
                             rexBuilder,
                             multiJoin.getMultiJoinFields(),
-                            left.getJoinTree().getRowType().getFields(),
-                            right.getJoinTree().getRowType().getFields(),
+                            CompositeList.of(
+                                left.getJoinTree().getRowType()
+                                    .getFieldList(),
+                                right.getJoinTree().getRowType()
+                                    .getFieldList()),
                             adjustments));
             }
         }
@@ -1891,7 +1899,7 @@ outerForLoop:
                         new RelOptUtil.RexInputConverter(
                             rexBuilder,
                             multiJoin.getMultiJoinFields(),
-                            joinTree.getRowType().getFields(),
+                            joinTree.getRowType().getFieldList(),
                             adjustments));
             }
             joinTree = CalcRel.createFilter(joinTree, filterCond);

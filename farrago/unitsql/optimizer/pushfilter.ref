@@ -192,7 +192,7 @@
 >     select * from (select * from t1 union select * from t2) where t1a < 41;
 'column0'
 'FennelToIteratorConverter'
-'  LhxAggRel(groupCount=[5])'
+'  LhxAggRel(group=[{0, 1, 2, 3, 4}])'
 '    FennelMergeRel'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[41]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER T1A, INTEGER T1B, INTEGER T1C, INTEGER T1D) NOT NULL])'
 '        FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
@@ -220,9 +220,9 @@
 >         where t1b in (12, 21, 32);
 'column0'
 'FennelToIteratorConverter'
-'  LhxAggRel(groupCount=[2])'
+'  LhxAggRel(group=[{0, 1}])'
 '    FennelMergeRel'
-'      LhxAggRel(groupCount=[2])'
+'      LhxAggRel(group=[{0, 1}])'
 '        FennelMergeRel'
 '          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t0):INTEGER], expr#3=[CAST($t1):INTEGER], expr#4=[12], expr#5=[=($t1, $t4)], expr#6=[21], expr#7=[=($t1, $t6)], expr#8=[OR($t5, $t7)], expr#9=[32], expr#10=[=($t1, $t9)], expr#11=[OR($t8, $t10)], T1A=[$t2], T1B=[$t3], $condition=[$t11])'
 '            FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
@@ -470,7 +470,7 @@
 >         where t1b in (12, 21, 32);
 'column0'
 'FennelToIteratorConverter'
-'  LhxAggRel(groupCount=[2])'
+'  LhxAggRel(group=[{0, 1}])'
 '    FennelMergeRel'
 '      FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER T1A, INTEGER T1B) NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, PDF, LT1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LT1$T1A, SYS$CLUSTERED_INDEX$LT1$T1B]])'

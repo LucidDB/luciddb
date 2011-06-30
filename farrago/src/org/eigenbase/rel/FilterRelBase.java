@@ -24,7 +24,7 @@ package org.eigenbase.rel;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
-
+import org.eigenbase.sql.type.*;
 
 /**
  * <code>FilterRelBase</code> is an abstract base class for implementations of
@@ -60,6 +60,9 @@ public abstract class FilterRelBase
     {
         super(cluster, traits, child);
         this.condition = condition;
+        assert condition != null;
+        assert !RexOver.containsOver(condition);
+        assert isValid(true);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -69,9 +72,54 @@ public abstract class FilterRelBase
         return new RexNode[] { condition };
     }
 
+    /**
+     * Returns the condition.
+     *
+     * @return Condition
+     */
     public RexNode getCondition()
     {
         return condition;
+    }
+
+    public boolean isValid(boolean fail)
+    {
+        if (!super.isValid(fail)) {
+            return false;
+        }
+        // We cannot assert that getRowType() == getChild().getRowType()
+        // because if the child is a RelSubset its row type may change during a
+        // merge (to accommodate differences in field names) after the filter's
+        // rowtype has been determined.
+        if (!SqlTypeUtil.equalSansNames(getRowType(), getChild().getRowType()))
+        {
+            assert !fail
+                : "row type mismatch:\nthis: " + getRowType()
+                  + "\nchild: " + getChild().getRowType();
+            return false;
+        }
+        if (condition.getType().getSqlTypeName() != SqlTypeName.BOOLEAN) {
+            assert !fail
+                : "condition must be boolean: " + condition.getType();
+            return false;
+        }
+        if (RexOver.containsOver(condition)) {
+            assert !fail
+                : "condition must not contain windowed aggs: " + condition;
+            return false;
+        }
+        RexChecker checker =
+            new RexChecker(
+                getRowType(),
+                fail);
+        condition.accept(checker);
+        if (checker.getFailureCount() > 0) {
+            assert !fail
+                : checker.getFailureCount()
+                  + " failures in condition " + condition;
+            return false;
+        }
+        return true;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -90,6 +138,14 @@ public abstract class FilterRelBase
             condition);
     }
 
+    /**
+     * Estimates the number of rows returned by an expression after a filtering
+     * program has been applied.
+     *
+     * @param child Relational expression
+     * @param program Program including filter
+     * @return Estimate of number of rows returned by filtered expression
+     */
     public static double estimateFilteredRows(RelNode child, RexProgram program)
     {
         // convert the program's RexLocalRef condition to an expanded RexNode
@@ -105,6 +161,14 @@ public abstract class FilterRelBase
             condition);
     }
 
+    /**
+     * Estimates the number of rows returned by an expression after a filter
+     * condition has been applied.
+     *
+     * @param child Relational expression
+     * @param condition Filter expression
+     * @return Estimate of number of rows returned by filtered expression
+     */
     public static double estimateFilteredRows(RelNode child, RexNode condition)
     {
         return RelMetadataQuery.getRowCount(child)

@@ -22,18 +22,16 @@
 */
 package org.eigenbase.sql;
 
-import java.util.*;
-
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**
- * A <code>SqlUpdate</code> is a node of a parse tree which represents an UPDATE
- * statement.
+ * Parse tree node representing an UPDATE statement.
  */
 public class SqlUpdate
-    extends SqlCall
+    extends SqlDml
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -71,25 +69,17 @@ public class SqlUpdate
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * @return the identifier for the target table of the update
-     */
     public SqlIdentifier getTargetTable()
     {
         return (SqlIdentifier) operands[TARGET_TABLE_OPERAND];
     }
 
-    /**
-     * @return the alias for the target table of the update
-     */
+    @Override
     public SqlIdentifier getAlias()
     {
         return (SqlIdentifier) operands[ALIAS_OPERAND];
     }
 
-    /**
-     * @return the list of target column names
-     */
     public SqlNodeList getTargetColumnList()
     {
         return (SqlNodeList) operands[TARGET_COLUMN_LIST_OPERAND];
@@ -115,13 +105,15 @@ public class SqlUpdate
     }
 
     /**
-     * Gets the source SELECT expression for the data to be updated. Returns
+     * {@inheritDoc}
+     *
+     * In an UPDATE statement, it is always a SELECT. Returns
      * null before the statement has been expanded by
-     * SqlValidator.performUnconditionalRewrites.
+     * {@link SqlValidatorImpl#performUnconditionalRewrites}.
      *
      * @return the source SELECT for the data to be updated
      */
-    public SqlSelect getSourceSelect()
+    public SqlSelect getSource()
     {
         return (SqlSelect) operands[SOURCE_SELECT_OPERAND];
     }
@@ -153,19 +145,18 @@ public class SqlUpdate
         }
         final SqlWriter.Frame setFrame =
             writer.startList(SqlWriter.FrameTypeEnum.UpdateSetList, "SET", "");
-        Iterator targetColumnIter = getTargetColumnList().getList().iterator();
-        Iterator sourceExpressionIter =
-            getSourceExpressionList().getList().iterator();
-        while (targetColumnIter.hasNext()) {
+        Iterable<Pair<SqlIdentifier, SqlNode>> pairIterable =
+            Pair.of(
+                Util.cast(getTargetColumnList().getList(), SqlIdentifier.class),
+                getSourceExpressionList().getList());
+        for (Pair<SqlIdentifier, SqlNode> pair : pairIterable) {
             writer.sep(",");
-            SqlIdentifier id = (SqlIdentifier) targetColumnIter.next();
-            id.unparse(
+            pair.left.unparse(
                 writer,
                 getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
             writer.keyword("=");
-            SqlNode sourceExp = (SqlNode) sourceExpressionIter.next();
-            sourceExp.unparse(
+            pair.right.unparse(
                 writer,
                 getOperator().getLeftPrec(),
                 getOperator().getRightPrec());

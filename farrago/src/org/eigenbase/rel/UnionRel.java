@@ -52,26 +52,19 @@ public final class UnionRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public UnionRel clone()
+    public UnionRel copy(boolean all, RelNode... inputs)
     {
-        UnionRel clone =
-            new UnionRel(
-                getCluster(),
-                RelOptUtil.clone(inputs),
-                all);
-        clone.inheritTraitsFrom(this);
-        return clone;
-    }
-
-    public UnionRel clone(RelNode [] inputs, boolean all)
-    {
-        UnionRel clone =
+        return
             new UnionRel(
                 getCluster(),
                 inputs,
                 all);
-        clone.inheritTraitsFrom(this);
-        return clone;
+    }
+
+    @Override
+    public UnionRel copy(RelNode... inputs)
+    {
+        return copy(all, inputs);
     }
 }
 

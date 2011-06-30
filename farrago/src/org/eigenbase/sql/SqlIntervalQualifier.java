@@ -457,6 +457,7 @@ public class SqlIntervalQualifier
                 } else {
                     writer.keyword(end);
                 }
+/*
             } else if (
                 (TimeUnit.SECOND == timeUnitRange.startUnit)
                 && (!useDefaultFractionalSecondPrecision))
@@ -464,6 +465,7 @@ public class SqlIntervalQualifier
                 final SqlWriter.Frame frame = writer.startList("(", ")");
                 writer.print(fractionalSecondPrecision);
                 writer.endList(frame);
+*/
             }
         }
     }

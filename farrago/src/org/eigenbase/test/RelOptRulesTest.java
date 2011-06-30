@@ -21,7 +21,6 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 
 
@@ -61,6 +60,24 @@ import org.eigenbase.rel.rules.*;
 public class RelOptRulesTest
     extends RelOptTestBase
 {
+    /**
+     * Creates a RelOptRulesTest.
+     */
+    public RelOptRulesTest()
+    {
+        super();
+    }
+
+    /**
+     * Creates a RelOptRulesTest with an explicit name.
+     *
+     * @param name Test case name
+     */
+    public RelOptRulesTest(String name)
+    {
+        super(name);
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     protected DiffRepository getDiffRepos()

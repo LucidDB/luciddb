@@ -28,8 +28,10 @@ import javax.jmi.model.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
-
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 /**
  * MedMdrJoinRule is a rule for converting a JoinRel into a MedMdrJoinRel when
@@ -38,20 +40,55 @@ import org.eigenbase.relopt.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrJoinRule
+public class MedMdrJoinRule
     extends RelOptRule
 {
-    //~ Constructors -----------------------------------------------------------
+    // TODO:  allow join to work on other inputs (e.g. filters, other joins)
 
-    MedMdrJoinRule()
-    {
-        // TODO:  allow join to work on inputs other
-        // than MedMdrClassExtentRel (e.g. filters, projects, other joins)
-        super(
+    /**
+     * Instance of the rule that converts {@code JoinRel(any,
+     * MedMdrClassExtentRel)} to {@code MedMdrJoinRel} with the same inputs.
+     */
+    public static final MedMdrJoinRule INSTANCE =
+        new MedMdrJoinRule(
             new RelOptRuleOperand(
                 JoinRel.class,
+                RelOptRuleOperand.hasSystemFields(false),
+                false,
                 new RelOptRuleOperand(RelNode.class, ANY),
-                new RelOptRuleOperand(MedMdrClassExtentRel.class, ANY)));
+                new RelOptRuleOperand(MedMdrClassExtentRel.class, ANY)),
+            "MedMdrJoinRule:Vanilla");
+
+    /**
+     * Instance of the rule that converts
+     * {@code JoinRel(any, ProjectRel(MedMdrClassExtentRel))}
+     * to
+     * {@code ProjectRel(MedMdrJoinRel(any, MedMdrClassExtentRel))},
+     * provided that ProjectRel projects the required fields.
+     */
+    public static final MedMdrJoinRule PROJECT_INSTANCE =
+        new MedMdrJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                RelOptRuleOperand.hasSystemFields(false),
+                false,
+                new RelOptRuleOperand(RelNode.class, ANY),
+                new RelOptRuleOperand(
+                    ProjectRel.class,
+                    new RelOptRuleOperand(MedMdrClassExtentRel.class, ANY))),
+            "MedMdrJoinRule:Project");
+
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Intentionally private; use singleton.
+     *
+     * @param operand Rule operand
+     * @param description Description
+     */
+    private MedMdrJoinRule(RelOptRuleOperand operand, String description)
+    {
+        super(operand, description);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -68,15 +105,41 @@ class MedMdrJoinRule
         JoinRel joinRel = (JoinRel) call.rels[0];
 
         RelNode leftRel = call.rels[1];
-        MedMdrClassExtentRel rightRel = (MedMdrClassExtentRel) call.rels[2];
+        ProjectRel projectRel;
+        MedMdrClassExtentRel rightRel;
+        final JoinRelType joinType = joinRel.getJoinType();
+        if (call.rels[2] instanceof ProjectRel) {
+            projectRel = (ProjectRel) call.rels[2];
+            rightRel = (MedMdrClassExtentRel) call.rels[3];
+
+            if (!canPullProjectExprs(
+                    projectRel.getChildExps(),
+                    joinType.generatesNullsOnRight()))
+            {
+                call.failed(
+                    "cannot pull non-trivial projection through "
+                    + "null-generating side of join");
+                return;
+            }
+        } else {
+            projectRel = null;
+            rightRel = (MedMdrClassExtentRel) call.rels[2];
+        }
 
         if (!joinRel.getVariablesStopped().isEmpty()) {
+            call.failed("variables are stopped");
             return;
         }
 
-        if ((joinRel.getJoinType() != JoinRelType.INNER)
-            && (joinRel.getJoinType() != JoinRelType.LEFT))
-        {
+        assert joinRel.getSystemFieldList().isEmpty()
+            : "Operand predicate should ensure no sys fields";
+
+        switch (joinType) {
+        case INNER:
+        case LEFT:
+            break;
+        default:
+            call.failed("rule does not apply to join type " + joinType);
             return;
         }
 
@@ -86,6 +149,13 @@ class MedMdrJoinRule
         }
         int leftOrdinal = joinFieldOrdinals[0];
         int rightOrdinal = joinFieldOrdinals[1];
+
+        if (projectRel != null) {
+            rightOrdinal = projectRel.getSourceField(rightOrdinal);
+            if (rightOrdinal < 0) {
+                return;
+            }
+        }
 
         // on right side, must join to reference field which refers to
         // left side type
@@ -140,15 +210,143 @@ class MedMdrJoinRule
             return;
         }
 
-        call.transformTo(
-            new MedMdrJoinRel(
-                joinRel.getCluster(),
-                iterLeft,
-                iterRight,
-                joinRel.getCondition(),
-                joinRel.getJoinType(),
-                leftOrdinal,
-                reference));
+        final RelNode newRel;
+        if (projectRel != null) {
+            // Dummy join relational expression, mainly to serve as a factory
+            // for a correctly-wired MedMdrJoinRel.
+            MedMdrJoinRel dummyJoin =
+                new MedMdrJoinRel(
+                    joinRel.getCluster(),
+                    leftRel,
+                    projectRel,
+                    joinRel.getCondition(), joinType,
+                    leftOrdinal,
+                    reference);
+            newRel =
+                PullUpProjectsAboveJoinRule.createJoin(
+                    dummyJoin, null, projectRel, leftRel, rightRel);
+        } else {
+            newRel =
+                new MedMdrJoinRel(
+                    joinRel.getCluster(),
+                    iterLeft,
+                    iterRight,
+                    joinRel.getCondition(), joinType,
+                    leftOrdinal,
+                    reference);
+        }
+
+        call.transformTo(newRel);
+    }
+
+    /**
+     * Returns whether the given project expressions can be pulled a join. If
+     * the join generates nulls, only trivial expressions can be pulled up.
+     *
+     * <p>Consider:
+     *
+     * <blockquote><code>
+     * select dept.name, e.x from dept<br/>
+     * join (select deptno, empno + sal as x) as e<br/>
+     * using (deptno)
+     * </code></blockquote>
+     *
+     * is equivalent to
+     *
+     * <blockquote><code>
+     * select dept.name, e.empno + e.sal as x from dept<br/>
+     * join (select deptno, empno, sal) as e<br/>
+     * using (deptno)
+     * </code></blockquote>
+     *
+     * because for any null row generated from the right-hand side of the join,
+     * empno and sal will be null, and therefore empno + sal will be null. This
+     * property holds for raw column references, and expressions made up of
+     * operators (such as '+' in this case) that evaluate to null if any of
+     * their inputs are null.
+     *
+     * <p>Literal values do not have this property, nor do expressions involving
+     * non-null-preserving operators.
+     *
+     * @param exprs Expressions being projected by input to the join
+     * @param generatesNull Whether this side of the join generates NULL rows
+     * @return Whether the projections can be pulled up through the join
+     */
+    private boolean canPullProjectExprs(
+        RexNode[] exprs,
+        boolean generatesNull)
+    {
+        return !generatesNull
+            || RexVisitorImpl.visitArrayAnd(
+                new NullPreservationShuttle(), exprs);
+    }
+
+    /**
+     * Shuttle that detects whether an expression preserves nulls; that is,
+     * returns null if and only if its inputs are null.
+     */
+    private static class NullPreservationShuttle
+        extends RexVisitorImpl<Boolean>
+    {
+        protected NullPreservationShuttle()
+        {
+            super(true);
+        }
+
+        @Override
+        public Boolean visitInputRef(RexInputRef inputRef)
+        {
+            return true;
+        }
+
+        @Override
+        public Boolean visitLocalRef(RexLocalRef localRef)
+        {
+            return true;
+        }
+
+        @Override
+        public Boolean visitLiteral(RexLiteral literal)
+        {
+            return false;
+        }
+
+        @Override
+        public Boolean visitOver(RexOver over)
+        {
+            return false;
+        }
+
+        @Override
+        public Boolean visitCorrelVariable(RexCorrelVariable correlVariable)
+        {
+            return false;
+        }
+
+        @Override
+        public Boolean visitCall(RexCall call)
+        {
+            return call.getOperator() == SqlStdOperatorTable.plusOperator
+                && visitArrayAnd(this, call.getOperands());
+        }
+
+        @Override
+        public Boolean visitDynamicParam(RexDynamicParam dynamicParam)
+        {
+            return false;
+        }
+
+        @Override
+        public Boolean visitRangeRef(RexRangeRef rangeRef)
+        {
+            return false;
+        }
+
+        @Override
+        public Boolean visitFieldAccess(RexFieldAccess fieldAccess)
+        {
+            return true;
+        }
     }
 }
 

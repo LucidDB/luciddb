@@ -59,7 +59,9 @@ public class LcsTable
         Properties tableProps,
         Map<String, Properties> columnPropMap)
     {
-        super(localName, null, rowType, tableProps, columnPropMap);
+        super(
+            localName, null, rowType, Collections.<RelDataTypeField>emptyList(),
+            tableProps, columnPropMap);
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -281,6 +281,10 @@ public class FarragoDataWrapperCache
     {
         String [] qualifiedName = getQualifiedName(baseColumnSet);
         Properties props = getColumnSetProperties(baseColumnSet);
+        // REVIEW: A "$TYPE" system property seemed to be an unobtrusive way
+        //   to pass additional info without extending the newColumnSet API.
+        //   Feel free to use a different mechanism.
+        props.setProperty("$TYPE", baseColumnSet.getClass().getSimpleName());
         RelDataType rowType =
             typeFactory.createStructTypeFromClassifier(baseColumnSet);
         Map<String, Properties> columnPropMap =

@@ -260,25 +260,29 @@ public class SqlValidatorImpl
         return unknownType;
     }
 
-    public SqlNodeList expandStar(
-        SqlNodeList selectList,
-        SqlSelect select,
-        boolean includeSystemVars)
+    public List<RelDataTypeField> getSystemFields()
     {
-        List<SqlNode> list = new ArrayList<SqlNode>();
-        List<String> aliases = new ArrayList<String>();
-        List<RelDataType> types = new ArrayList<RelDataType>();
-        for (int i = 0; i < selectList.size(); i++) {
-            final SqlNode selectItem = selectList.get(i);
-            expandSelectItem(
-                selectItem,
-                select,
-                list,
-                aliases,
-                types,
-                includeSystemVars);
+        return Collections.emptyList();
+    }
+
+    public SqlNodeList getExpandedSelectList(SqlSelect select)
+    {
+        final SelectScope selectScope = getRawSelectScope(select);
+        List<SqlNode> list = selectScope.getExpandedSelectList();
+        if (list == null) {
+            SqlNodeList selectList = select.getSelectList();
+            list = new ArrayList<SqlNode>();
+            for (int i = 0; i < selectList.size(); i++) {
+                final SqlNode selectItem = selectList.get(i);
+                expandSelectItem(
+                    selectItem,
+                    select,
+                    list,
+                    new LinkedHashSet<String>(),
+                    new ArrayList<Map.Entry<String, RelDataType>>());
+            }
+            selectScope.setExpandedSelectList(list);
         }
-        getRawSelectScope(select).setExpandedSelectList(list);
         return new SqlNodeList(list, SqlParserPos.ZERO);
     }
 
@@ -333,19 +337,16 @@ public class SqlValidatorImpl
      * @param selectItem Select-list item
      * @param select Containing select clause
      * @param selectItems List that expanded items are written to
-     * @param aliases List of aliases
-     * @param types List of data types in alias order
-     * @param includeSystemVars If true include system vars in lists
-     *
+     * @param aliases Set of aliases
+     * @param fieldList List of name/type pairs
      * @return Whether the node was expanded
      */
     private boolean expandSelectItem(
         final SqlNode selectItem,
         SqlSelect select,
         List<SqlNode> selectItems,
-        List<String> aliases,
-        List<RelDataType> types,
-        final boolean includeSystemVars)
+        Set<String> aliases,
+        List<Map.Entry<String, RelDataType>> fieldList)
     {
         final SelectScope scope = (SelectScope) getWhereScope(select);
         if (selectItem instanceof SqlIdentifier) {
@@ -372,10 +373,9 @@ public class SqlValidatorImpl
                         addToSelectList(
                             selectItems,
                             aliases,
-                            types,
+                            fieldList,
                             exp,
-                            scope,
-                            includeSystemVars);
+                            scope);
                     }
                 }
                 return true;
@@ -407,11 +407,9 @@ public class SqlValidatorImpl
                             starPosition);
                     addToSelectList(
                         selectItems,
-                        aliases,
-                        types,
+                        aliases, fieldList,
                         exp,
-                        scope,
-                        includeSystemVars);
+                        scope);
                 }
                 return true;
             }
@@ -424,7 +422,7 @@ public class SqlValidatorImpl
         final String alias =
             deriveAlias(
                 selectItem,
-                aliases.size());
+                fieldList.size());
 
         // If expansion has altered the natural alias, supply an explicit 'AS'.
         if (expanded != selectItem) {
@@ -447,7 +445,7 @@ public class SqlValidatorImpl
 
         final RelDataType type = deriveType(scope, selectItem);
         setValidatedNodeTypeImpl(selectItem, type);
-        types.add(type);
+        fieldList.add(Pair.of(alias, type));
         return false;
     }
 
@@ -812,7 +810,7 @@ public class SqlValidatorImpl
         namespace.validate();
         setValidatedNodeType(
             namespace.getNode(),
-            namespace.getRowType());
+            namespace.getRowTypeAsWritten());
     }
 
     public SqlValidatorScope getCursorScope(SqlSelect select)
@@ -1132,7 +1130,7 @@ public class SqlValidatorImpl
             // what we want for the select list of the merge source -- '*'
             // followed by the update set expressions
             selectList =
-                (SqlNodeList) updateStmt.getSourceSelect().getSelectList()
+                (SqlNodeList) updateStmt.getSource().getSelectList()
                 .clone();
         } else {
             // otherwise, just use select *
@@ -1406,15 +1404,16 @@ public class SqlValidatorImpl
             // REVIEW jvs 10-Sept-2003: Once we support single-row queries as
             // rows, need to infer aliases from there.
             SqlNode [] operands = rowConstructor.getOperands();
-            final List<String> aliasList = new ArrayList<String>();
-            final List<RelDataType> typeList = new ArrayList<RelDataType>();
+            List<Pair<String, RelDataType>> list =
+                new ArrayList<Pair<String, RelDataType>>();
             for (int iCol = 0; iCol < operands.length; ++iCol) {
-                final String alias = deriveAlias(operands[iCol], iCol);
-                aliasList.add(alias);
-                final RelDataType type = deriveType(scope, operands[iCol]);
-                typeList.add(type);
+                list.add(
+                    Pair.of(
+                        deriveAlias(operands[iCol], iCol),
+                        deriveType(scope, operands[iCol])));
             }
-            rowTypes[iRow] = typeFactory.createStructType(typeList, aliasList);
+            rowTypes[iRow] =
+                typeFactory.createStructType(list);
         }
         if (values.getOperands().length == 1) {
             // TODO jvs 10-Oct-2005:  get rid of this workaround once
@@ -1422,6 +1421,11 @@ public class SqlValidatorImpl
             return rowTypes[0];
         }
         return typeFactory.leastRestrictive(rowTypes);
+    }
+
+    public RelDataType getRootNodeType(SqlNode node)
+    {
+        return getValidatedNodeType(node);
     }
 
     public RelDataType getValidatedNodeType(SqlNode node)
@@ -1442,7 +1446,7 @@ public class SqlValidatorImpl
         }
         final SqlValidatorNamespace ns = getNamespace(node);
         if (ns != null) {
-            return ns.getRowType();
+            return ns.getRowTypeAsWritten();
         }
         final SqlNode original = originalExprs.get(node);
         if (original != null) {
@@ -1489,12 +1493,12 @@ public class SqlValidatorImpl
         }
         final SqlValidatorNamespace ns = getNamespace(expr);
         if (ns != null) {
-            return ns.getRowType();
+            return ns.getRowTypeAsWritten();
         }
         type = deriveTypeImpl(scope, expr);
         Util.permAssert(
             type != null,
-            "SqlValidator.deriveTypeInternal returned null");
+            "SqlValidator.deriveTypeImpl returned null");
         setValidatedNodeTypeImpl(expr, type);
         return type;
     }
@@ -1721,18 +1725,17 @@ public class SqlValidatorImpl
      */
     protected void addToSelectList(
         List<SqlNode> list,
-        List<String> aliases,
-        List<RelDataType> types,
+        Set<String> aliases,
+        List<Map.Entry<String, RelDataType>> fields,
         SqlNode exp,
-        SqlValidatorScope scope,
-        final boolean includeSystemVars)
+        SqlValidatorScope scope)
     {
         String alias = SqlValidatorUtil.getAlias(exp, -1);
         String uniqueAlias = SqlValidatorUtil.uniquify(alias, aliases);
         if (!alias.equals(uniqueAlias)) {
             exp = SqlValidatorUtil.addAlias(exp, uniqueAlias);
         }
-        types.add(deriveType(scope, exp));
+        fields.add(Pair.of(uniqueAlias, deriveType(scope, exp)));
         list.add(exp);
     }
 
@@ -1773,7 +1776,7 @@ public class SqlValidatorImpl
         return expandIdentifiers;
     }
 
-    protected boolean shouldAllowIntermediateOrderBy()
+    public boolean shouldAllowIntermediateOrderBy()
     {
         return true;
     }
@@ -2353,7 +2356,7 @@ public class SqlValidatorImpl
             registerQuery(
                 parentScope,
                 usingScope,
-                deleteCall.getSourceSelect(),
+                deleteCall.getSource(),
                 enclosingNode,
                 null,
                 false);
@@ -2375,7 +2378,7 @@ public class SqlValidatorImpl
             registerQuery(
                 parentScope,
                 usingScope,
-                updateCall.getSourceSelect(),
+                updateCall.getSource(),
                 enclosingNode,
                 null,
                 false);
@@ -2502,6 +2505,11 @@ public class SqlValidatorImpl
                 null,
                 false);
         }
+    }
+
+    public boolean isCursor(SqlNode node)
+    {
+        return cursorSet.contains(node);
     }
 
     public boolean isAggregate(SqlSelect select)
@@ -3042,12 +3050,30 @@ public class SqlValidatorImpl
         // window name in the WINDOW clause etc.
         final RelDataType rowType =
             validateSelectList(selectItems, select, targetRowType);
-        ns.setRowType(rowType);
+
+        // Reorganize row type to account for system columns and assign to
+        // namespace.
+        fixRowType(ns, rowType);
+
 
         // Validate ORDER BY after we have set ns.rowType because in some
         // dialects you can refer to columns of the select list, e.g.
         // "SELECT empno AS x FROM emp ORDER BY x"
         validateOrderList(select);
+    }
+
+    /**
+     * Reorganizes the row type of a SELECT to account for system columns and
+     * assigns to the namespace.
+     *
+     * <p>Default implementation returns row type unchanged.
+     *
+     * @param ns Namespace
+     * @param rowType Row type as returned by {@link #validateSelectList}.
+     */
+    protected void fixRowType(SelectNamespace ns, RelDataType rowType)
+    {
+        ns.setRowType(rowType, rowType);
     }
 
     /**
@@ -3145,9 +3171,9 @@ public class SqlValidatorImpl
             return;
         }
         if (!shouldAllowIntermediateOrderBy()) {
-            if (!cursorSet.contains(select)) {
+            if (!isCursor(select)) {
                 throw newValidationError(
-                    select,
+                    orderList,
                     EigenbaseResource.instance().InvalidOrderByPos.ex());
             }
         }
@@ -3290,27 +3316,11 @@ public class SqlValidatorImpl
         // Validate SELECT list. Expand terms of the form "*" or "TABLE.*".
         final SqlValidatorScope selectScope = getSelectScope(select);
         final List<SqlNode> expandedSelectItems = new ArrayList<SqlNode>();
-        final List<String> aliasList = new ArrayList<String>();
-        final List<RelDataType> typeList = new ArrayList<RelDataType>();
-        for (int i = 0; i < selectItems.size(); i++) {
-            SqlNode selectItem = selectItems.get(i);
-            if (selectItem instanceof SqlSelect) {
-                handleScalarSubQuery(
-                    select,
-                    (SqlSelect) selectItem,
-                    expandedSelectItems,
-                    aliasList,
-                    typeList);
-            } else {
-                expandSelectItem(
-                    selectItem,
-                    select,
-                    expandedSelectItems,
-                    aliasList,
-                    typeList,
-                    false);
-            }
-        }
+        final Set<String> aliases = new HashSet<String>();
+        final List<Map.Entry<String, RelDataType>> fieldList =
+            new ArrayList<Map.Entry<String, RelDataType>>();
+        expandSelectList(
+            select, selectItems, expandedSelectItems, aliases, fieldList);
 
         // Check expanded select list for aggregation.
         if (selectScope instanceof AggregatingScope) {
@@ -3341,8 +3351,45 @@ public class SqlValidatorImpl
             validateExpr(selectItem, selectScope);
         }
 
-        assert typeList.size() == aliasList.size();
-        return typeFactory.createStructType(typeList, aliasList);
+        assert fieldList.size() >= aliases.size();
+        return typeFactory.createStructType(fieldList);
+    }
+
+    /**
+     * Expands expressions in the SELECT clause. Items covered include "*",
+     * "tableAlias.*" and subquery.
+     *
+     * @param select Select query
+     * @param selectItems Select list
+     * @param expandedSelectItems Expanded items are added to this list
+     * @param aliases Set of aliases
+     * @param fieldList List of name/type pairs
+     */
+    protected void expandSelectList(
+        SqlSelect select,
+        SqlNodeList selectItems,
+        List<SqlNode> expandedSelectItems,
+        Set<String> aliases,
+        List<Map.Entry<String, RelDataType>> fieldList)
+    {
+        for (int i = 0; i < selectItems.size(); i++) {
+            SqlNode selectItem = selectItems.get(i);
+            if (selectItem instanceof SqlSelect) {
+                handleScalarSubQuery(
+                    select,
+                    (SqlSelect) selectItem,
+                    expandedSelectItems,
+                    aliases,
+                    fieldList);
+            } else {
+                expandSelectItem(
+                    selectItem,
+                    select,
+                    expandedSelectItems,
+                    aliases,
+                    fieldList);
+            }
+        }
     }
 
     /**
@@ -3369,15 +3416,15 @@ public class SqlValidatorImpl
      * @param parentSelect base SqlSelect item
      * @param selectItem child SqlSelect from select list
      * @param expandedSelectItems Select items after processing
-     * @param aliasList built from user or system values
+     * @param aliasList Set of aliases
      * @param typeList Built up entries for each select list entry
      */
     private void handleScalarSubQuery(
         SqlSelect parentSelect,
         SqlSelect selectItem,
         List<SqlNode> expandedSelectItems,
-        List<String> aliasList,
-        List<RelDataType> typeList)
+        Set<String> aliasList,
+        List<Map.Entry<String, RelDataType>> typeList)
     {
         // A scalar subquery only has one output column.
         if (1 != selectItem.getSelectList().size()) {
@@ -3408,25 +3455,25 @@ public class SqlValidatorImpl
 
         RelDataType nodeType = rec.getFields()[0].getType();
         nodeType = typeFactory.createTypeWithNullability(nodeType, true);
-        typeList.add(nodeType);
+        typeList.add(Pair.of(alias, nodeType));
     }
 
     /**
      * Derives a row-type for INSERT and UPDATE operations.
      *
-     * @param table Target table for INSERT/UPDATE
+     * @param targetNamespace Namespace containing the target table for
+     *     INSERT/UPDATE
      * @param targetColumnList List of target columns, or null if not specified
-     * @param append Whether to append fields to those in <code>
-     * baseRowType</code>
+     * @param append Whether to append fields to those in {@code baseRowType}
      *
      * @return Rowtype
      */
     protected RelDataType createTargetRowType(
-        SqlValidatorTable table,
+        SqlValidatorNamespace targetNamespace,
         SqlNodeList targetColumnList,
         boolean append)
     {
-        RelDataType baseRowType = table.getRowType();
+        RelDataType baseRowType = targetNamespace.getRowType();
         if (targetColumnList == null) {
             return baseRowType;
         }
@@ -3435,15 +3482,11 @@ public class SqlValidatorImpl
         if (append) {
             targetColumnCount += baseRowType.getFieldCount();
         }
-        RelDataType [] types = new RelDataType[targetColumnCount];
-        String [] fieldNames = new String[targetColumnCount];
-        int iTarget = 0;
+        List<Map.Entry<String, RelDataType>> fields =
+            new ArrayList<Map.Entry<String, RelDataType>>(targetColumnCount);
         if (append) {
-            iTarget += baseRowType.getFieldCount();
-            for (int i = 0; i < iTarget; ++i) {
-                types[i] = targetFields[i].getType();
-                fieldNames[i] = SqlUtil.deriveAliasFromOrdinal(i);
-            }
+            int iTarget = baseRowType.getFieldCount();
+            fields.addAll(Arrays.asList(targetFields).subList(0, iTarget));
         }
         Set<String> assignedColumnNames = new HashSet<String>();
         for (SqlNode node : targetColumnList) {
@@ -3461,11 +3504,9 @@ public class SqlValidatorImpl
                     EigenbaseResource.instance().UnknownTargetColumn.ex(
                         id.getSimple()));
             }
-            fieldNames[iTarget] = targetFields[iColumn].getName();
-            types[iTarget] = targetFields[iColumn].getType();
-            ++iTarget;
+            fields.add(targetFields[iColumn]);
         }
-        return typeFactory.createStructType(types, fieldNames);
+        return typeFactory.createStructType(fields);
     }
 
     public void validateInsert(SqlInsert insert)
@@ -3479,7 +3520,7 @@ public class SqlValidatorImpl
         // then the entire target rowtype is used.
         RelDataType targetRowType =
             createTargetRowType(
-                table,
+                targetNamespace,
                 insert.getTargetColumnList(),
                 false);
 
@@ -3497,7 +3538,7 @@ public class SqlValidatorImpl
         // from validateSelect above).  It would be better if that information
         // were used here so that we never saw any untyped nulls during
         // checkTypeAssignment.
-        RelDataType sourceRowType = getNamespace(source).getRowType();
+        RelDataType sourceRowType = getRootNodeType(source);
         RelDataType logicalTargetRowType =
             getLogicalTargetRowType(targetRowType, insert);
         RelDataType logicalSourceRowType =
@@ -3526,16 +3567,34 @@ public class SqlValidatorImpl
         }
     }
 
+    /**
+     * Returns the target row type of an INSERT statement, not containing
+     * system columns unless they are explicitly listed.
+     *
+     *
+     * @param targetRowType Target row type including any system columns
+     * @param dml DML parse tree node
+     * @return Target row type with system columns removed
+     */
     protected RelDataType getLogicalTargetRowType(
         RelDataType targetRowType,
-        SqlInsert insert)
+        SqlDml dml)
     {
         return targetRowType;
     }
 
+    /**
+     * Returns the source row type of an INSERT statement, that is, the row
+     * type of the query feeding into the table, not containing
+     * system columns unless they are explicitly listed.
+     *
+     * @param sourceRowType Source row type including any system columns
+     * @param dml DML parse tree node
+     * @return Source row type with system columns removed
+     */
     protected RelDataType getLogicalSourceRowType(
         RelDataType sourceRowType,
-        SqlInsert insert)
+        SqlDml dml)
     {
         return sourceRowType;
     }
@@ -3617,7 +3676,7 @@ public class SqlValidatorImpl
                 return update.getSourceExpressionList().get(ordinal);
             } else {
                 return getNthExpr(
-                    update.getSourceSelect(),
+                    update.getSource(),
                     ordinal,
                     sourceCount);
             }
@@ -3635,7 +3694,7 @@ public class SqlValidatorImpl
 
     public void validateDelete(SqlDelete call)
     {
-        SqlSelect sqlSelect = call.getSourceSelect();
+        SqlSelect sqlSelect = call.getSource();
         validateSelect(sqlSelect, unknownType);
 
         IdentifierNamespace targetNamespace =
@@ -3647,27 +3706,31 @@ public class SqlValidatorImpl
         validateAccess(call.getTargetTable(), table, SqlAccessEnum.DELETE);
     }
 
-    public void validateUpdate(SqlUpdate call)
+    public void validateUpdate(SqlUpdate update)
     {
-        IdentifierNamespace targetNamespace =
-            getNamespace(call.getTargetTable()).unwrap(
+        final SqlValidatorNamespace targetNamespace =
+            getNamespace(update.getTargetTable());
+        IdentifierNamespace targetNamespaceUnwrapped =
+            targetNamespace.unwrap(
                 IdentifierNamespace.class);
-        validateNamespace(targetNamespace);
-        SqlValidatorTable table = targetNamespace.getTable();
+        validateNamespace(targetNamespaceUnwrapped);
+        SqlValidatorTable table = targetNamespaceUnwrapped.getTable();
 
         RelDataType targetRowType =
             createTargetRowType(
-                table,
-                call.getTargetColumnList(),
-                true);
+                targetNamespace, update.getTargetColumnList(), true);
+        RelDataType logicalTargetRowType =
+            getLogicalTargetRowType(targetRowType, update);
 
-        SqlSelect select = call.getSourceSelect();
-        validateSelect(select, targetRowType);
+        SqlSelect select = update.getSource();
+        validateSelect(select, logicalTargetRowType);
 
-        RelDataType sourceRowType = getNamespace(select).getRowType();
-        checkTypeAssignment(sourceRowType, targetRowType, call);
+        RelDataType sourceRowType = getRootNodeType(select);
+        RelDataType logicalSourceRowType =
+            getLogicalSourceRowType(sourceRowType, update);
+        checkTypeAssignment(logicalSourceRowType, logicalTargetRowType, update);
 
-        validateAccess(call.getTargetTable(), table, SqlAccessEnum.UPDATE);
+        validateAccess(update.getTargetTable(), table, SqlAccessEnum.UPDATE);
     }
 
     public void validateMerge(SqlMerge call)
@@ -4023,6 +4086,13 @@ public class SqlValidatorImpl
             list.add(origin);
         }
         return list;
+    }
+
+    public RelDataType getCursorRowType(SqlCall cursorCall)
+    {
+        final SqlNode query = cursorCall.operands[0];
+        SqlValidatorNamespace namespace = getNamespace(query);
+        return namespace.getRowTypeAsWritten();
     }
 
     private List<String> getFieldOrigin(SqlNode sqlQuery, int i)
@@ -4395,7 +4465,7 @@ public class SqlValidatorImpl
             this.root = root;
             this.aliasList =
                 RelOptUtil.getFieldNameList(
-                    getNamespace(select).getRowType());
+                    getNamespace(select).getRowTypeAsWritten());
         }
 
         public SqlNode go()
@@ -4437,18 +4507,12 @@ public class SqlValidatorImpl
 
         /**
          * Returns the <code>ordinal</code>th item in the select list.
+         * The select list is after any "*" or "alias.*" have been expanded,
+         * but before any system fields have been added.
          */
         private SqlNode nthSelectItem(int ordinal, final SqlParserPos pos)
         {
-            // TODO: Don't expand the list every time. Maybe keep an expanded
-            // version of each expression -- select lists and identifiers -- in
-            // the validator.
-
-            SqlNodeList expandedSelectList =
-                expandStar(
-                    select.getSelectList(),
-                    select,
-                    false);
+            SqlNodeList expandedSelectList = getExpandedSelectList(select);
             SqlNode expr = expandedSelectList.get(ordinal);
             if (expr instanceof SqlCall) {
                 SqlCall call = (SqlCall) expr;
@@ -4473,12 +4537,12 @@ public class SqlValidatorImpl
             {
                 String alias = id.getSimple();
                 final SqlValidatorNamespace selectNs = getNamespace(select);
-                final RelDataType rowType =
-                    selectNs.getRowTypeSansSystemColumns();
-                int ordinal = SqlValidatorUtil.lookupField(rowType, alias);
-                if (ordinal >= 0) {
+                final RelDataType rowType = selectNs.getRowTypeAsWritten();
+                RelDataTypeField field =
+                    SqlValidatorUtil.lookupField(rowType, alias);
+                if (field != null) {
                     return nthSelectItem(
-                        ordinal,
+                        field.getIndex(),
                         id.getParserPosition());
                 }
             }

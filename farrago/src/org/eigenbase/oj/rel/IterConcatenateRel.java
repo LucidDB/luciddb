@@ -55,26 +55,21 @@ public class IterConcatenateRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public IterConcatenateRel clone()
+    public SetOpRel clone()
     {
         // REVIEW jvs 13-Nov-2005:  shouldn't we be cloning the inputs too?
-        IterConcatenateRel clone =
-            new IterConcatenateRel(
-                getCluster(),
-                inputs);
-        clone.inheritTraitsFrom(this);
-        return clone;
+        return copy(all, inputs)
+            .inheritTraitsFrom(this);
     }
 
-    public IterConcatenateRel clone(RelNode [] inputs, boolean all)
+    @Override
+    public IterConcatenateRel copy(boolean all, RelNode... inputs)
     {
         assert all;
-        IterConcatenateRel clone =
+        return
             new IterConcatenateRel(
                 getCluster(),
                 inputs);
-        clone.inheritTraitsFrom(this);
-        return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

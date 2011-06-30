@@ -40,6 +40,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -78,7 +79,7 @@ class FtrsIndexScanRel
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FtrsIndexScanRel object.
+     * Creates an FtrsIndexScanRel.
      *
      * @param cluster RelOptCluster for this rel
      * @param ftrsTable table being scanned
@@ -174,32 +175,37 @@ class FtrsIndexScanRel
     // implement RelNode
     public RelDataType deriveRowType()
     {
+        // First, flatten the row type.
         RelDataType flattenedRowType =
             ftrsTable.getIndexGuide().getFlattenedRowType();
+
+        // Next, prepend system fields.
+        final RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
+        final List<RelDataTypeField> fields = flattenedRowType.getFieldList();
+
+        // Next, project fields asked for.
+        final List<RelDataTypeField> projectedFields;
         if (projectedColumns == null) {
-            return flattenedRowType;
+            projectedFields = fields;
         } else {
-            final RelDataTypeField [] fields = flattenedRowType.getFields();
-            return getCluster().getTypeFactory().createStructType(
-                new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
+            projectedFields =
+                new AbstractList<RelDataTypeField>()
+                {
+                    public int size()
                     {
                         return projectedColumns.length;
                     }
 
-                    public String getFieldName(int index)
+                    public RelDataTypeField get(int index)
                     {
-                        final int i = projectedColumns[index].intValue();
-                        return fields[i].getName();
+                        final int i = projectedColumns[index];
+                        return fields.get(i);
                     }
-
-                    public RelDataType getFieldType(int index)
-                    {
-                        final int i = projectedColumns[index].intValue();
-                        return fields[i].getType();
-                    }
-                });
+                };
         }
+
+        // Convert to row type.
+        return typeFactory.createStructType(projectedFields);
     }
 
     // override TableAccess

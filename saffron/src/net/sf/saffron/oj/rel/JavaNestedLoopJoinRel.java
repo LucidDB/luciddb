@@ -19,7 +19,8 @@
 
 package net.sf.saffron.oj.rel;
 
-import java.util.Set;
+import java.util.*;
+import java.util.List;
 
 import openjava.ptree.*;
 
@@ -31,7 +32,6 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
@@ -63,17 +63,31 @@ public class JavaNestedLoopJoinRel
             condition, joinType, variablesStopped);
     }
 
-    public JavaNestedLoopJoinRel clone()
+    @Override
+    public JavaNestedLoopJoinRel copy(
+        RexNode conditionExpr,
+        List<RelDataTypeField> systemFieldList,
+        RelNode left,
+        RelNode right)
     {
-        JavaNestedLoopJoinRel clone = new JavaNestedLoopJoinRel(
+        assert systemFieldList.isEmpty();
+        return new JavaNestedLoopJoinRel(
             getCluster(),
-            left.clone(),
-            right.clone(),
-            condition.clone(),
+            left,
+            right,
+            conditionExpr,
             joinType,
             variablesStopped);
-        clone.inheritTraitsFrom(this);
-        return clone;
+    }
+
+    public JavaNestedLoopJoinRel clone()
+    {
+        return copy(
+            condition.clone(),
+            getSystemFieldList(),
+            left.clone(),
+            right.clone())
+            .inheritTraitsFrom(this);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

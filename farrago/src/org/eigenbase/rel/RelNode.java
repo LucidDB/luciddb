@@ -255,8 +255,13 @@ public interface RelNode
      * Receives notification that this expression is about to be registered. The
      * implementation of this method must at least register all child
      * expressions.
+     *
+     * @param planner Planner
+     * @param call Planner rule call (for historical context; may be null)
      */
-    public void onRegister(RelOptPlanner planner);
+    public void onRegister(
+        RelOptPlanner planner,
+        RelOptRuleCall call);
 
     /**
      * Computes the digest, assigns it, and returns it. For planner use only.
@@ -376,6 +381,34 @@ public interface RelNode
      * @param traitSet Traits
      */
     void setTraits(RelTraitSet traitSet);
+
+    /**
+     * Creates a copy of this RelNode, substituting child relational
+     * expressions.
+     *
+     * <p>This method SHOULD be mandatory for every RelNode, but currently
+     * fails for some types. If you get an error, please fix it.
+     *
+     * <p>The default implementation in {@link AbstractRelNode} calls
+     * {@link #clone} then {@link AbstractRelNode#replaceInput(int, RelNode)}.
+     * It currently fails for some subclasses, because {@code replaceInput} is
+     * not a required method. It is preferred that each
+     * subclass implements the method for itself.
+     *
+     * <p>Does not call
+     * {@link AbstractRelNode#inheritTraitsFrom(AbstractRelNode)}.
+     *
+     * @param inputs Array of child relational expressions that will be children
+     *     of the new relational expression
+     *
+     * @return Copy of this RelNode
+     */
+    RelNode copy(RelNode... inputs);
+
+    /**
+     * Returns a list of system fields.
+     */
+    List<RelDataTypeField> getSystemFieldList();
 }
 
 // End RelNode.java

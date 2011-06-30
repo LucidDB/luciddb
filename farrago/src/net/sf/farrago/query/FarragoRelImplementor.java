@@ -467,6 +467,13 @@ public class FarragoRelImplementor
             return;
         }
 
+        if (rowType.getFieldCount() == 0) {
+            throw Util.newInternal(
+                "Row type of stream [" + streamDef
+                + "], implementing relational expression [" + rel
+                + "], has 0 fields. This is illegal because fennel XOs require "
+                + "that every row has a positive byte count.");
+        }
         if (streamDef.getName() == null) {
             String streamName = getStreamGlobalName(streamDef, rel);
             streamDef.setName(streamName);

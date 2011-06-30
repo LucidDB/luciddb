@@ -51,6 +51,13 @@ public class SqlSelect
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a SELECT.
+     *
+     * @param operator Operator
+     * @param operands Operands
+     * @param pos Parser position
+     */
     SqlSelect(
         SqlSelectOperator operator,
         SqlNode [] operands,

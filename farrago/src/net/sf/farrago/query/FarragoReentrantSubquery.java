@@ -126,7 +126,9 @@ public class FarragoReentrantSubquery
         // converted by the parent so we can avoid re-executing them
         sqlConverter.addConvertedNonCorrSubqs(
             parentConverter.getMapConvertedNonCorrSubqs());
-        RelNode plan = sqlConverter.convertQuery(select, true, true);
+        RelNode plan =
+            sqlConverter.convertQuery(
+                select, true, SqlToRelConverter.QueryContext.TOP);
 
         // The subquery cannot have dynamic parameters
         if (sqlConverter.getDynamicParamCount() > 0) {

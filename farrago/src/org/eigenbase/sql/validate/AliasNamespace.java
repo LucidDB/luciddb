@@ -71,9 +71,14 @@ public class AliasNamespace
     protected RelDataType validateImpl()
     {
         final List<String> nameList = new ArrayList<String>();
+        final List<RelDataType> typeList = new ArrayList<RelDataType>();
+
+        // The row type starts with the system fields.
+        for (RelDataTypeField field : validator.getSystemFields()) {
+            nameList.add(field.getName());
+        }
         final SqlValidatorNamespace childNs =
             validator.getNamespace(call.getOperands()[0]);
-        final RelDataType rowType = childNs.getRowTypeSansSystemColumns();
         for (int i = 2; i < call.getOperands().length; ++i) {
             final SqlNode operand = call.getOperands()[i];
             String name = ((SqlIdentifier) operand).getSimple();
@@ -85,11 +90,15 @@ public class AliasNamespace
             }
             nameList.add(name);
         }
-        if (nameList.size() != rowType.getFieldCount()) {
+        int nameCount = call.getOperands().length - 2;
+        assert nameList.size()
+            == nameCount + validator.getSystemFields().size();
+        final RelDataType rowTypeAsWritten = childNs.getRowTypeAsWritten();
+        if (nameCount != rowTypeAsWritten.getFieldCount()) {
             StringBuilder buf = new StringBuilder();
             buf.append("(");
             int k = 0;
-            for (RelDataTypeField field : rowType.getFieldList()) {
+            for (RelDataTypeField field : rowTypeAsWritten.getFieldList()) {
                 if (k++ > 0) {
                     buf.append(", ");
                 }
@@ -103,12 +112,11 @@ public class AliasNamespace
             throw validator.newValidationError(
                 call.getOperands()[2],
                 EigenbaseResource.instance().AliasListDegree.ex(
-                    rowType.getFieldCount(),
+                    rowTypeAsWritten.getFieldCount(),
                     buf.toString(),
-                    nameList.size()));
+                    nameCount));
         }
-        final List<RelDataType> typeList = new ArrayList<RelDataType>();
-        for (RelDataTypeField field : rowType.getFieldList()) {
+        for (RelDataTypeField field : childNs.getRowType().getFieldList()) {
             typeList.add(field.getType());
         }
         return validator.getTypeFactory().createStructType(
@@ -124,7 +132,7 @@ public class AliasNamespace
     public String translate(String name)
     {
         final RelDataType underlyingRowType =
-            validator.getValidatedNodeType(call.getOperands()[0]);
+            validator.getNamespace(call.getOperands()[0]).getRowType();
         int i = 0;
         for (RelDataTypeField field : rowType.getFieldList()) {
             if (field.getName().equals(name)) {

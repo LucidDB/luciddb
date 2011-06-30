@@ -117,6 +117,22 @@ public abstract class AbstractRelNode
 
     public abstract RelNode clone();
 
+    public RelNode copy(
+        RelNode... inputs)
+    {
+        assert inputs.length == getInputs().length;
+        final AbstractRelNode copy = (AbstractRelNode) clone();
+        assert copy.getClass() == getClass()
+            : "clone of a " + getClass() + " yielded a "
+              + copy.getClass();
+        for (int i = 0; i < inputs.length; i++) {
+            // replaceInput may fail. It is not a required method. If so,
+            // override cloneSubstitutingInputs.
+            copy.replaceInput(i, inputs[i]);
+        }
+        return copy;
+    }
+
     public boolean isAccessTo(RelOptTable table)
     {
         return getTable() == table;
@@ -259,7 +275,7 @@ public abstract class AbstractRelNode
 
     public boolean isValid(boolean fail)
     {
-        return true;
+        return getTraits().isValid(fail);
     }
 
     public List<RelCollation> getCollationList()
@@ -339,12 +355,12 @@ public abstract class AbstractRelNode
         pw.explain(this, Util.emptyStringArray, Util.emptyObjectArray);
     }
 
-    public void onRegister(RelOptPlanner planner)
+    public void onRegister(RelOptPlanner planner, RelOptRuleCall call)
     {
         RelNode [] inputs = getInputs();
         for (int i = 0; i < inputs.length; i++) {
             final RelNode input = inputs[i];
-            RelNode e = planner.ensureRegistered(input, null);
+            RelNode e = planner.ensureRegistered(input, null, call);
             if (e != input) {
                 // TODO: change 'equal' to 'eq', which is stronger.
                 assert RelOptUtil.equal(
@@ -469,6 +485,20 @@ public abstract class AbstractRelNode
         explain(pw);
         pw.flush();
         return sw.toString();
+    }
+
+    /**
+     * Returns a list of system fields that will be prefixed to the output row
+     * type.
+     *
+     * <p>Never returns null. The default implementation returns the empty
+     * list.</p>
+     *
+     * @return list of system fields
+     */
+    public List<RelDataTypeField> getSystemFieldList()
+    {
+        return Collections.emptyList();
     }
 }
 

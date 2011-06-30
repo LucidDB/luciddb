@@ -19,9 +19,12 @@
 
 package net.sf.saffron.ext;
 
+import java.util.*;
+
 import junit.framework.TestSuite;
 
 import org.eigenbase.relopt.RelOptSchema;
+import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
@@ -66,6 +69,5 @@ public abstract class ObjectSchema implements RelOptSchema
         return new TestSuite(clazz);
     }
 }
-
 
 // End ObjectSchema.java

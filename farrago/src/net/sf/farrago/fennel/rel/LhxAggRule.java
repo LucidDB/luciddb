@@ -21,8 +21,6 @@
 */
 package net.sf.farrago.fennel.rel;
 
-import java.util.*;
-
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
@@ -75,12 +73,7 @@ public class LhxAggRule
                 return;
             }
 
-            // TODO jvs 5-Oct-2005:  find a better way of detecting
-            // whether the aggregate function is one of the builtins supported
-            // by Fennel; also test whether we can handle input datatype
-            try {
-                FennelRelUtil.lookupAggFunction(aggCall);
-            } catch (IllegalArgumentException ex) {
+            if (!FennelRelUtil.isFennelBuiltinAggFunction(aggCall)) {
                 return;
             }
         }
@@ -102,28 +95,22 @@ public class LhxAggRule
         }
 
         // Derive cardinality of RHS join keys.
-        Double cndGroupByKey;
-        BitSet groupByKeyMap = new BitSet();
-
-        for (int i = 0; i < aggRel.getGroupCount(); i++) {
-            groupByKeyMap.set(i);
-        }
-
-        cndGroupByKey =
+        Double cndGroupByKey =
             RelMetadataQuery.getPopulationSize(
                 fennelInput,
-                groupByKeyMap);
+                aggRel.getGroupSet());
 
         if (cndGroupByKey == null) {
             cndGroupByKey = -1.0;
         }
 
-        if (aggRel.getGroupCount() > 0) {
+        if (!aggRel.getGroupSet().isEmpty()) {
             LhxAggRel lhxAggRel =
                 new LhxAggRel(
                     aggRel.getCluster(),
                     fennelInput,
-                    aggRel.getGroupCount(),
+                    aggRel.getSystemFieldList(),
+                    aggRel.getGroupSet(),
                     aggRel.getAggCallList(),
                     numInputRows.longValue(),
                     cndGroupByKey.longValue());
@@ -134,7 +121,8 @@ public class LhxAggRule
                 new FennelAggRel(
                     aggRel.getCluster(),
                     fennelInput,
-                    aggRel.getGroupCount(),
+                    aggRel.getSystemFieldList(),
+                    aggRel.getGroupSet(),
                     aggRel.getAggCallList());
             call.transformTo(fennelAggRel);
         }

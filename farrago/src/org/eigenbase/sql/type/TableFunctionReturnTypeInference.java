@@ -27,6 +27,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.Pair;
 
 
 /**
@@ -71,14 +72,13 @@ public class TableFunctionReturnTypeInference
     {
         columnMappings = new HashSet<RelColumnMapping>();
         RelDataType unexpandedOutputType = getExplicitType();
-        List<RelDataType> expandedOutputTypes = new ArrayList<RelDataType>();
-        List<String> expandedFieldNames = new ArrayList<String>();
+        List<Map.Entry<String, RelDataType>> expandedFields =
+            new ArrayList<Map.Entry<String, RelDataType>>();
         for (RelDataTypeField field : unexpandedOutputType.getFieldList()) {
             RelDataType fieldType = field.getType();
             String fieldName = field.getName();
             if (fieldType.getSqlTypeName() != SqlTypeName.CURSOR) {
-                expandedOutputTypes.add(fieldType);
-                expandedFieldNames.add(fieldName);
+                expandedFields.add(field);
                 continue;
             }
 
@@ -142,8 +142,7 @@ public class TableFunctionReturnTypeInference
                         }
                     }
                     addOutputColumn(
-                        expandedFieldNames,
-                        expandedOutputTypes,
+                        expandedFields,
                         iInputColumn,
                         iCursor,
                         opBinding,
@@ -154,8 +153,7 @@ public class TableFunctionReturnTypeInference
                 for (RelDataTypeField cursorField : cursorType.getFieldList()) {
                     ++iInputColumn;
                     addOutputColumn(
-                        expandedFieldNames,
-                        expandedOutputTypes,
+                        expandedFields,
                         iInputColumn,
                         iCursor,
                         opBinding,
@@ -163,21 +161,18 @@ public class TableFunctionReturnTypeInference
                 }
             }
         }
-        return opBinding.getTypeFactory().createStructType(
-            expandedOutputTypes,
-            expandedFieldNames);
+        return opBinding.getTypeFactory().createStructType(expandedFields);
     }
 
     private void addOutputColumn(
-        List<String> expandedFieldNames,
-        List<RelDataType> expandedOutputTypes,
+        List<Map.Entry<String, RelDataType>> expandedFields,
         int iInputColumn,
         int iCursor,
         SqlOperatorBinding opBinding,
         RelDataTypeField cursorField)
     {
         RelColumnMapping columnMapping = new RelColumnMapping();
-        columnMapping.iOutputColumn = expandedFieldNames.size();
+        columnMapping.iOutputColumn = expandedFields.size();
         columnMapping.iInputColumn = iInputColumn;
         columnMapping.iInputRel = iCursor;
 
@@ -191,9 +186,7 @@ public class TableFunctionReturnTypeInference
         boolean nullable = true;
         if (opBinding instanceof SqlCallBinding) {
             SqlCallBinding sqlCallBinding = (SqlCallBinding) opBinding;
-            if (sqlCallBinding.getValidator().isSystemField(
-                    cursorField))
-            {
+            if (sqlCallBinding.getValidator().isSystemField(cursorField)) {
                 nullable = false;
             }
         }
@@ -203,15 +196,14 @@ public class TableFunctionReturnTypeInference
                 nullable);
 
         // Make sure there are no duplicates in the output column names
-        for (String fieldName : expandedFieldNames) {
-            if (fieldName.equals(cursorField.getName())) {
+        for (Map.Entry<String, RelDataType> field : expandedFields) {
+            if (field.getKey().equals(cursorField.getName())) {
                 throw opBinding.newError(
                     EigenbaseResource.instance().DuplicateColumnName.ex(
                         cursorField.getName()));
             }
         }
-        expandedOutputTypes.add(nullableType);
-        expandedFieldNames.add(cursorField.getName());
+        expandedFields.add(Pair.of(cursorField.getName(), nullableType));
     }
 }
 

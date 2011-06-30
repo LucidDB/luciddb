@@ -22,11 +22,10 @@
 */
 package org.eigenbase.rel.rules;
 
-import java.util.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.trace.EigenbaseTrace;
 
 
 /**
@@ -93,6 +92,19 @@ public class PushProjectPastSetOpRule
             return;
         }
 
+        // No point in pushing down a trivial project. The project should not
+        // exist, but it's worth the effort to check for it.
+        if (origProj.isTrivial()) {
+            EigenbaseTrace.getPlannerTracer().finer(
+                origProj.getId() + " is trivial");
+            return;
+        }
+
+        // Cannot push a project that contains windowed aggregates.
+        if (RexOver.containsOver(origProj.getProjectExps(), null)) {
+            return;
+        }
+
         // locate all fields referenced in the projection
         PushProjector pushProject =
             new PushProjector(origProj, null, setOpRel, preserveExprCondition);
@@ -109,20 +121,29 @@ public class PushProjectPastSetOpRule
         // because UNION ALL does not have any filtering effect,
         // and it is the only operator this rule currently acts on
         for (int i = 0; i < nSetOpInputs; i++) {
-            // be lazy:  produce two ProjectRels, and let another rule
+            // Be lazy:  produce two ProjectRels, and let another rule
             // merge them (could probably just clone origProj instead?)
-            newSetOpInputs[i] =
+            // But try not to create trivial projects; they increase the search
+            // space.
+            RelNode input = setOpInputs[i];
+            ProjectRel project1 =
                 pushProject.createProjectRefsAndExprs(
-                    setOpInputs[i],
+                    input,
                     true,
                     false);
-            newSetOpInputs[i] =
-                pushProject.createNewProject(newSetOpInputs[i], adjustments);
+            if (!project1.isTrivial()) {
+                input = project1;
+            }
+            ProjectRel project2 =
+                pushProject.createNewProject(input, adjustments);
+            if (!project2.isTrivial()) {
+                input = project2;
+            }
+            newSetOpInputs[i] = input;
         }
 
         // create a new setop whose children are the ProjectRels created above
-        SetOpRel newSetOpRel =
-            RelOptUtil.createNewSetOpRel(setOpRel, newSetOpInputs);
+        SetOpRel newSetOpRel = setOpRel.copy(newSetOpInputs);
 
         call.transformTo(newSetOpRel);
     }

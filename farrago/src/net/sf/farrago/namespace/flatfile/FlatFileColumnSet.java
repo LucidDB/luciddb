@@ -28,12 +28,10 @@ import java.text.*;
 
 import java.util.*;
 
-import net.sf.farrago.fem.config.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 
-import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -77,7 +75,9 @@ class FlatFileColumnSet
         long numRows,
         FlatFileParams.SchemaType schemaType)
     {
-        super(localName, null, rowType, null, null);
+        super(
+            localName, null, rowType, Collections.<RelDataTypeField>emptyList(),
+            null, null);
 
         this.params = params;
         this.numRows = numRows;

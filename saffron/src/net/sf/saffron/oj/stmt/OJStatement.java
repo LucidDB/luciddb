@@ -52,8 +52,7 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql2rel.SqlToRelConverter;
-import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -222,6 +221,11 @@ public class OJStatement extends OJPreparingStmt
         return rootRel;
     }
 
+    protected RelNode trimUnusedFields(RelNode rootRel)
+    {
+        return rootRel;
+    }
+
     /**
      * Prepares a statement for execution, starting from a SQL string and
      * using the standard validator.
@@ -233,7 +237,8 @@ public class OJStatement extends OJPreparingStmt
         try {
             sqlQuery = parser.parseStmt();
         } catch (SqlParseException e) {
-            throw Util.newInternal(e,
+            throw Util.newInternal(
+                e,
                 "Error while parsing SQL '" + queryString + "'");
         }
         RelOptSchema schema = connection.getRelOptSchema();
@@ -293,7 +298,8 @@ public class OJStatement extends OJPreparingStmt
         try {
             parseTree = OJUtil.go(queryExpander, parseTree);
         } catch (Throwable e) {
-            throw Util.newInternal(e,
+            throw Util.newInternal(
+                e,
                 "while validating parse tree " + parseTree);
         }
         return parseTree;
@@ -357,13 +363,13 @@ public class OJStatement extends OJPreparingStmt
     {
         reloadTrace();
         return super.prepareSql(
-            sqlQuery,runtimeContextClass,validator,needValidation);
+            sqlQuery, runtimeContextClass, validator, needValidation);
     }
 
     // override OJPreparingStmt
     protected void bindArgument(Argument arg)
     {
-        env.bindVariable(arg.getName(),new ArgumentInfo(arg));
+        env.bindVariable(arg.getName(), new ArgumentInfo(arg));
     }
 
     // override OJPreparingStmt

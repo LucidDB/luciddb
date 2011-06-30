@@ -69,8 +69,13 @@ public abstract class ConverterRelImpl
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
+        // Bump up the conversion cost by multiplying by the number of columns.
+        // JVS wants IterCalcRel to be 2x cheaper than FennelCalcRel (see
+        // comment in FennelCalcRel.computeSelfCost); well, that's fine, but we
+        // have to price conversion realistically otherwise we end up going
+        // into and out of java for trivial computations. -- jhyde, 2009/4/11
         double dRows = RelMetadataQuery.getRowCount(getChild());
-        double dCpu = dRows;
+        double dCpu = dRows * getRowType().getFieldCount();
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }

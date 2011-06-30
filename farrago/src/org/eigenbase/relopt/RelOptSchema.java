@@ -22,6 +22,8 @@
 */
 package org.eigenbase.relopt;
 
+import java.util.List;
+
 import org.eigenbase.reltype.*;
 
 

@@ -183,6 +183,9 @@ public class SqlAdvisorTest
             "Keyword(ASC)",
             "Keyword(DESC)");
 
+    private final List<String> SYS_COLUMNS =
+        getSysColumns();
+
     private static final List<String> EMP_COLUMNS =
         Arrays.asList(
             "Column(EMPNO)",
@@ -240,6 +243,7 @@ public class SqlAdvisorTest
     private static final List<String> A_TABLE =
         Arrays.asList(
             "Table(A)");
+
     protected static final List<String> JOIN_KEYWORDS =
         Arrays.asList(
             "Keyword(UNION)",
@@ -276,6 +280,11 @@ public class SqlAdvisorTest
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    protected List<String> getSysColumns()
+    {
+        return Collections.emptyList();
+    }
 
     protected List<String> getFromKeywords()
     {
@@ -580,7 +589,7 @@ public class SqlAdvisorTest
         sql =
             "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.^";
-        assertComplete(sql, EMP_COLUMNS); // on left
+        assertComplete(sql, SYS_COLUMNS, EMP_COLUMNS); // on left
 
         sql =
             "select a.empno, b.deptno from sales.emp a join sales.dept b "
@@ -590,12 +599,12 @@ public class SqlAdvisorTest
         sql =
             "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.^ where empno=1";
-        assertComplete(sql, DEPT_COLUMNS); // on right
+        assertComplete(sql, SYS_COLUMNS, DEPT_COLUMNS); // on right
 
         sql =
             "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.^";
-        assertComplete(sql, DEPT_COLUMNS); // on right
+        assertComplete(sql, SYS_COLUMNS, DEPT_COLUMNS); // on right
     }
 
     public void testFromWhere()
@@ -611,7 +620,7 @@ public class SqlAdvisorTest
         sql =
             "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where b.deptno=a.^";
-        assertComplete(sql, EMP_COLUMNS); // where list
+        assertComplete(sql, SYS_COLUMNS, EMP_COLUMNS); // where list
 
         // hints contain no columns, only table aliases, because there are >1
         // aliases
@@ -631,6 +640,7 @@ public class SqlAdvisorTest
             "select a.empno, a.deptno from sales.emp a "
             + "where ^",
             A_TABLE,
+            SYS_COLUMNS,
             EMP_COLUMNS,
             EXPR_KEYWORDS);
     }
@@ -658,7 +668,7 @@ public class SqlAdvisorTest
         sql =
             "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where a.^";
-        assertComplete(sql, EMP_COLUMNS);
+        assertComplete(sql, SYS_COLUMNS, EMP_COLUMNS);
 
         sql =
             "select a.empno, b.deptno from sales.emp a join sales.dept b "
@@ -680,6 +690,7 @@ public class SqlAdvisorTest
         assertComplete(
             sql,
             getSelectKeywords(),
+            SYS_COLUMNS,
             EXPR_KEYWORDS,
             Arrays.asList("Table(EXPR$0)", "Column(EXPR$0)"));
 
@@ -687,6 +698,7 @@ public class SqlAdvisorTest
         assertComplete(
             sql,
             getSelectKeywords(),
+            SYS_COLUMNS,
             EXPR_KEYWORDS,
             Arrays.asList("Table(T)", "Column(C)"));
 
@@ -699,7 +711,7 @@ public class SqlAdvisorTest
         assertHint(sql, EXPR_KEYWORDS, STAR_KEYWORD, AB_TABLES);
 
         sql = "select dummy, b.^ from sales.emp a join sales.dept b on true";
-        assertComplete(sql, STAR_KEYWORD, DEPT_COLUMNS);
+        assertComplete(sql, STAR_KEYWORD, SYS_COLUMNS, DEPT_COLUMNS);
 
         // REVIEW: Since 'b' is not a valid alias, should it suggest anything?
         // We don't get through validation, so the only suggestion, '*', comes
@@ -712,11 +724,12 @@ public class SqlAdvisorTest
             sql,
             getSelectKeywords(),
             EXPR_KEYWORDS,
+            SYS_COLUMNS,
             EMP_COLUMNS,
             Arrays.asList("Table(EMP)"));
 
         sql = "select emp.^ from sales.emp";
-        assertComplete(sql, EMP_COLUMNS, STAR_KEYWORD);
+        assertComplete(sql, SYS_COLUMNS, EMP_COLUMNS, STAR_KEYWORD);
     }
 
     public void testOrderByList()
@@ -725,10 +738,10 @@ public class SqlAdvisorTest
         String sql;
 
         sql = "select emp.empno from sales.emp where empno=1 order by ^dummy";
-        assertHint(sql, EXPR_KEYWORDS, EMP_COLUMNS, EMP_TABLE);
+        assertHint(sql, EXPR_KEYWORDS, SYS_COLUMNS, EMP_COLUMNS, EMP_TABLE);
 
         sql = "select emp.empno from sales.emp where empno=1 order by ^";
-        assertComplete(sql, EXPR_KEYWORDS, EMP_COLUMNS, EMP_TABLE);
+        assertComplete(sql, EXPR_KEYWORDS, SYS_COLUMNS, EMP_COLUMNS, EMP_TABLE);
 
         sql =
             "select emp.empno\n"
@@ -738,6 +751,7 @@ public class SqlAdvisorTest
         assertComplete(
             sql,
             EXPR_KEYWORDS,
+            SYS_COLUMNS,
             Arrays.asList(
                 "Column(MPNO)",
                 "Column(NAME)",
@@ -826,6 +840,7 @@ public class SqlAdvisorTest
         assertComplete(
             sql,
             AB_TABLES,
+            SYS_COLUMNS,
             DEPT_COLUMNS,
             EXPR_KEYWORDS);
     }
@@ -1151,7 +1166,7 @@ public class SqlAdvisorTest
 
         // just before dot
         sql = "select emp.^name from emp";
-        assertComplete(sql, EMP_COLUMNS, STAR_KEYWORD);
+        assertComplete(sql, SYS_COLUMNS, EMP_COLUMNS, STAR_KEYWORD);
     }
 
     public void testInsert()
@@ -1164,6 +1179,7 @@ public class SqlAdvisorTest
             getSelectKeywords(),
             EXPR_KEYWORDS,
             A_TABLE,
+            SYS_COLUMNS,
             DEPT_COLUMNS);
 
         sql = "insert into emp(empno, mgr) values (123, 3 + ^)";
@@ -1186,7 +1202,7 @@ public class SqlAdvisorTest
         String simplified =
             "SELECT * FROM dept a WHERE _suggest_ and deptno < 5";
         assertSimplify(sql, simplified);
-        assertComplete(sql, EXPR_KEYWORDS, A_TABLE, DEPT_COLUMNS);
+        assertComplete(sql, EXPR_KEYWORDS, A_TABLE, SYS_COLUMNS, DEPT_COLUMNS);
 
         // UNION ALL
         sql =
@@ -1218,7 +1234,6 @@ public class SqlAdvisorTest
             super(conformance);
         }
 
-        // REVIEW this is the same as the base method
         public SqlValidator getValidator()
         {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();

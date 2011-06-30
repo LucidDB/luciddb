@@ -176,6 +176,7 @@ public class LcsTableProjectionRule
         // to read only projected columns
         RelNode modRelNode =
             createNewRelNode(
+                call,
                 projectedScan,
                 origProject,
                 needRename,

@@ -41,7 +41,7 @@ public class SqlParser
     //~ Instance fields --------------------------------------------------------
 
     private final SqlParserImpl parser;
-    private String originalInput;
+    private final String originalInput;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -60,17 +60,23 @@ public class SqlParser
      */
     public SqlParser(Reader reader)
     {
+        this.originalInput = guessReaderContents(reader);
+        parser = new SqlParserImpl(reader);
+        parser.setTabSize(1);
+    }
+
+    private static String guessReaderContents(Reader reader)
+    {
         if (reader instanceof StringReader) {
             try {
                 char [] buffer = new char[4096];
                 int count = reader.read(buffer);
-                this.originalInput = new String(buffer, 0, count);
                 reader.reset();
+                return new String(buffer, 0, count);
             } catch (IOException e) {
             }
         }
-        parser = new SqlParserImpl(reader);
-        parser.setTabSize(1);
+        return null;
     }
 
     //~ Methods ----------------------------------------------------------------

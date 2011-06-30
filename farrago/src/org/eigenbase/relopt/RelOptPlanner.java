@@ -178,30 +178,34 @@ public interface RelOptPlanner
      * <p>After it has been registered, you may not modify it.
      *
      * <p>The expression must not already have been registered. If you are not
-     * sure whether it has been registered, call {@link
-     * #ensureRegistered(RelNode,RelNode)}.
+     * sure whether it has been registered, call {@link #ensureRegistered}.
      *
      * @param rel Relational expression to register (must not already be
      * registered)
      * @param equivRel Relational expression it is equivalent to (may be null)
      *
+     * @param call Planner rule call (for historical context; may be null)
      * @return the same expression, or an equivalent existing expression
      *
      * @pre !isRegistered(rel)
      */
     public RelNode register(
         RelNode rel,
-        RelNode equivRel);
+        RelNode equivRel,
+        RelOptRuleCall call);
 
     /**
      * Registers a relational expression if it is not already registered.
      *
      * @param rel Relational expression to register
      * @param equivRel Relational expression it is equivalent to (may be null)
-     *
+     * @param call Planner rule call (for historical context; may be null)
      * @return Registered relational expression
      */
-    RelNode ensureRegistered(RelNode rel, RelNode equivRel);
+    RelNode ensureRegistered(
+        RelNode rel,
+        RelNode equivRel,
+        RelOptRuleCall call);
 
     /**
      * Determines whether a relational expression has been registered.
@@ -255,6 +259,26 @@ public interface RelOptPlanner
      * @return timestamp of last change which might affect metadata derivation
      */
     public long getRelMetadataTimestamp(RelNode rel);
+
+    /**
+     * Returns whether to diligently compute the correct answer to a metadata
+     * query if a particular answer is not cached.
+     *
+     * <p>The default implementation of this method always returns {@code true},
+     * and therefore the metadata provider will diligently compute and cache the
+     * correct answer if a metadata query is not in cache. If the answer is in
+     * cache (and not expired), providers will return it without even consulting
+     * this method.
+     *
+     * <p>Most other providers will return {@code true} most of the time.
+     * One instance when a planner might choose to return {@code false} is
+     * when printing diagnostics. If a query has failed to plan, it doesn't make
+     * sense to spend a huge amount of effort computing metadata.
+     *
+     * @return Whether to compute the correct answer for a metadata query
+     * that is not already in cache
+     */
+    public boolean isRelMetadataDiligent();
 
     /**
      * Sets the importance of a relational expression.

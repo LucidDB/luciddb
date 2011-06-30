@@ -36,7 +36,7 @@ import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 import org.eigenbase.oj.util.*;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -65,7 +65,8 @@ class SubqueryFinder extends ScopeHandler
         if (p.getOperator() == BinaryExpression.IN) {
             Expression left = p.getLeft();
             Expression right = p.getRight();
-            tracer.log(Level.FINE,
+            tracer.log(
+                Level.FINE,
                 "SubqueryFinder: found IN: left=[" + left + "], right=["
                 + right + "]");
             RelNode oldFrom = queryInfo.getRoot();
@@ -74,7 +75,8 @@ class SubqueryFinder extends ScopeHandler
             RelNode rightRel = queryInfo.convertFromExpToRel(right);
             OJClass rightRowType = Toolbox.getRowType(queryInfo.env, right);
             boolean wrap = rightRowType.isPrimitive();
-            final RelDataTypeFactory typeFactory = queryInfo.cluster.getTypeFactory();
+            final RelDataTypeFactory typeFactory =
+                queryInfo.cluster.getTypeFactory();
             if (wrap) {
                 final RexNode[] exprs = {
                     queryInfo.rexBuilder.makeJava(
@@ -90,7 +92,8 @@ class SubqueryFinder extends ScopeHandler
                         exprs,
                         RexUtil.createStructType(
                             typeFactory, exprs),
-                        ProjectRel.Flags.None, Collections.<RelCollation>emptyList());
+                        ProjectRel.Flags.None,
+                        Collections.<RelCollation>emptyList());
             }
 
             boolean isNullable = false;
@@ -125,13 +128,15 @@ class SubqueryFinder extends ScopeHandler
                         OJSyntheticClass.makeField(1));
             }
             RelNode rightDistinct =
-                RelOptUtil.createDistinctRel(rightRel);
+                RelOptUtil.createDistinctRel(
+                    rightRel, Collections.<RelDataTypeField>emptyList());
             queryInfo.leaves.add(rightDistinct);
 
             // Join the sub-query from the 'in' to the tree built up from
             // the 'from' clause
             JoinRel join =
-                new JoinRel(queryInfo.cluster, oldFrom, rightDistinct,
+                new JoinRel(
+                    queryInfo.cluster, oldFrom, rightDistinct,
                     queryInfo.rexBuilder.makeJava(
                         getEnvironment(),
                         Toolbox.makeEquals(
@@ -176,7 +181,8 @@ class SubqueryFinder extends ScopeHandler
     {
         if (p.getOperator() == UnaryExpression.EXISTS) {
             Expression right = p.getExpression();
-            tracer.log(Level.FINE,
+            tracer.log(
+                Level.FINE,
                 "SubqueryFinder: found EXISTS: expr=[" + right + "]");
             RelNode oldFrom = queryInfo.getRoot();
             RelNode rightRel = queryInfo.convertFromExpToRel(right);
@@ -192,7 +198,8 @@ class SubqueryFinder extends ScopeHandler
                     ProjectRel.Flags.None,
                     Collections.<RelCollation>emptyList());
             RelNode rightDistinct =
-                RelOptUtil.createDistinctRel(rightProject);
+                RelOptUtil.createDistinctRel(
+                    rightProject, Collections.<RelDataTypeField>emptyList());
             queryInfo.leaves.add(rightDistinct);
             JoinRel join =
                 new JoinRel(

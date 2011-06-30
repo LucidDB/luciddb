@@ -65,17 +65,22 @@ public final class TableModificationRel
     // implement Cloneable
     public TableModificationRel clone()
     {
-        TableModificationRel clone =
-            new TableModificationRel(
-                getCluster(),
-                table,
-                connection,
-                getChild().clone(),
-                getOperation(),
-                getUpdateColumnList(),
-                isFlattened());
-        clone.inheritTraitsFrom(this);
-        return clone;
+        return copy(getChild().clone())
+            .inheritTraitsFrom(this);
+    }
+
+    @Override
+    public TableModificationRel copy(RelNode... inputs)
+    {
+        assert inputs.length == 1;
+        return new TableModificationRel(
+            getCluster(),
+            table,
+            connection,
+            inputs[0],
+            getOperation(),
+            getUpdateColumnList(),
+            isFlattened());
     }
 }
 

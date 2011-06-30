@@ -25,7 +25,6 @@ import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -45,6 +44,8 @@ public class CachingRelMetadataProvider
     private final RelMetadataProvider underlyingProvider;
 
     private final RelOptPlanner planner;
+
+    private static final Object NULL_VALUE = new Object();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -98,7 +99,7 @@ public class CachingRelMetadataProvider
                 rel,
                 metadataQueryName,
                 args);
-        if (result != null) {
+        if (result != null || !planner.isRelMetadataDiligent()) {
             entry = new CacheEntry();
             entry.timestamp = timestamp;
             entry.result = result;

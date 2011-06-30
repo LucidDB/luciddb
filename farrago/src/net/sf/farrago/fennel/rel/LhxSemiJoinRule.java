@@ -30,6 +30,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -122,15 +123,11 @@ public class LhxSemiJoinRule
         RelOptUtil.InputFinder inputFinder =
             new RelOptUtil.InputFinder(projRefs);
 
-        inputFinder.apply(projExprs, null);
+        RexUtil.apply(inputFinder, projExprs, null);
 
         int leftRefCount = 0;
         int rightRefCount = 0;
-        for (
-            int bit = projRefs.nextSetBit(0);
-            bit >= 0;
-            bit = projRefs.nextSetBit(bit + 1))
-        {
+        for (int bit : Util.toIter(projRefs)) {
             if (bit >= leftFieldCount) {
                 rightRefCount++;
             } else {
@@ -164,7 +161,6 @@ public class LhxSemiJoinRule
         }
 
         // then check if aggregate(distinct) keys are covered by the join keys
-        int numGroupByKeys = aggRel.getGroupCount();
         List<RexNode> aggJoinKeys = null;
 
         if (outputLeft) {
@@ -183,11 +179,8 @@ public class LhxSemiJoinRule
             expr.accept(aggJoinInputFinder);
         }
 
-        // group by key positions are 0 ...numGroupByKeys -1
-        for (int i = 0; i < numGroupByKeys; i++) {
-            if (inputRefBitset.nextSetBit(i) != i) {
-                return;
-            }
+        if (!inputRefBitset.equals(aggRel.getGroupSet())) {
+            return;
         }
 
         // now we can replace the original Join(A, distinct(B)) with
@@ -291,12 +284,12 @@ public class LhxSemiJoinRule
             // right semi join. need to convert input to the project to
             // reference the output of the new join
 
-            RelDataTypeField [] projInputFields =
-                joinRel.getRowType().getFields();
-            RelDataTypeField [] newProjInputFields =
-                rel.getRowType().getFields();
-            int [] adjustments = new int[projInputFields.length];
-            assert (projInputFields.length
+            List<RelDataTypeField> projInputFields =
+                joinRel.getRowType().getFieldList();
+            List<RelDataTypeField> newProjInputFields =
+                rel.getRowType().getFieldList();
+            int [] adjustments = new int[projInputFields.size()];
+            assert (projInputFields.size()
                 == (leftFieldCount + rightFieldCount));
 
             int i;
@@ -304,7 +297,7 @@ public class LhxSemiJoinRule
                 adjustments[i] = 0;
             }
 
-            for (; i < projInputFields.length; i++) {
+            for (; i < projInputFields.size(); i++) {
                 adjustments[i] = -leftFieldCount;
             }
 

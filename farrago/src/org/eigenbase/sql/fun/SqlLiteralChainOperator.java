@@ -121,10 +121,9 @@ public class SqlLiteralChainOperator
             + typeName;
         int size = 0;
         RelDataType [] types = opBinding.collectOperandTypes();
-        for (int i = 0; i < types.length; i++) {
-            RelDataType type = types[i];
+        for (RelDataType type : types) {
             size += type.getPrecision();
-            assert (type.getSqlTypeName().equals(typeName));
+            assert type.getSqlTypeName() == typeName;
         }
         return opBinding.getTypeFactory().createSqlType(typeName, size);
     }

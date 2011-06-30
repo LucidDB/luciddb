@@ -71,14 +71,14 @@ public abstract class DelegatingNamespace
         return namespace.getRowType();
     }
 
-    public void setRowType(RelDataType rowType)
+    public void setRowType(RelDataType rowType, RelDataType rowTypeAsWritten)
     {
-        namespace.setRowType(rowType);
+        namespace.setRowType(rowType, rowTypeAsWritten);
     }
 
-    public RelDataType getRowTypeSansSystemColumns()
+    public RelDataType getRowTypeAsWritten()
     {
-        return namespace.getRowTypeSansSystemColumns();
+        return namespace.getRowTypeAsWritten();
     }
 
     public void validate()

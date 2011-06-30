@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.jdbc;
 
 import java.sql.*;
+import java.util.Collections;
 
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.namespace.impl.*;
@@ -67,7 +68,10 @@ public class MedJdbcColumnSet
         RelDataType origRowType,
         RelDataType srcRowType)
     {
-        super(localName, foreignName, origRowType, null, null);
+        super(
+            localName, foreignName, origRowType,
+            Collections.<RelDataTypeField>emptyList(),
+            null, null);
         this.directory = directory;
         this.select = select;
         this.dialect = dialect;

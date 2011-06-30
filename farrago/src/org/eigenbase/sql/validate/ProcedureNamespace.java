@@ -21,8 +21,11 @@
 */
 package org.eigenbase.sql.validate;
 
+import java.util.List;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.CompositeList;
 
 
 /**
@@ -59,7 +62,33 @@ public class ProcedureNamespace
     public RelDataType validateImpl()
     {
         validator.inferUnknownTypes(validator.unknownType, scope, call);
-        return validator.deriveTypeImpl(scope, call);
+        final RelDataType callType = validator.deriveTypeImpl(scope, call);
+        return prefixIfNotPresent(callType, validator.getSystemFields());
+    }
+
+    private RelDataType prefixIfNotPresent(
+        RelDataType rowType, List<RelDataTypeField> systemFields)
+    {
+        if (!prefixedWith(rowType, systemFields)) {
+            return validator.getTypeFactory().createStructType(
+                CompositeList.of(
+                    systemFields, rowType.getFieldList()));
+        } else {
+            return rowType;
+        }
+    }
+
+    private boolean prefixedWith(
+        RelDataType rowType, List<RelDataTypeField> systemFields)
+    {
+        for (int i = 0; i < systemFields.size(); i++) {
+            if (!rowType.getFieldList().get(i).getName().equals(
+                    systemFields.get(i).getName()))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     public SqlNode getNode()

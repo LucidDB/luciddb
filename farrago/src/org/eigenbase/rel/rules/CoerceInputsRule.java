@@ -58,7 +58,10 @@ public class CoerceInputsRule
         boolean coerceNames)
     {
         super(
-            new RelOptRuleOperand(consumerRelClass, ANY),
+            new RelOptRuleOperand(
+                consumerRelClass,
+                RelOptRuleOperand.preciseInstance(consumerRelClass),
+                ANY),
             "CoerceInputsRule:" + consumerRelClass.getName());
         this.consumerRelClass = consumerRelClass;
         this.coerceNames = coerceNames;
@@ -76,10 +79,8 @@ public class CoerceInputsRule
     public void onMatch(RelOptRuleCall call)
     {
         RelNode consumerRel = call.rels[0];
-        if (consumerRel.getClass() != consumerRelClass) {
-            // require exact match on type
-            return;
-        }
+        assert consumerRel.getClass() == consumerRelClass
+            : "require exact match on type; operand should have ensured this";
         RelNode [] inputs = consumerRel.getInputs();
         RelNode [] newInputs = new RelNode[inputs.length];
         boolean coerce = false;
@@ -94,10 +95,10 @@ public class CoerceInputsRule
             if (newInputs[i] != input) {
                 coerce = true;
             }
-            assert (RelOptUtil.areRowTypesEqual(
+            assert RelOptUtil.areRowTypesEqual(
                 newInputs[i].getRowType(),
                 expectedType,
-                coerceNames));
+                coerceNames);
         }
         if (!coerce) {
             return;

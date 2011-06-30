@@ -29,6 +29,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -110,11 +111,7 @@ public class RelMdColumnUniqueness
 
         RexNode [] projExprs = rel.getProjectExps();
         BitSet childColumns = new BitSet();
-        for (
-            int bit = columns.nextSetBit(0);
-            bit >= 0;
-            bit = columns.nextSetBit(bit + 1))
-        {
+        for (int bit : Util.toIter(columns)) {
             RexNode projExpr = projExprs[bit];
             if (projExpr instanceof RexInputRef) {
                 childColumns.set(((RexInputRef) projExpr).getIndex());
@@ -178,11 +175,7 @@ public class RelMdColumnUniqueness
         BitSet leftColumns = new BitSet();
         BitSet rightColumns = new BitSet();
         int nLeftColumns = left.getRowType().getFieldCount();
-        for (
-            int bit = columns.nextSetBit(0);
-            bit >= 0;
-            bit = columns.nextSetBit(bit + 1))
-        {
+        for (int bit : Util.toIter(columns)) {
             if (bit < nLeftColumns) {
                 leftColumns.set(bit);
             } else {
@@ -272,12 +265,18 @@ public class RelMdColumnUniqueness
         BitSet columns,
         boolean ignoreNulls)
     {
+        // REVIEW: jhyde, 2009/11/17: Why the special case? If the group set is
+        // empty, then the relation contains only one row (or zero if the table
+        // is empty) and therefore the empty key DOES constitute a unique key.
+
         // group by keys form a unique key
-        if (rel.getGroupCount() > 0) {
-            BitSet groupKey = new BitSet();
-            for (int i = 0; i < rel.getGroupCount(); i++) {
-                groupKey.set(i);
-            }
+        if (!rel.getGroupSet().isEmpty()) {
+            final int sysFieldCount = rel.getSystemFieldList().size();
+            final int groupCount = rel.getGroupSet().cardinality();
+            BitSet groupKey =
+                Util.bitSetBetween(
+                    sysFieldCount,
+                    sysFieldCount + groupCount);
             return RelOptUtil.contains(columns, groupKey);
         } else {
             // interpret an empty set as asking whether the aggregation is full
@@ -285,6 +284,8 @@ public class RelMdColumnUniqueness
             // TODO jvs 1-Sept-2008:  apply this convention consistently
             // to other relational expressions, as well as to
             // RelMetadataQuery.getUniqueKeys
+            assert columns.isEmpty() == (columns.cardinality() == 0)
+                : "beware jdk bug!";
             return columns.isEmpty();
         }
     }

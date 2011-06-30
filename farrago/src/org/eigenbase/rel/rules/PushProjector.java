@@ -29,6 +29,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -206,23 +207,18 @@ public class PushProjector
                 joinRel.getRight().getRowType().getFields();
             nFields = leftFields.length;
             nFieldsRight = rightFields.length;
-            childBitmap = new BitSet(nFields);
-            rightBitmap = new BitSet(nFieldsRight);
             nSysFields = joinRel.getSystemFieldList().size();
-            RelOptUtil.setRexInputBitmap(
-                childBitmap,
+            childBitmap = Util.bitSetBetween(
                 nSysFields,
                 nFields + nSysFields);
-            RelOptUtil.setRexInputBitmap(
-                rightBitmap,
+            rightBitmap = Util.bitSetBetween(
                 nFields + nSysFields,
                 nChildFields);
         } else {
             nFields = nChildFields;
             nFieldsRight = 0;
-            childBitmap = new BitSet(nChildFields);
+            childBitmap = Util.bitSetBetween(0, nChildFields);
             nSysFields = 0;
-            RelOptUtil.setRexInputBitmap(childBitmap, 0, nChildFields);
         }
         assert nChildFields == nSysFields + nFields + nFieldsRight;
 
@@ -266,7 +262,11 @@ public class PushProjector
 
             // even though there is no projection, this is the same as
             // selecting all fields
-            RelOptUtil.setRexInputBitmap(projRefs, 0, nChildFields);
+            if (nChildFields > 0) {
+                // Calling with nChildFields == 0 should be safe but hits
+                // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6222207
+                projRefs.set(0, nChildFields);
+            }
             nProject = nChildFields;
         } else if (
             (projRefs.cardinality() == nChildFields)
@@ -302,7 +302,7 @@ public class PushProjector
             RexNode newFilter =
                 convertRefsAndExprs(
                     origFilter,
-                    newProject.getRowType().getFields(),
+                    newProject.getRowType().getFieldList(),
                     adjustments);
             projChild = CalcRel.createFilter(newProject, newFilter);
         } else {
@@ -329,21 +329,33 @@ public class PushProjector
      */
     public boolean locateAllRefs()
     {
-        new InputSpecialOpFinder(
-            projRefs,
-            childBitmap,
-            rightBitmap,
-            preserveExprCondition,
-            childPreserveExprs,
-            rightPreserveExprs).apply(origProjExprs, origFilter);
+        RexUtil.apply(
+            new InputSpecialOpFinder(
+                projRefs,
+                childBitmap,
+                rightBitmap,
+                preserveExprCondition,
+                childPreserveExprs,
+                rightPreserveExprs),
+            origProjExprs,
+            origFilter);
+
+        // The system fields of each child are always used by the join, even if
+        // they are not projected out of it.
+        projRefs.set(
+            nSysFields,
+            nSysFields + nSysFields,
+            true);
+        projRefs.set(
+            nSysFields + nFields,
+            nSysFields + nFields + nSysFields,
+            true);
+
+        // Count how many fields are projected.
         nSystemProject = 0;
         nProject = 0;
         nRightProject = 0;
-        for (
-            int bit = projRefs.nextSetBit(0);
-            bit >= 0;
-            bit = projRefs.nextSetBit(bit + 1))
-        {
+        for (int bit : Util.toIter(projRefs)) {
             if (bit < nSysFields) {
                 nSystemProject++;
             } else if (bit < nSysFields + nFields) {
@@ -423,7 +435,8 @@ public class PushProjector
         int projLength = nInputRefs + preserveExprs.size();
         RexNode [] newProjExprs = new RexNode[projLength];
         String [] fieldNames = new String[projLength];
-        RelDataTypeField [] destFields = projChild.getRowType().getFields();
+        List<RelDataTypeField> destFields =
+            projChild.getRowType().getFieldList();
         int i;
 
         // add on the input references
@@ -432,9 +445,9 @@ public class PushProjector
             assert (refIdx >= 0);
             newProjExprs[i] =
                 rexBuilder.makeInputRef(
-                    destFields[refIdx - offset].getType(),
+                    destFields.get(refIdx - offset).getType(),
                     refIdx - offset);
-            fieldNames[i] = destFields[refIdx - offset].getName();
+            fieldNames[i] = destFields.get(refIdx - offset).getName();
         }
 
         // add on the expressions that need to be preserved, converting the
@@ -453,7 +466,7 @@ public class PushProjector
                     projExpr.accept(
                         new RelOptUtil.RexInputConverter(
                             rexBuilder,
-                            childFields,
+                            Arrays.asList(childFields),
                             destFields,
                             adjustments));
             } else {
@@ -482,11 +495,7 @@ public class PushProjector
         int [] adjustments = new int[nChildFields];
         int newIdx = 0;
         int rightOffset = childPreserveExprs.size();
-        for (
-            int pos = projRefs.nextSetBit(0);
-            pos >= 0;
-            pos = projRefs.nextSetBit(pos + 1))
-        {
+        for (int pos : Util.toIter(projRefs)) {
             adjustments[pos] = -(pos - newIdx);
             if (pos >= nSysFields + nFields) {
                 adjustments[pos] += rightOffset;
@@ -510,13 +519,13 @@ public class PushProjector
      */
     public RexNode convertRefsAndExprs(
         RexNode rex,
-        RelDataTypeField [] destFields,
+        List<RelDataTypeField> destFields,
         int [] adjustments)
     {
         return rex.accept(
             new RefAndExprConverter(
                 rexBuilder,
-                childFields,
+                Arrays.asList(childFields),
                 destFields,
                 adjustments,
                 childPreserveExprs,
@@ -529,7 +538,9 @@ public class PushProjector
      * Creates a new projection based on the original projection, adjusting all
      * input refs using an adjustment array passed in. If there was no original
      * projection, create a new one that selects every field from the underlying
-     * rel
+     * rel.
+     *
+     * <p>If the resulting projection would be trivial, return the child.
      *
      * @param projChild child of the new project
      * @param adjustments array indicating how much each input reference should
@@ -557,7 +568,7 @@ public class PushProjector
                 projExprs[i] =
                     convertRefsAndExprs(
                         origProjExprs[i],
-                        projChild.getRowType().getFields(),
+                        projChild.getRowType().getFieldList(),
                         adjustments);
                 fieldNames[i] = origProj.getRowType().getFields()[i].getName();
             }
@@ -654,18 +665,8 @@ public class PushProjector
 
         public Void visitInputRef(RexInputRef inputRef)
         {
-//            if ()
             rexRefs.set(inputRef.getIndex());
             return null;
-        }
-
-        /**
-         * Applies this visitor to an array of expressions and an optional
-         * single expression.
-         */
-        public void apply(RexNode [] exprs, RexNode expr)
-        {
-            RexProgram.apply(this, exprs, expr);
         }
 
         /**
@@ -701,8 +702,8 @@ public class PushProjector
 
         public RefAndExprConverter(
             RexBuilder rexBuilder,
-            RelDataTypeField [] srcFields,
-            RelDataTypeField [] destFields,
+            List<RelDataTypeField> srcFields,
+            List<RelDataTypeField> destFields,
             int [] adjustments,
             List<RexNode> preserveLeft,
             int firstLeftRef,
@@ -730,8 +731,7 @@ public class PushProjector
                     firstRightRef);
             if (match >= 0) {
                 return rexBuilder.makeInputRef(
-                    destFields[match].getType(),
-                    match);
+                    destFields.get(match).getType(), match);
             }
             return super.visitCall(call);
         }

@@ -75,6 +75,9 @@ public final class WindowedAggregateRel
 
     public boolean isValid(boolean fail)
     {
+        if (!super.isValid(fail)) {
+            return false;
+        }
         if (!program.isValid(fail)) {
             return false;
         }

@@ -29,7 +29,6 @@ import java.util.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
-
 /**
  * RelDataTypeFactory is a factory for datatype descriptors. It defines methods
  * for instantiating and combining SQL, Java, and collection types. The factory
@@ -111,6 +110,17 @@ public interface RelDataTypeFactory
      * @return canonical struct type descriptor
      */
     public RelDataType createStructType(FieldInfo fieldInfo);
+
+    /**
+     * Creates a type which represents a structured collection of fieldList,
+     * obtaining the field information from a list of (name, type) pairs.
+     *
+     * @param fieldList List of (name, type) pairs
+     *
+     * @return canonical struct type descriptor
+     */
+    public RelDataType createStructType(
+        List<? extends Map.Entry<String, RelDataType>> fieldList);
 
     /**
      * Creates an array type. Arrays are ordered collections of elements.
@@ -307,10 +317,27 @@ public interface RelDataTypeFactory
         RelDataType type1,
         RelDataType type2);
 
-    //~ Inner Interfaces -------------------------------------------------------
+    /**
+     * Returns a list of system fields allowed in relations.
+     *
+     * <p>For stored relations such as tables and views, the fields are not
+     * present in the row type stored in the catalog, but they are available at
+     * validation time. A later validation stage determines whether the field
+     * is actually applicable for that particular table or view.
+     *
+     * @see org.eigenbase.relopt.RelOptTable#getSystemFieldList()
+     *
+     * @return List of allowed system fields; may be empty, never null
+     */
+    List<RelDataTypeField> getSystemFieldList();
+
+    //~ Inner Interfaces and Classes -------------------------------------------
 
     /**
      * Callback which provides enough information to create fields.
+     *
+     * <p>NOTE: Use of FieldInfo is discouraged for new code. It is better
+     * to create an {@link AbstractList} of {@link RelDataTypeField}.</p>
      */
     public interface FieldInfo
     {
@@ -336,39 +363,6 @@ public interface RelDataTypeFactory
          * @return Type of given field
          */
         public RelDataType getFieldType(int index);
-    }
-
-    /**
-     * Simple implementation of {@link FieldInfo}, based on a list of fields.
-     */
-    public static class ListFieldInfo implements FieldInfo
-    {
-        private final List<? extends RelDataTypeField> fieldList;
-
-        /**
-         * Creates a ListFieldInfo.
-         *
-         * @param fieldList List of fields
-         */
-        public ListFieldInfo(List<? extends RelDataTypeField> fieldList)
-        {
-            this.fieldList = fieldList;
-        }
-
-        public int getFieldCount()
-        {
-            return fieldList.size();
-        }
-
-        public String getFieldName(int index)
-        {
-            return fieldList.get(index).getName();
-        }
-
-        public RelDataType getFieldType(int index)
-        {
-            return fieldList.get(index).getType();
-        }
     }
 }
 

@@ -23,6 +23,7 @@ package org.eigenbase.relopt.volcano;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -157,14 +158,10 @@ class VolcanoRuleMatch
      */
     private String computeDigest()
     {
-        StringBuilder buf =
-            new StringBuilder("rule [" + getRule() + "] rels [");
-        for (int i = 0; i < rels.length; i++) {
-            if (i > 0) {
-                buf.append(", ");
-            }
-            buf.append(rels[i].toString());
-        }
+        StringBuilder buf = new StringBuilder("rule [");
+        buf.append(getRule().toString());
+        buf.append("] rels [");
+        Util.appendList(buf, rels);
         buf.append("]");
         return buf.toString();
     }

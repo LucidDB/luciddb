@@ -269,13 +269,14 @@ public abstract class OJPreparingStmt
         }
 
         RelNode rootRel =
-            sqlToRelConverter.convertQuery(sqlQuery, needsValidation, true);
+            sqlToRelConverter.convertQuery(
+                sqlQuery, needsValidation, SqlToRelConverter.QueryContext.TOP);
 
         if (timingTracer != null) {
             timingTracer.traceTime("end sql2rel");
         }
 
-        final RelDataType resultType = validator.getValidatedNodeType(sqlQuery);
+        final RelDataType resultType = validator.getRootNodeType(sqlQuery);
         fieldOrigins = validator.getFieldOrigins(sqlQuery);
         assert fieldOrigins.size() == resultType.getFieldCount();
 
@@ -309,6 +310,9 @@ public abstract class OJPreparingStmt
         // Subquery decorrelation.
         rootRel = decorrelate(sqlQuery, rootRel);
 
+        // Trim unused fields.
+        rootRel = trimUnusedFields(rootRel);
+
         // Display physical plan after decorrelation.
         if (sqlExplain != null) {
             SqlExplain.Depth explainDepth = sqlExplain.getDepth();
@@ -329,6 +333,8 @@ public abstract class OJPreparingStmt
             }
         }
 
+        tracer.fine("prepareSql rootRel=" + rootRel);
+
         rootRel = optimize(resultType, rootRel);
         containsJava = treeContainsJava(rootRel);
 
@@ -343,12 +349,32 @@ public abstract class OJPreparingStmt
         if (!kind.belongsTo(SqlKind.DML)) {
             kind = sqlNodeOriginal.getKind();
         }
-        return implement(
+
+        preImplement();
+
+        return implement0(
             resultType,
             rootRel,
             kind,
             decl,
             arguments);
+    }
+
+    /**
+     * Called before {@link #implement}.
+     *
+     * <p>A typical implementation sets up the
+     * environment the preparing statement needs in order to
+     * implement (i.e. to generate code). When preparing a parsed query (by
+     * calling {@link #prepareSql}) this happens automatically. But when
+     * implementing a query presented as a query plan (by calling {@link
+     * #implement}), you must call this method first, even before constructing
+     * the query plan.</p>
+     *
+     * <p>The default implementation does nothing.</p>
+     */
+    public void preImplement()
+    {
     }
 
     /**
@@ -408,27 +434,6 @@ public abstract class OJPreparingStmt
         return false;
     }
 
-    public void halfImplement(
-        RelNode rootRel,
-        ClassDeclaration decl)
-    {
-        Class runtimeContextClass = null;
-        final Argument [] arguments = {
-            new Argument(
-                connectionVariable,
-                runtimeContextClass,
-                connection)
-        };
-        assert containsJava;
-        javaCompiler = createCompiler();
-        JavaRelImplementor relImplementor =
-            getRelImplementor(rootRel.getCluster().getRexBuilder());
-        Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
-        BoundMethod boundMethod;
-        boundMethod = compileAndBind(decl, expr, arguments);
-        Util.discard(boundMethod);
-    }
-
     /**
      * Implements a physical query plan.
      *
@@ -437,9 +442,9 @@ public abstract class OJPreparingStmt
      * @param sqlKind SqlKind of the original statement.
      * @param decl ClassDeclaration of the generated result.
      * @param args argument list of the generated result.
-     * @return an executable plan, a {@link PreparedExecution}.
+     * @return an executable plan, a {@link PreparedResult}.
      */
-    private PreparedExecution implement(
+    protected PreparedResult implement(
         RelDataType rowType,
         RelNode rootRel,
         SqlKind sqlKind,
@@ -504,6 +509,27 @@ public abstract class OJPreparingStmt
                 mapTableModOp(isDml, sqlKind),
                 boundMethod);
         return plan;
+    }
+
+    /**
+     * Bridge method to call {@link #implement}; it allows a subclass to
+     * control which parameters are passed to {@code implement}.
+     *
+     * @param rowType original rowtype returned by query validator
+     * @param rootRel root of the relational expression.
+     * @param sqlKind SqlKind of the original statement.
+     * @param decl ClassDeclaration of the generated result.
+     * @param args argument list of the generated result.
+     * @return an executable plan, a {@link PreparedResult}.
+     */
+    protected PreparedResult implement0(
+        RelDataType rowType,
+        RelNode rootRel,
+        SqlKind sqlKind,
+        ClassDeclaration decl,
+        Argument[] args)
+    {
+        return implement(rowType, rootRel, sqlKind, decl, args);
     }
 
     private TableModificationRel.Operation mapTableModOp(
@@ -597,6 +623,16 @@ public abstract class OJPreparingStmt
     protected abstract RelNode decorrelate(
         SqlNode query,
         RelNode rootRel);
+
+    /**
+     * Walks over a tree of relational expressions, replacing each
+     * {@link RelNode} with a 'slimmed down' relational expression that projects
+     * only the columns required by its consumer.
+     *
+     * @param rootRel Relational expression that is at the root of the tree
+     * @return Trimmed relational expression
+     */
+    protected abstract RelNode trimUnusedFields(RelNode rootRel);
 
     protected JavaCompiler createCompiler()
     {

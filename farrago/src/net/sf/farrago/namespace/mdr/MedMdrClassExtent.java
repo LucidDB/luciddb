@@ -24,19 +24,14 @@ package net.sf.farrago.namespace.mdr;
 
 import java.util.*;
 
-import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -64,7 +59,10 @@ class MedMdrClassExtent
         String [] localName,
         RelDataType rowType)
     {
-        super(localName, foreignName, rowType, null, null);
+        super(
+            localName, foreignName, rowType,
+            Collections.<RelDataTypeField>emptyList(),
+            null, null);
         this.directory = directory;
         this.refClass = refClass;
     }

@@ -132,21 +132,22 @@ public final class JoinRel
 
     //~ Methods ----------------------------------------------------------------
 
-    @SuppressWarnings({"CloneDoesntCallSuperClone"})
-    public JoinRel clone()
+    @Override
+    public JoinRel copy(
+        RexNode conditionExpr,
+        List<RelDataTypeField> systemFieldList,
+        RelNode left,
+        RelNode right)
     {
-        JoinRel clone =
-            new JoinRel(
-                getCluster(),
-                left.clone(),
-                right.clone(),
-                condition.clone(),
-                joinType,
-                new HashSet<String>(variablesStopped),
-                isSemiJoinDone(),
-                systemFieldList);
-        clone.inheritTraitsFrom(this);
-        return clone;
+        return new JoinRel(
+            getCluster(),
+            left,
+            right,
+            conditionExpr,
+            this.joinType,
+            new HashSet<String>(this.variablesStopped),
+            this.semiJoinDone,
+            systemFieldList);
     }
 
     public void explain(RelOptPlanWriter pw)

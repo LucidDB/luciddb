@@ -714,7 +714,7 @@
 '  FennelReshapeRel(projection=[[5, 0, 1, 2, 3, 4]], outputRowType=[RecordType(INTEGER NOT NULL SID, INTEGER NOT NULL SID0, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
-'      LhxAggRel(groupCount=[1])'
+'      LhxAggRel(group=[{0}])'
 '        LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$SID]])'
 > explain plan for select * from
 >     sales s1,

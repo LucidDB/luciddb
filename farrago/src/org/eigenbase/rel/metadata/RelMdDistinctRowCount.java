@@ -29,6 +29,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util14.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -78,7 +79,7 @@ public class RelMdDistinctRowCount
                         new RelOptUtil.RexInputConverter(
                             rexBuilder,
                             null,
-                            input.getRowType().getFields(),
+                            input.getRowType().getFieldList(),
                             adjustments));
             }
             Double partialRowCount =
@@ -170,7 +171,7 @@ public class RelMdDistinctRowCount
         List<RexNode> notPushable = new ArrayList<RexNode>();
         List<RexNode> pushable = new ArrayList<RexNode>();
         RelOptUtil.splitFilters(
-            rel.getGroupCount(),
+            rel.getGroupSet(),
             predicate,
             pushable,
             notPushable);
@@ -226,7 +227,7 @@ public class RelMdDistinctRowCount
         List<RexNode> notPushable = new ArrayList<RexNode>();
         List<RexNode> pushable = new ArrayList<RexNode>();
         RelOptUtil.splitFilters(
-            rel.getRowType().getFieldCount(),
+            Util.bitSetBetween(0, rel.getRowType().getFieldCount()),
             predicate,
             pushable,
             notPushable);
@@ -265,11 +266,7 @@ public class RelMdDistinctRowCount
         }
 
         // multiply by the cardinality of the non-child projection expressions
-        for (
-            int bit = projCols.nextSetBit(0);
-            bit >= 0;
-            bit = projCols.nextSetBit(bit + 1))
-        {
+        for (int bit : Util.toIter(projCols)) {
             Double subRowCount = RelMdUtil.cardOfProjExpr(rel, projExprs[bit]);
             if (subRowCount == null) {
                 return null;

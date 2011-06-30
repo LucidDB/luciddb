@@ -104,14 +104,21 @@ public class FennelCalcRel
     // implement RelNode
     public FennelCalcRel clone()
     {
-        FennelCalcRel clone =
+        return copy(getChild().clone())
+            .inheritTraitsFrom(this);
+    }
+
+    @Override
+    public FennelCalcRel copy(
+        RelNode... inputs)
+    {
+        assert inputs.length == 1;
+        return
             new FennelCalcRel(
                 getCluster(),
-                getChild().clone(),
+                inputs[0],
                 rowType,
                 program);
-        clone.inheritTraitsFrom(this);
-        return clone;
     }
 
     /**

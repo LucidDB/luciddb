@@ -180,14 +180,14 @@ public class MockRelOptPlanner
 
     // implement RelOptPlanner
     public RelNode register(
-        RelNode rel,
-        RelNode equivRel)
+        RelNode rel, RelNode equivRel, RelOptRuleCall call)
     {
         return rel;
     }
 
     // implement RelOptPlanner
-    public RelNode ensureRegistered(RelNode rel, RelNode equivRel)
+    public RelNode ensureRegistered(
+        RelNode rel, RelNode equivRel, RelOptRuleCall call)
     {
         return rel;
     }

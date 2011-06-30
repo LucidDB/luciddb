@@ -21,26 +21,14 @@
 */
 package net.sf.farrago.namespace.mql;
 
-import java.math.*;
-
-import java.sql.*;
-
 import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
-import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -68,7 +56,9 @@ class MedMqlColumnSet
         String metawebType,
         String udxSpecificName)
     {
-        super(localName, null, rowType, null, null);
+        super(
+            localName, null, rowType, Collections.<RelDataTypeField>emptyList(),
+            null, null);
         this.server = server;
         this.udxSpecificName = udxSpecificName;
         this.metawebType = metawebType;

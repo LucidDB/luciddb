@@ -36,9 +36,11 @@ import junit.framework.*;
 
 import junit.textui.*;
 
-import org.eigenbase.sql.*;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.sql.SqlDialect;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.test.*;
+import org.eigenbase.util.mapping.*;
 
 
 /**
@@ -667,6 +669,363 @@ public class UtilTest
     }
 
     /**
+     * Tests the method
+     * {@link RelOptUtil#contains(java.util.BitSet, java.util.BitSet)}.
+     */
+    public void testIsSubSetOf()
+    {
+        // empty set is subset of self
+        assertTrue(RelOptUtil.contains(Util.bitSetOf(), Util.bitSetOf()));
+
+        // {} is subset of {1}
+        assertTrue(RelOptUtil.contains(Util.bitSetOf(1), Util.bitSetOf()));
+
+        // {2} is subset of {1, 2}
+        assertTrue(RelOptUtil.contains(Util.bitSetOf(1, 2), Util.bitSetOf(2)));
+
+        // {1, 2} is subset of {1, 2}
+        assertTrue(
+            RelOptUtil.contains(Util.bitSetOf(1, 2), Util.bitSetOf(1, 2)));
+
+        // {1, 2} is not subset of {2}
+        assertFalse(
+            RelOptUtil.contains(Util.bitSetOf(2), Util.bitSetOf(1, 2)));
+
+        // {1, 2} is not subset of {0, 2}
+        assertFalse(
+            RelOptUtil.contains(Util.bitSetOf(0, 2), Util.bitSetOf(1, 2)));
+
+        // {1, 2} is not subset of {}
+        assertFalse(RelOptUtil.contains(Util.bitSetOf(), Util.bitSetOf(1, 2)));
+    }
+
+    /**
+     * Test for {@link Util#minus(java.util.Set, java.util.Set)}.
+     */
+    public void testMinus()
+    {
+        // empty minus empty
+        assertEquals(
+            Collections.<String>emptySet(),
+            Util.minus(
+                Collections.<String>emptySet(),
+                Collections.<String>emptySet()));
+
+        // something minus empty
+        assertEquals(
+            setOf("a", "b"),
+            Util.minus(
+                setOf("a", "b"),
+                Collections.<String>emptySet()));
+
+        // empty minus something
+        assertEquals(
+            Collections.<String>emptySet(),
+            Util.minus(
+                Collections.<String>emptySet(),
+                setOf("a", "b")));
+
+        // overlap
+        assertEquals(
+            setOf("a", "c"),
+            Util.minus(
+                setOf("a", "b", "c"),
+                setOf("d", "b")));
+
+        // very big set minus quite big set
+        Set<Integer> integers = new HashSet<Integer>();
+        Set<Integer> multiplesOfHundred = new HashSet<Integer>();
+        for (int i = 0; i < 1000000; i++) {
+            integers.add(i);
+            if (i % 100 == 0) {
+                multiplesOfHundred.add(i);
+            }
+        }
+        assertEquals(
+            Collections.<Integer>emptySet(),
+            Util.minus(integers, integers));
+        Set<Integer> notMultipleOfHundred =
+            Util.minus(integers, multiplesOfHundred);
+        assertEquals(
+            990000, notMultipleOfHundred.size());
+        assertEquals(
+            multiplesOfHundred,
+            Util.minus(integers, notMultipleOfHundred));
+    }
+
+    private static <T> Set<T> setOf(T... ts) {
+        return new HashSet<T>(Arrays.asList(ts));
+    }
+
+    /**
+     * Test for method {@link IntList#of(int...)}.
+     */
+    public void testIntListOf()
+    {
+        List<Integer> list;
+
+        // empty list
+        list = IntList.of();
+        assertTrue(list.isEmpty());
+        try {
+            final boolean b = list.add(1);
+            fail("expected error, got " + b);
+        } catch (UnsupportedOperationException e) {
+            // ok
+        }
+        assertEquals(0, list.size());
+        assertEquals(Collections.<Integer>emptyList(), list);
+        assertEquals(Collections.emptyList().hashCode(), list.hashCode());
+        try {
+            final Integer n = list.set(2, 56);
+            fail("expected error, got " + n);
+        } catch (UnsupportedOperationException e) {
+            // You'd probably expect IndexOutOfBoundsException.
+            // UnsupportedOperationException happens because we use
+            // Collections.emptyList. We can live with that.
+        }
+
+        // list with two elements
+        list = IntList.of(7, 2);
+        assertFalse(list.isEmpty());
+        try {
+            final boolean b = list.add(1);
+            fail("expected error, got " + b);
+        } catch (UnsupportedOperationException e) {
+            // ok
+        }
+        assertEquals(2, list.size());
+        assertEquals(Arrays.asList(7, 2), list);
+        assertEquals(Arrays.asList(7, 2).hashCode(), list.hashCode());
+        int n = list.set(1, 56);
+        assertEquals(2, n);
+        try {
+            n = list.set(2, 56);
+            fail("expected error, got " + n);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // ok
+        }
+        String s = "";
+        for (Integer i : list) {
+            s += i + ";";
+        }
+        assertEquals("7;56;", s);
+
+        // null not allowed
+        try {
+            n = list.set(0, null);
+            fail("expected error, got " + n);
+        } catch (NullPointerException e) {
+            // ok
+        }
+
+        // immutable list
+        list = IntList.ofImmutable(7, 2);
+        assertEquals(2, list.size());
+        assertEquals(Arrays.asList(7, 2), list);
+        assertEquals(Arrays.asList(7, 2).hashCode(), list.hashCode());
+        try {
+            n = list.set(0, null);
+            fail("expected error, got " + n);
+        } catch (UnsupportedOperationException e) {
+            // ok
+        }
+    }
+
+    /**
+     * Test {@link Mappings#divide}.
+     */
+    public void testMappingDivide()
+    {
+        // Identity divided by identity is identity
+        Mapping a = Mappings.createIdentity(4);
+        Mapping c = Mappings.divide(a, a);
+        assertTrue(c.isIdentity());
+        assertEquals(4, c.getSourceCount());
+
+        a = Mappings.create(MappingType.InverseSurjection, 5, 3);
+        c = Mappings.divide(a, a);
+        assertEquals("[]", c.toString());
+        assertEquals(3, c.getSourceCount());
+
+        // A: 5->3 = [0:2, 2:1, 4:0]
+        // B: 5->4 = [0:1, 2:0, 4:3]
+        // C: 4->3 = [0:1, 1:2, 3:0]
+        // A = B . C
+        a.set(0, 2);
+        a.set(2, 1);
+        a.set(4, 0);
+        Mapping b = Mappings.create(MappingType.InverseSurjection, 5, 4);
+        b.set(0, 1);
+        b.set(2, 0);
+        b.set(4, 3);
+        c = Mappings.divide(a, b);
+        assertEquals(4, c.getSourceCount());
+        assertEquals(3, c.getTargetCount());
+        assertEquals("[0:1, 1:2, 3:0]", c.toString());
+        assertEquals(a, Mappings.multiply(b, c));
+    }
+
+    /**
+     * Test {@link Mappings#multiply}.
+     */
+    public void testMappingMultiply()
+    {
+        Mapping a, b, c;
+
+        // Identity divided by identity is identity
+        a = Mappings.createIdentity(4);
+        c = Mappings.multiply(a, a);
+        assertTrue(c.isIdentity());
+        assertEquals(4, c.getSourceCount());
+
+        // Multiply by inverse. Get a subset of the identity.
+        a = Mappings.create(MappingType.InverseSurjection, 5, 3);
+        a.set(0, 2);
+        a.set(2, 1);
+        a.set(4, 0);
+        b = a.inverse();
+        c = Mappings.multiply(a, b);
+        assertEquals("[0:0, 2:2, 4:4]", c.toString());
+
+        // Empty mappings
+        a = Mappings.create(MappingType.InverseSurjection, 5, 2);
+        b = Mappings.create(MappingType.InverseSurjection, 2, 1);
+        c = Mappings.multiply(a, b);
+        assertEquals("[]", c.toString());
+        assertEquals(5, c.getSourceCount());
+        assertEquals(1, c.getTargetCount());
+
+        // Map from 4 to 3 to 2 elements.
+        // A: 5->4 = [0:1, 2:0, 4:3]
+        // B: 4->3 = [0:1, 1:2, 3:0]
+        // C: 5->3 = [0:2, 2:1, 4:0]
+        // C = A . B
+        a = Mappings.create(MappingType.InverseSurjection, 5, 4);
+        a.set(0, 1);
+        a.set(2, 0);
+        a.set(4, 3);
+        b = Mappings.create(MappingType.InverseSurjection, 4, 3);
+        b.set(0, 1);
+        b.set(1, 2);
+        b.set(3, 0);
+        c = Mappings.multiply(a, b);
+        assertEquals(5, c.getSourceCount());
+        assertEquals(3, c.getTargetCount());
+        assertEquals("[0:2, 2:1, 4:0]", c.toString());
+    }
+
+    /**
+     * Test {@link Mappings#apply(Mapping, java.util.BitSet)}.
+     */
+    public void testMappingApply()
+    {
+        Mapping mapping;
+        BitSet bitSet, bitSet2;
+
+        // Apply identity to bit set, get same object back
+        mapping = Mappings.createIdentity(4);
+        bitSet = Util.bitSetOf(1, 3);
+        bitSet2 = Mappings.apply(mapping, bitSet);
+        assertEquals(bitSet2, bitSet);
+        assertSame(bitSet2, bitSet);
+
+        // With a mapping that removes column 2, bits get squashed up.
+        //
+        // | 0 1 2 3 4 5 |
+        //     X   X   X     bitSet
+        //     |  /   /      apply mapping
+        //     X X   X       bitSet2
+        bitSet = Util.bitSetOf(1, 3, 5);
+        mapping = Mappings.create(MappingType.InverseSurjection, 6, 5);
+        mapping.set(0, 0);
+        mapping.set(1, 1);
+        mapping.set(3, 2);
+        mapping.set(4, 3);
+        mapping.set(5, 4);
+        bitSet2 = Mappings.apply(mapping, bitSet);
+        assertEquals(Util.bitSetOf(1, 2, 4), bitSet2);
+
+        // A mapping that removes column 2, and maps col 1 to col 5.
+        //
+        // | 0 1 2 3 4 5 |
+        //     X   X   X     bitSet
+        //     +--/---/+     apply mapping
+        //       X   X X     bitSet2
+        bitSet = Util.bitSetOf(1, 3, 5);
+        mapping = Mappings.create(MappingType.InverseSurjection, 6, 6);
+        mapping.set(0, 0);
+        mapping.set(1, 5);
+        mapping.set(3, 2);
+        mapping.set(4, 3);
+        mapping.set(5, 4);
+        bitSet2 = Mappings.apply(mapping, bitSet);
+        assertEquals(Util.bitSetOf(2, 4, 5), bitSet2);
+
+        // Not tested, but if a bit is set and doesn't appear in the mapping,
+        // expect an exception to be thrown.
+    }
+
+    /**
+     * Test {@link Mappings#apply(Mapping, java.util.List)}.
+     */
+    public void testMappingApplyList()
+    {
+        Mapping mapping;
+
+        // Apply identity to bit set, get same object back
+        mapping = Mappings.createIdentity(4);
+        List<String> list = Arrays.asList("a", "b", null, "c");
+        List<String> list2 = Mappings.apply(mapping, list);
+        assertEquals(list2, list);
+
+        // A mapping that removes entry 2.
+        mapping = Mappings.create(MappingType.InverseSurjection, 4, 3);
+        mapping.set(0, 0);
+        mapping.set(1, 1);
+        mapping.set(3, 2);
+        list2 = Mappings.apply(mapping, list);
+        assertEquals(Arrays.asList("a", "b", "c"), list2);
+
+        // As above, but mapping has more sources than list size --> fail
+        // REVIEW: is this reasonable?
+        mapping = Mappings.create(MappingType.InverseSurjection, 5, 3);
+        mapping.set(0, 0);
+        mapping.set(1, 1);
+        mapping.set(3, 2);
+        try {
+            list2 = Mappings.apply(mapping, list);
+            fail("expected error, got " + list2);
+        } catch (IllegalArgumentException e) {
+            // ok
+        }
+
+        // As above, but mapping has fewer sources than list size --> fail
+        // REVIEW: is this reasonable?
+        mapping = Mappings.create(MappingType.InverseSurjection, 3, 3);
+        mapping.set(0, 0);
+        mapping.set(1, 2);
+        mapping.set(2, 1);
+        try {
+            list2 = Mappings.apply(mapping, list);
+            fail("expected error, got " + list2);
+        } catch (IllegalArgumentException e) {
+            // ok
+        }
+
+        // A mapping that removes entry 2, and moves entry 1 to entry 5.
+        List<Integer> list3 = Arrays.asList(0, 10, 20, 30, 40, 50, 60);
+        mapping = Mappings.create(MappingType.InverseSurjection, 7, 5);
+        mapping.set(0, 0);
+        mapping.set(1, 4);
+        mapping.set(3, 2);
+        mapping.set(4, 3);
+        mapping.set(6, 1);
+        List<Integer> list4 = Mappings.apply(mapping, list3);
+        assertEquals(Arrays.asList(0, 60, 30, 40, 10), list4);
+    }
+
+    /**
      * Unit test for {@link org.eigenbase.util.CompositeList}.
      */
     public void testCompositeList()
@@ -732,6 +1091,23 @@ public class UtilTest
             ss += s;
         }
         assertEquals("abczzabczz", ss);
+
+        // Empty composite list.
+        final List<String> emptyCompList = CompositeList.of();
+        assertTrue(emptyCompList.isEmpty());
+        assertTrue(emptyCompList == Collections.EMPTY_LIST);
+
+        // Singleton composite list.
+        final List<String> singletonCompList =
+            CompositeList.of(Arrays.asList("foo", "bar"));
+        assertEquals(2, singletonCompList.size());
+        assertEquals("bar", singletonCompList.get(1));
+        try {
+            String x = singletonCompList.set(0, ss);
+            fail("expected error, got " + x);
+        } catch (UnsupportedOperationException e) {
+            // ok
+        }
     }
 
     /**
@@ -761,8 +1137,7 @@ public class UtilTest
         map.put("person", "Ringo");
         map.put("age", 64.5);
         assertEquals(
-            "Happy 64.50th birthday, Ringo!",
-            template.format(map));
+            "Happy 64.50th birthday, Ringo!", template.format(map));
 
         // Missing parameters evaluate to null.
         map.remove("person");
@@ -897,6 +1272,88 @@ public class UtilTest
         } catch (NullPointerException npe) {
             // OK
         }
+    }
+
+    /**
+     * Unit test for {@link Util#spaces(int)}.
+     */
+    public void testSpaces()
+    {
+        for (int i : new int[]{0, 1, 3, 1, 8, 11, 9, 15, 16}) {
+            checkSpaces(i);
+        }
+
+        // test for strings of random length (exponentially distributed, up to
+        // 4096 chars long)
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            int power = random.nextInt(12);
+            int length = random.nextInt(1 << power);
+            checkSpaces(length);
+        }
+    }
+
+    private void checkSpaces(int length)
+    {
+        String spaces = Util.spaces(length);
+        String message = "spaces(" + length + ")";
+        assertNotNull(message, spaces);
+        assertEquals(message, spaces.length(), length);
+        for (int j = 0; j < spaces.length(); j++) {
+            assertEquals(message, ' ', spaces.charAt(j));
+        }
+    }
+
+    /**
+     * Unit test for {@link Pair#of(Iterable, Iterable)}.
+     */
+    public void testPairOfIterable()
+    {
+        List<String> strings = Arrays.asList("foo", "bar");
+        List<Integer> integers = Arrays.asList(3, 2);
+        String s = "";
+        for (Pair<String, Integer> pair : Pair.of(strings, integers)) {
+            s += pair + ";";
+        }
+        assertEquals("<foo, 3>;<bar, 2>;", s);
+
+        s = "";
+        strings = Collections.emptyList();
+        integers = Collections.emptyList();
+        for (Pair<String, Integer> pair : Pair.of(strings, integers)) {
+            s += pair + ";";
+        }
+        assertEquals("", s);
+    }
+
+    /**
+     * Unit test for {@link Util#startsWith(java.util.List, java.util.List)}.
+     */
+    public void testStartsWith()
+    {
+        assertTrue(
+            Util.startsWith(
+                Arrays.asList(1, 2, 3),
+                Arrays.asList(1)));
+        assertFalse(
+            Util.startsWith(
+                Arrays.asList(1, 2, 3), Arrays.asList(1, 3)));
+        assertTrue(
+            Util.startsWith(
+                Arrays.asList(1, 2, 3),
+                Collections.<Integer>emptyList()));
+        assertTrue(
+            Util.startsWith(
+                Collections.<Integer>emptyList(),
+                Collections.<Integer>emptyList()));
+        assertFalse(
+            Util.startsWith(
+                Collections.<Integer>emptyList(),
+                Arrays.asList(1)));
+        assertFalse(
+            Util.startsWith(
+                Arrays.asList(1, 2, 3),
+                Arrays.asList(1, 2, 3, 4)));
     }
 
     /**

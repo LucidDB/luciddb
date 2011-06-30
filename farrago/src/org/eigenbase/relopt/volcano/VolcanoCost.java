@@ -27,7 +27,7 @@ import org.eigenbase.relopt.*;
 /**
  * <code>VolcanoCost</code> represents the cost of a plan node.
  *
- * <p>This class is immutable: none of the methods (besides {@link #set})
+ * <p>This class is immutable: none of the methods
  * modifies any member variables.</p>
  */
 class VolcanoCost
@@ -73,9 +73,9 @@ class VolcanoCost
 
     //~ Instance fields --------------------------------------------------------
 
-    double dCpu;
-    double dIo;
-    double dRows;
+    final double dCpu;
+    final double dIo;
+    final double dRows;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -84,7 +84,9 @@ class VolcanoCost
         double dCpu,
         double dIo)
     {
-        set(dRows, dCpu, dIo);
+        this.dRows = dRows;
+        this.dCpu = dCpu;
+        this.dIo = dIo;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -216,16 +218,6 @@ class VolcanoCost
             this.dRows + that.dRows,
             this.dCpu + that.dCpu,
             this.dIo + that.dIo);
-    }
-
-    public void set(
-        double dRows,
-        double dCpu,
-        double dIo)
-    {
-        this.dRows = dRows;
-        this.dCpu = dCpu;
-        this.dIo = dIo;
     }
 
     public String toString()

@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.query;
 
+import java.util.List;
+
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.rel.*;
@@ -51,24 +53,31 @@ class FarragoView
     /**
      * Creates a new FarragoView object.
      *
-     * @param cwmView catalog definition for view
-     * @param rowType type for rows produced by view
+     * @param cwmView Catalog definition for view
+     * @param rowType Type for rows produced by view (not including sys fields)
+     * @param systemFieldList List of system fields (may be empty, not null)
      * @param datasetName Name of sample dataset, or null to use vanilla
      * @param modality Modality of the view (relational versus streaming)
      */
     FarragoView(
         FemLocalView cwmView,
         RelDataType rowType,
+        List<RelDataTypeField> systemFieldList,
         String datasetName,
         ModalityType modality)
     {
-        super(cwmView, rowType);
+        super(cwmView, rowType, systemFieldList);
         this.datasetName = datasetName;
         this.modality = modality;
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the underlying repository object.
+     *
+     * @return repository view definition
+     */
     public FemLocalView getFemView()
     {
         return (FemLocalView) getCwmColumnSet();
@@ -96,13 +105,22 @@ class FarragoView
         return expandView(queryString);
     }
 
+    /**
+     * Returns a relational expression representing a use of this view.
+     *
+     * @param queryString View query string
+     * @return Relational expression
+     */
     private RelNode expandView(String queryString)
     {
         try {
             // REVIEW:  cache view definition?
+            final RelDataType rowType =
+                RelOptUtil.getRowTypeIncludingSystemFields(
+                    getPreparingStmt().getTypeFactory(), this, false);
             RelNode rel =
                 getPreparingStmt().expandView(
-                    getRowType(),
+                    rowType,
                     queryString);
 
             // NOTE jvs 22-Jan-2007:  It would be nice if we could

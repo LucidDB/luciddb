@@ -35,6 +35,7 @@ import org.eigenbase.sql.SqlIntervalQualifier.TimeUnit;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.DateTimeUtil;
 
 
 /**
@@ -150,8 +151,7 @@ public class RexBuilder
         final RelDataTypeField [] fields = type.getFields();
         if ((i < 0) || (i >= fields.length)) {
             throw Util.newInternal(
-                "Field ordinal " + i + " is invalid for "
-                + " type '" + type + "'");
+                "Field ordinal " + i + " is invalid for type '" + type + "'");
         }
         return makeFieldAccessInternal(expr, fields[i]);
     }
@@ -681,7 +681,7 @@ public RexNode decodeIntervalOrDecimal(RexNode node)
      *
      * @return Reference to field
      */
-    public RexNode makeInputRef(
+    public RexInputRef makeInputRef(
         RelDataType type,
         int i)
     {
@@ -1088,6 +1088,86 @@ public RexNode decodeIntervalOrDecimal(RexNode node)
     public RexNode copy(RexNode expr)
     {
         return expr.accept(new RexCopier(this));
+    }
+
+    /**
+     * Creates a literal of the default value for the given type.
+     *
+     * @see #makeZeroLiteral(org.eigenbase.reltype.RelDataType, boolean)
+     *
+     * @param type Type
+     * @return Simple literal
+     */
+    public RexLiteral makeZeroLiteral(RelDataType type)
+    {
+        return (RexLiteral) makeZeroLiteral(type, false);
+    }
+
+    /**
+     * Creates an expression of the default value for the given type, casting if
+     * necessary to ensure that the expression is the exact type.
+     *
+     * <p>This value is:<ul>
+     * <li>0 for numeric types
+     * <li>FALSE for BOOLEAN
+     * <li>The epoch for TIMESTAMP and DATE
+     * <li>Midnight for TIME
+     * <li>The empty string for string types (CHAR, BINARY, VARCHAR, VARBINARY).
+     *
+     * @param type Type
+     * @param allowCast Whether to allow a cast. If false, value is always a
+     *    {@link RexLiteral} but may not be the exact type
+     * @return Simple literal, or cast simple literal
+     */
+    public RexNode makeZeroLiteral(RelDataType type, boolean allowCast)
+    {
+        if (type.isNullable()) {
+            type = typeFactory.createTypeWithNullability(type, false);
+        }
+        RexLiteral literal;
+        switch (type.getSqlTypeName()) {
+        case CHAR:
+            return makeCharLiteral(
+                new NlsString(Util.spaces(type.getPrecision()), null, null));
+        case VARCHAR:
+            literal = makeCharLiteral(new NlsString("", null, null));
+            if (allowCast) {
+                return makeCast(type, literal);
+            } else {
+                return literal;
+            }
+        case BINARY:
+            return makeBinaryLiteral(new byte[type.getPrecision()]);
+        case VARBINARY:
+            literal = makeBinaryLiteral(new byte[0]);
+            if (allowCast) {
+                return makeCast(type, literal);
+            } else {
+                return literal;
+            }
+        case TINYINT:
+        case SMALLINT:
+        case INTEGER:
+        case BIGINT:
+        case DECIMAL:
+            return makeExactLiteral(BigDecimal.ZERO, type);
+        case FLOAT:
+        case REAL:
+        case DOUBLE:
+            return makeApproxLiteral(BigDecimal.ZERO, type);
+        case BOOLEAN:
+            return booleanFalse;
+        case TIME:
+            return makeTimeLiteral(
+                DateTimeUtil.zeroCalendar, type.getPrecision());
+        case DATE:
+            return makeDateLiteral(DateTimeUtil.zeroCalendar);
+        case TIMESTAMP:
+            return makeTimestampLiteral(
+                DateTimeUtil.zeroCalendar, type.getPrecision());
+        default:
+            throw Util.unexpected(type.getSqlTypeName());
+        }
     }
 }
 

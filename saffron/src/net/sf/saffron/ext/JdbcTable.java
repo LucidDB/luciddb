@@ -19,6 +19,8 @@
 
 package net.sf.saffron.ext;
 
+import java.util.Collections;
+
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.OJConnectionRegistry;
 
@@ -53,7 +55,7 @@ public class JdbcTable extends RelOptAbstractTable
         RelDataType rowType,
         JdbcColumn [] columns)
     {
-        super(schema, name, rowType);
+        this(schema, name, rowType);
         this.columns = columns;
     }
 
@@ -62,7 +64,7 @@ public class JdbcTable extends RelOptAbstractTable
         String name,
         RelDataType rowType)
     {
-        super(schema, name, rowType);
+        super(schema, name, rowType, Collections.<RelDataTypeField>emptyList());
     }
 
     /**
@@ -127,9 +129,10 @@ public class JdbcTable extends RelOptAbstractTable
             schema.getTypeFactory());
         StatementList whileBody =
             new StatementList(
-            // Emp emp = new Emp(resultSet);
-            // <<body>>
-            new VariableDeclaration(rowTypeName,
+                // Emp emp = new Emp(resultSet);
+                // <<body>>
+                new VariableDeclaration(
+                    rowTypeName,
                     varRow.toString(),
                     new AllocationExpression(
                         rowTypeName,
@@ -157,12 +160,11 @@ public class JdbcTable extends RelOptAbstractTable
             OJConnectionRegistry.instance.get(connection);
         stmtList.add(
             new TryStatement(
-                
-        // try {
-        new StatementList(
-                    
-        // jdbcCon = ((javax.sql.DataSource) connection).getConnection();
-        new ExpressionStatement(
+                // try {
+                new StatementList(
+                    // jdbcCon = ((javax.sql.DataSource) connection)
+                    //     .getConnection();
+                    new ExpressionStatement(
                         new AssignmentExpression(
                             varJdbcCon,
                             AssignmentExpression.EQUALS,
@@ -173,47 +175,49 @@ public class JdbcTable extends RelOptAbstractTable
                                     connectionInfo.expr),
                                 "getConnection",
                                 null))),
-                    
+
         // statement = jdbcCon.createStatement();
         new ExpressionStatement(
-                        new AssignmentExpression(
-                            varStmt,
-                            AssignmentExpression.EQUALS,
-                            new MethodCall(varJdbcCon, "createStatement", null))),
-                    
+            new AssignmentExpression(
+                varStmt,
+                AssignmentExpression.EQUALS,
+                new MethodCall(varJdbcCon, "createStatement", null))),
+
         // java.sql.ResultSet resultSet =
         //   statement.executeQuery(
         //     "select * from table");
         new VariableDeclaration(
-                        new TypeName("java.sql.ResultSet"),
-                        varRs.toString(),
-                        new MethodCall(
-                            varStmt,
-                            "executeQuery",
-                            new ExpressionList(
-                                Literal.makeLiteral(queryString)))),
-                    
+            new TypeName("java.sql.ResultSet"),
+            varRs.toString(),
+            new MethodCall(
+                varStmt,
+                "executeQuery",
+                new ExpressionList(
+                    Literal.makeLiteral(queryString)))),
+
         // while (resultSet.next()) {
-        new WhileStatement(new MethodCall(varRs, "next", null),
-                        
+                    new WhileStatement(
+                        new MethodCall(varRs, "next", null),
+
         // Emp emp = new Emp(resultSet);
         // <<body>>
-        whileBody)),
+                        whileBody)),
                 new CatchList(
-                    
         // catch (java.sql.SQLException e) {
         //   throw new saffron.runtime.SaffronError(e);
         // }
-        new CatchBlock(new Parameter(
+                    new CatchBlock(
+                        new Parameter(
                             new TypeName("java.sql.SQLException"),
                             varEx.toString()),
                         new StatementList(
                             new ThrowStatement(
                                 new AllocationExpression(
                                     OJUtil.typeNameForClass(
-                                        net.sf.saffron.runtime.SaffronError.class),
+                                        net.sf.saffron.runtime.SaffronError
+                                            .class),
                                     new ExpressionList(varEx)))))),
-                
+
         // finally {
         //    if (stmt != null) {
         //       try {
@@ -236,7 +240,8 @@ public class JdbcTable extends RelOptAbstractTable
                             new TryStatement(
                                 new StatementList(
                                     new ExpressionStatement(
-                                        new MethodCall(varStmt, "close", null))),
+                                        new MethodCall(
+                                            varStmt, "close", null))),
                                 new CatchList(
                                     new CatchBlock(
                                         new Parameter(
@@ -253,8 +258,8 @@ public class JdbcTable extends RelOptAbstractTable
                             new TryStatement(
                                 new StatementList(
                                     new ExpressionStatement(
-                                        new MethodCall(varJdbcCon, "close",
-                                            null))),
+                                        new MethodCall(
+                                            varJdbcCon, "close", null))),
                                 new CatchList(
                                     new CatchBlock(
                                         new Parameter(

@@ -174,6 +174,10 @@ public class FennelWindowRel
             "type2",
             rowType,
             true);
+        assert RelOptUtil.equal(
+            "input row type", child.getRowType(),
+            "input program row type", inputProgram.getInputRowType(),
+            true);
         this.rowType = rowType;
         this.outputProgram = outputProgram;
         this.inputProgram = inputProgram;
@@ -201,16 +205,22 @@ public class FennelWindowRel
     // override Object (public, does not throw CloneNotSupportedException)
     public FennelWindowRel clone()
     {
-        FennelWindowRel clone =
-            new FennelWindowRel(
-                getCluster(),
-                getChild(),
-                rowType,
-                inputProgram,
-                windows,
-                outputProgram);
-        clone.inheritTraitsFrom(this);
-        return clone;
+        return copy(getChild())
+            .inheritTraitsFrom(this);
+    }
+
+    @Override
+    public FennelWindowRel copy(
+        RelNode... inputs)
+    {
+        assert inputs.length == 1;
+        return new FennelWindowRel(
+            getCluster(),
+            inputs[0],
+            rowType,
+            inputProgram,
+            windows,
+            outputProgram);
     }
 
     protected Window[] getWindows()
@@ -230,6 +240,9 @@ public class FennelWindowRel
 
     public boolean isValid(boolean fail)
     {
+        if (!super.isValid(fail)) {
+            return false;
+        }
         if (!inputProgram.isValid(fail)) {
             return false;
         }
@@ -318,8 +331,9 @@ public class FennelWindowRel
     }
 
     // for toStreamDef()
-    protected void
-        fillStreamDef(FemWindowStreamDef def, FennelRelImplementor implementor)
+    protected void fillStreamDef(
+        FemWindowStreamDef def,
+        FennelRelImplementor implementor)
     {
         final FarragoMetadataFactory repos = implementor.getRepos();
 
@@ -345,12 +359,9 @@ public class FennelWindowRel
         List<Integer> sortFieldList = new ArrayList<Integer>();
         if (!collationList.isEmpty()) {
             final RelCollation collation = collationList.get(0);
-            for (
-                RelFieldCollation fieldCollation
-                    : collation.getFieldCollations())
-                {
-                    sortFieldList.add(fieldCollation.getFieldIndex());
-                }
+            for (RelFieldCollation fc : collation.getFieldCollations()) {
+                sortFieldList.add(fc.getFieldIndex());
+            }
         }
         Integer [] sortFields =
             sortFieldList.toArray(new Integer[sortFieldList.size()]);
@@ -394,7 +405,10 @@ public class FennelWindowRel
             windowDef.setRange(String.valueOf(offsetAndRange.range));
 
             RelDataType inputRowType = getChild().getRowType();
-            assert inputRowType == inputProgram.getInputRowType();
+            assert RelOptUtil.equal(
+                "input row type", inputRowType,
+                "input program row type", inputProgram.getInputRowType(),
+                true);
 
             // For each partition...
             for (Partition partition : window.partitionList) {

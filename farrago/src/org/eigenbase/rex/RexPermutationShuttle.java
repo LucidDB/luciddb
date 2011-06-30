@@ -22,7 +22,7 @@
 */
 package org.eigenbase.rex;
 
-import org.eigenbase.util.*;
+import org.eigenbase.util.mapping.Mappings;
 
 
 /**
@@ -38,13 +38,23 @@ public class RexPermutationShuttle
 {
     //~ Instance fields --------------------------------------------------------
 
-    private final Permutation permutation;
+    private final Mappings.TargetMapping mapping;
 
     //~ Constructors -----------------------------------------------------------
 
-    public RexPermutationShuttle(Permutation permutation)
+    /**
+     * Creates a RexPermutationShuttle.
+     *
+     * <p>The mapping provides at most one target for every source. If a source
+     * has no targets and is referenced in the expression,
+     * {@link org.eigenbase.util.mapping.Mappings.TargetMapping#getTarget(int)}
+     * will give an error. Otherwise the mapping gives a unique target.
+     *
+     * @param mapping Mapping
+     */
+    public RexPermutationShuttle(Mappings.TargetMapping mapping)
     {
-        this.permutation = permutation;
+        this.mapping = mapping;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -52,7 +62,7 @@ public class RexPermutationShuttle
     public RexNode visitLocalRef(RexLocalRef local)
     {
         final int index = local.getIndex();
-        int target = permutation.getTarget(index);
+        int target = mapping.getTarget(index);
         return new RexLocalRef(
             target,
             local.getType());
