@@ -5069,13 +5069,13 @@ public class SqlParserTest
 
     public void testIntervalOperators()
     {
-        checkExp("-interval '1' day", "(- INTERVAL '1' DAY)");
+        checkExp("-interval '1' day", "(- (INTERVAL '1' DAY))");
         checkExp(
             "interval '1' day + interval '1' day",
-            "(INTERVAL '1' DAY + INTERVAL '1' DAY)");
+            "((INTERVAL '1' DAY) + INTERVAL '1' DAY)");
         checkExp(
             "interval '1' day - interval '1:2:3' hour to second",
-            "(INTERVAL '1' DAY - INTERVAL '1:2:3' HOUR TO SECOND)");
+            "((INTERVAL '1' DAY) - INTERVAL '1:2:3' HOUR TO SECOND)");
 
         checkExp("interval -'1' day", "INTERVAL -'1' DAY");
         checkExp("interval '-1' day", "INTERVAL '-1' DAY");
@@ -5140,13 +5140,16 @@ public class SqlParserTest
             "DATE '2000-01-01' + interval '1' hour ",
             "(DATE '2000-01-01' + INTERVAL '1' HOUR)");
 
+        // Interval is unparsed with parentheses if there is a high-precedence
+        // operator to the right. This is to prevent conflicts with "TO"
+        // keyword.
         checkExp(
             "interval '1' hour + TIME '23:59:59' ",
-            "(INTERVAL '1' HOUR + TIME '23:59:59')");
+            "((INTERVAL '1' HOUR) + TIME '23:59:59')");
 
-        checkExp("interval '1' hour * 8", "(INTERVAL '1' HOUR * 8)");
+        checkExp("interval '1' hour * 8", "((INTERVAL '1' HOUR) * 8)");
         checkExp("1 * interval '1' hour", "(1 * INTERVAL '1' HOUR)");
-        checkExp("interval '1' hour / 8", "(INTERVAL '1' HOUR / 8)");
+        checkExp("interval '1' hour / 8", "((INTERVAL '1' HOUR) / 8)");
     }
 
     public void testIntervalCompare()

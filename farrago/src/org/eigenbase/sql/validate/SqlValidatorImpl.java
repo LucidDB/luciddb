@@ -110,48 +110,48 @@ public class SqlValidatorImpl
      * scope created from them}.
      */
     protected final Map<SqlNode, SqlValidatorScope> scopes =
-        new HashMap<SqlNode, SqlValidatorScope>();
+        new IdentityHashMap<SqlNode, SqlValidatorScope>();
 
     /**
      * Maps a {@link SqlSelect} node to the scope used by its WHERE and HAVING
      * clauses.
      */
     private final Map<SqlSelect, SqlValidatorScope> whereScopes =
-        new HashMap<SqlSelect, SqlValidatorScope>();
+        new IdentityHashMap<SqlSelect, SqlValidatorScope>();
 
     /**
      * Maps a {@link SqlSelect} node to the scope used by its SELECT and HAVING
      * clauses.
      */
     private final Map<SqlSelect, SqlValidatorScope> selectScopes =
-        new HashMap<SqlSelect, SqlValidatorScope>();
+        new IdentityHashMap<SqlSelect, SqlValidatorScope>();
 
     /**
      * Maps a {@link SqlSelect} node to the scope used by its ORDER BY clause.
      */
     private final Map<SqlSelect, SqlValidatorScope> orderScopes =
-        new HashMap<SqlSelect, SqlValidatorScope>();
+        new IdentityHashMap<SqlSelect, SqlValidatorScope>();
 
     /**
      * Maps a {@link SqlSelect} node that is the argument to a CURSOR
      * constructor to the scope of the result of that select node
      */
     private final Map<SqlSelect, SqlValidatorScope> cursorScopes =
-        new HashMap<SqlSelect, SqlValidatorScope>();
+        new IdentityHashMap<SqlSelect, SqlValidatorScope>();
 
     /**
      * Maps a {@link SqlNode node} to the {@link SqlValidatorNamespace
      * namespace} which describes what columns they contain.
      */
     protected final Map<SqlNode, SqlValidatorNamespace> namespaces =
-        new HashMap<SqlNode, SqlValidatorNamespace>();
+        new IdentityHashMap<SqlNode, SqlValidatorNamespace>();
 
     /**
      * Set of select expressions used as cursor definitions. In standard SQL,
      * only the top-level SELECT is a cursor; Eigenbase extends this with
      * cursors as inputs to table functions.
      */
-    private final Set<SqlNode> cursorSet = new HashSet<SqlNode>();
+    private final Set<SqlNode> cursorSet = new IdentityHashSet<SqlNode>();
 
     /**
      * Stack of objects that maintain information about function calls. A stack
@@ -270,8 +270,11 @@ public class SqlValidatorImpl
         final SelectScope selectScope = getRawSelectScope(select);
         List<SqlNode> list = selectScope.getExpandedSelectList();
         if (list == null) {
-            SqlNodeList selectList = select.getSelectList();
             list = new ArrayList<SqlNode>();
+            for (RelDataTypeField field : getSystemFields()) {
+                list.add(new SqlIdentifier(field.getName(), SqlParserPos.ZERO));
+            }
+            SqlNodeList selectList = select.getSelectList();
             for (int i = 0; i < selectList.size(); i++) {
                 final SqlNode selectItem = selectList.get(i);
                 expandSelectItem(
@@ -4599,6 +4602,7 @@ public class SqlValidatorImpl
             columnListParamToParentCursorMap = new HashMap<String, String>();
         }
     }
+
 }
 
 // End SqlValidatorImpl.java

@@ -23,8 +23,8 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.*;
-
 
 /**
  * Namespace offered by a subquery.
@@ -78,8 +78,14 @@ public class SelectNamespace
     {
         final RelDataType rowType = this.getRowTypeAsWritten();
         final int field = SqlTypeUtil.findField(rowType, columnName);
-        final SqlNodeList selectList = select.getSelectList();
-        final SqlNode selectItem = selectList.get(field);
+        final SqlNode selectItem;
+        if (field < 0) {
+            // Column is not in the explicit select list, so presumably it's
+            // a system field.
+            selectItem = new SqlIdentifier(columnName, SqlParserPos.ZERO);
+        } else {
+            selectItem = select.getSelectList().get(field);
+        }
         return validator.getSelectScope(select).getMonotonicity(selectItem);
     }
 }

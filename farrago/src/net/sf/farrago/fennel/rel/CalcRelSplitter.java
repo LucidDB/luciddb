@@ -114,11 +114,9 @@ public abstract class CalcRelSplitter
         // Figure out what level each expression belongs to.
         int [] exprLevels = new int[exprs.length];
 
-        // The reltype of a level is given by
-        // relTypes[levelTypeOrdinals[level]].
-        int [] levelTypeOrdinals = new int[exprs.length];
+        LevelInfo[] levelInfos = new LevelInfo[exprs.length];
 
-        int levelCount = chooseLevels(exprs, -1, exprLevels, levelTypeOrdinals);
+        int levelCount = chooseLevels(exprs, -1, exprLevels, levelInfos);
 
         // For each expression, figure out which is the highest level where it
         // is used.
@@ -141,7 +139,7 @@ public abstract class CalcRelSplitter
             traceLevelExpressions(
                 exprs,
                 exprLevels,
-                levelTypeOrdinals,
+                levelInfos,
                 levelCount);
         }
 
@@ -182,7 +180,7 @@ public abstract class CalcRelSplitter
                 projectExprOrdinals = projectExprOrdinalList.toIntArray();
             }
 
-            final RelType relType = relTypes[levelTypeOrdinals[level]];
+            final RelType relType = levelInfos[level].relType;
 
             // Can we do the condition this level?
             int conditionExprOrdinal = -1;
@@ -238,18 +236,19 @@ public abstract class CalcRelSplitter
     /**
      * Figures out which expressions to calculate at which level.
      *
+     *
      * @param exprs Array of expressions
      * @param conditionOrdinal Ordinal of the condition expression, or -1 if no
      * condition
      * @param exprLevels Level ordinal for each expression (output)
-     * @param levelTypeOrdinals The type of each level (output)
+     * @param levelInfos Info about each level, including assigned reltype (out)
      * @return Number of levels required
      */
     private int chooseLevels(
         final RexNode [] exprs,
         int conditionOrdinal,
         int [] exprLevels,
-        int [] levelTypeOrdinals)
+        LevelInfo[] levelInfos)
     {
         final int inputFieldCount = program.getInputRowType().getFieldCount();
 
@@ -309,17 +308,17 @@ public abstract class CalcRelSplitter
                         if (!relTypesPossibleForTopLevel[relTypeOrdinal]) {
                             continue;
                         }
-                        if (relTypes[relTypeOrdinal].canImplement(
-                                expr,
-                                condition))
-                        {
+                        final RelType relType = relTypes[relTypeOrdinal];
+                        if (relType.canImplement(expr, condition)) {
                             // Success. We have found a reltype where we can
                             // implement this expression.
                             exprLevels[i] = level;
-                            levelTypeOrdinals[level] = relTypeOrdinal;
+                            levelInfos[level] = new LevelInfo();
+                            levelInfos[level].relType = relType;
                             assert (level == 0)
-                                || (levelTypeOrdinals[level - 1]
-                                    != levelTypeOrdinals[level])
+                                || (levelInfos[level - 1].relType
+                                    != levelInfos[level].relType)
+                                || levelInfos[level - 1].compatiblityException
                                 : "successive levels of same type";
 
                             // Figure out which of the other reltypes are
@@ -344,8 +343,8 @@ public abstract class CalcRelSplitter
                             }
 
                             // Move to next level.
-                            levelTypeOrdinals[levelCount] =
-                                firstSet(relTypesPossibleForTopLevel);
+                            levelInfos[levelCount].relType =
+                                relTypes[firstSet(relTypesPossibleForTopLevel)];
                             ++levelCount;
                             Arrays.fill(relTypesPossibleForTopLevel, true);
                             break levelLoop;
@@ -359,19 +358,26 @@ public abstract class CalcRelSplitter
                         // Cannot implement for any reltype.
                         throw Util.newInternal("cannot implement " + expr);
                     }
-                    levelTypeOrdinals[levelCount] =
-                        firstSet(relTypesPossibleForTopLevel);
+                    levelInfos[levelCount].relType =
+                        relTypes[firstSet(relTypesPossibleForTopLevel)];
                     ++levelCount;
                     Arrays.fill(relTypesPossibleForTopLevel, true);
                 } else {
-                    final int levelTypeOrdinal = levelTypeOrdinals[level];
-                    if (!relTypes[levelTypeOrdinal].canImplement(
-                            expr,
-                            condition))
-                    {
+                    final RelType relType = levelInfos[level].relType;
+                    if (!relType.canImplement(expr, condition)) {
                         // Cannot implement this expression in this reltype;
                         // continue to next level.
                         continue;
+                    }
+                    // Is this expression compatible with other expressions
+                    // already assigned to this level?
+                    for (int j = 0; j < exprs.length; j++) {
+                        if (exprLevels[j] == level) {
+                            if (!relType.areCompatible(exprs[j], exprs[i])) {
+                                levelInfos[level].compatiblityException = true;
+                                continue levelLoop;
+                            }
+                        }
                     }
                     exprLevels[i] = level;
                     break;
@@ -406,6 +412,16 @@ public abstract class CalcRelSplitter
         RexNode[] exprs,
         List<Set<Integer>> cohorts)
     {
+        Set<Integer> permutation = new LinkedHashSet<Integer>();
+        computeTopologicalOrderingRecurse(exprs, cohorts, permutation);
+        return new ArrayList<Integer>(permutation);
+    }
+
+    private void computeTopologicalOrderingRecurse(
+        RexNode[] exprs,
+        List<Set<Integer>> cohorts,
+        Set<Integer> permutation)
+    {
         final DirectedGraph<Integer, DefaultEdge> graph =
             new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
         for (int i = 0; i < exprs.length; i++) {
@@ -434,11 +450,26 @@ public abstract class CalcRelSplitter
         }
         TopologicalOrderIterator<Integer, DefaultEdge> iter =
             new TopologicalOrderIterator<Integer, DefaultEdge>(graph);
-        final List<Integer> permutation = new ArrayList<Integer>();
         while (iter.hasNext()) {
             permutation.add(iter.next());
         }
-        return permutation;
+        if (permutation.size() != exprs.length) {
+            // Topological sort stalled. The cohorts introduced cyclicity
+            // (e.g. one of the members of a cohort depended on the output
+            // of another member of the same cohort).
+            if (cohorts.isEmpty()) {
+                // We really are up the creek. We should have been able to
+                // finish if there were no cohorts.
+                throw Util.newInternal(
+                    "cannot make progress in topological sort: exprs="
+                    + Arrays.toString(exprs)
+                    + ", permutation=" + permutation);
+            }
+            // Try one more time, with no cohorts. We build on the existing
+            // partial "permutation".
+            computeTopologicalOrderingRecurse(
+                exprs, Collections.<Set<Integer>>emptyList(), permutation);
+        }
     }
 
     /**
@@ -622,14 +653,14 @@ public abstract class CalcRelSplitter
      *
      * @param exprs Array expressions
      * @param exprLevels For each expression, the ordinal of its level
-     * @param levelTypeOrdinals For each level, the ordinal of its reltype in
-     * the {@link #relTypes} array
+     * @param levelInfos For each level, the ordinal of its reltype in
+ * the {@link #relTypes} array
      * @param levelCount The number of levels
      */
     private void traceLevelExpressions(
         RexNode [] exprs,
         int [] exprLevels,
-        int [] levelTypeOrdinals,
+        LevelInfo[] levelInfos,
         int levelCount)
     {
         StringWriter traceMsg = new StringWriter();
@@ -640,7 +671,7 @@ public abstract class CalcRelSplitter
         for (int level = 0; level < levelCount; level++) {
             traceWriter.println(
                 "Rel Level " + level
-                + ", type " + relTypes[levelTypeOrdinals[level]]);
+                + ", type " + levelInfos[level].relType);
 
             for (int i = 0; i < exprs.length; i++) {
                 RexNode expr = exprs[i];
@@ -839,6 +870,11 @@ public abstract class CalcRelSplitter
             }
             return true;
         }
+
+        public boolean areCompatible(RexNode expr1, RexNode expr2)
+        {
+            return true;
+        }
     }
 
     /**
@@ -1034,6 +1070,11 @@ public abstract class CalcRelSplitter
                 Math.max(maxUsingLevelOrdinals[index], currentLevel);
             return null;
         }
+    }
+
+    private static class LevelInfo {
+        RelType relType;
+        boolean compatiblityException;
     }
 }
 

@@ -272,6 +272,21 @@ public class FennelWindowRel
             assert !fail : "FennelWindowRel is empty";
             return false;
         }
+
+        Set<Object> queueKeys = new LinkedHashSet<Object>();
+        for (Window window : windows) {
+            for (Partition partition : window.partitionList) {
+                queueKeys.add(partition.makeQueueKey(window));
+            }
+        }
+        if (queueKeys.size() != 1) {
+            assert !fail
+                : "windows require incompatible queues: "
+                  + "windows=" + Arrays.toString(windows)
+                  + ", queues=" + queueKeys;
+            return false;
+        }
+
         return true;
     }
 
@@ -747,6 +762,18 @@ public class FennelWindowRel
                 }
             }
             return false;
+        }
+
+        public Object makeQueueKey(Window window)
+        {
+            final ArrayList<Object> list = new ArrayList<Object>();
+            list.add(window.physical);
+            list.add(window.lowerBound);
+            list.add(window.upperBound);
+            if (window.physical) {
+                list.add(Arrays.toString(partitionKeys));
+            }
+            return list;
         }
 
         private void computeDigest(StringBuilder buf)

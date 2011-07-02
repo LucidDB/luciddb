@@ -242,15 +242,27 @@ public abstract class FennelWindowRule
         // Build a list of windows, partitions, and aggregate functions. Each
         // aggregate function will add its arguments as outputs of the input
         // program.
+        Set<Object> queueKeys = new LinkedHashSet<Object>();
         for (RexNode agg : aggProgram.getExprList()) {
             if (agg instanceof RexOver) {
                 final RexOver over = (RexOver) agg;
                 FennelWindowRel.RexWinAggCall aggCall =
-                    addWindows(windowList, over, inputProgramBuilder);
+                    addWindows(
+                        windowList, queueKeys, over, inputProgramBuilder);
                 aggMap.put(over, aggCall);
             }
         }
+        if (queueKeys.size() > 1) {
+            call.failed("incompatible queues: " + queueKeys);
+            return;
+        }
         final RexProgram inputProgram = inputProgramBuilder.getProgram();
+
+        // If the input program contains winagg functions, we should not be
+        // applying this rule. Let WindowedAggSplitterRule do its work.
+        if (RexOver.containsOver(inputProgram)) {
+            return;
+        }
 
         // Partitioning expressions must be evaluated before rows enter the XO.
         // If windows partition on expressions defined in inCalc, don't try to
@@ -462,6 +474,7 @@ public abstract class FennelWindowRule
 
     private FennelWindowRel.RexWinAggCall addWindows(
         List<FennelWindowRel.Window> windowList,
+        Set<Object> queueKeys,
         RexOver over,
         RexProgramBuilder programBuilder)
     {
@@ -483,7 +496,10 @@ public abstract class FennelWindowRule
             getProjectOrdinals(programBuilder, aggWindow.partitionKeys);
         FennelWindowRel.Partition fennelPartition =
             fennelWindow.lookupOrCreatePartition(partitionKeys);
-        Util.discard(fennelPartition);
+
+        // Register the queue that this partition will require. Windows can't
+        // be included in the same WinAgg XO if they require different queues.
+        queueKeys.add(fennelPartition.makeQueueKey(fennelWindow));
 
         // Create a clone the 'over' expression, omitting the window (which is
         // already part of the partition spec), and add the clone to the
@@ -674,6 +690,9 @@ public abstract class FennelWindowRule
                 CalcRel calcRel = (CalcRel) child;
                 if (calcRel.getProgram().getCondition() == null) {
                     // The Calc-on-Win-on-Calc rule will deal with this.
+                    return;
+                }
+                if (RexOver.containsOver(calcRel.getProgram())) {
                     return;
                 }
             }

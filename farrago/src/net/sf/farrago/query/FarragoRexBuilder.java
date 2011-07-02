@@ -29,6 +29,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
@@ -107,11 +108,17 @@ public class FarragoRexBuilder
             bodyString =
                 FarragoUserDefinedRoutine.removeReturnPrefix(
                     bodyString);
-            SqlParser parser = new SqlParser(bodyString);
+            FarragoSession session = getPreparingStmt().getSession();
+            FarragoSessionParser parser =
+                session.getPersonality().newParser(session);
             SqlNode sqlExpr;
             try {
-                sqlExpr = parser.parseExpression();
-            } catch (SqlParseException e) {
+                sqlExpr = (SqlNode) parser.parseSqlText(
+                    getPreparingStmt().getStmtValidator(),
+                    parser.getDdlValidator(),
+                    bodyString,
+                    false);
+            } catch (RuntimeException e) {
                 throw Util.newInternal(
                     e,
                     "Error while parsing routine definition:  " + bodyString);

@@ -28,6 +28,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -71,6 +72,26 @@ public class SqlCall
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof SqlCall)) {
+            return false;
+        }
+        final SqlCall that = (SqlCall) obj;
+        return operator == that.operator
+            && Arrays.equals(operands, that.operands);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Util.hashArray(operator.hashCode(), operands);
+    }
 
     public SqlKind getKind()
     {

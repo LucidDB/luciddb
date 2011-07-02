@@ -47,6 +47,30 @@ import org.eigenbase.util.*;
 public class SqlIntervalLiteral
     extends SqlLiteral
 {
+    /**
+     * Pretend that the "TO" keyword is a binary operator with high
+     * precedence, so that nested expressions will be parenthesized. In
+     * particular, the parentheses in
+     *
+     * <pre>FLOOR((ts + INTERVAL '1' MINUTE) TO SECOND)</pre>
+     *
+     * must be preserved. Otherwise the parser will parse
+     *
+     * <pre>FLOOR(ts + INTERVAL '1' MINUTE TO SECOND)</pre>
+     *
+     * as
+     *
+     * <pre>FLOOR(ts + (INTERVAL '1' MINUTE TO SECOND)</pre>
+     *
+     * and this is different. (See dtbug 1959.)
+     */
+    public static final int TO_PREC = 30;
+    public static final boolean TO_LEFT_ASSOC = false;
+    public static final int TO_LEFT_PREC =
+        SqlOperator.leftPrec(TO_PREC, TO_LEFT_ASSOC);
+    public static final int TO_RIGHT_PREC =
+        SqlOperator.rightPrec(TO_PREC, TO_LEFT_ASSOC);
+
     //~ Constructors -----------------------------------------------------------
 
     protected SqlIntervalLiteral(
@@ -88,6 +112,13 @@ public class SqlIntervalLiteral
         int leftPrec,
         int rightPrec)
     {
+        if (rightPrec > TO_RIGHT_PREC) {
+            // Ensure parentheses to protect "TO" outside this literal.
+            final SqlWriter.Frame frame = writer.startList("(", ")");
+            unparse(writer, 0, 0);
+            writer.endList(frame);
+            return;
+        }
         IntervalValue interval = (IntervalValue) value;
         writer.keyword("INTERVAL");
         if (interval.getSign() == -1) {
