@@ -7,7 +7,7 @@ BIN_DIR=$(cd `dirname $0`; pwd)
 
 . $BIN_DIR/defineFarragoRuntime.sh
 
-${JAVA_EXEC} ${JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
+${JAVA_EXEC} ${JAVA_ARGS_CLIENT} ${SQLLINE_JAVA_ARGS} \
     -u jdbc:farrago:http://localhost \
     -d net.sf.farrago.jdbc.client.FarragoVjdbcHttpClientDriver \
     -n sa $*
