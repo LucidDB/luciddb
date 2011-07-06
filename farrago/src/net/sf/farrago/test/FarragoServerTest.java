@@ -49,7 +49,7 @@ import org.eigenbase.util14.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoServerTest
+public abstract class FarragoServerTest
     extends TestCase
 {
     //~ Static fields/initializers ---------------------------------------------
@@ -83,15 +83,9 @@ public class FarragoServerTest
         FarragoTestCase.forceShutdown();
     }
 
-    protected FarragoAbstractServer newServer()
-    {
-        return new FarragoRmiJdbcServer();
-    }
+    protected abstract FarragoAbstractServer newServer();
 
-    protected FarragoAbstractJdbcDriver newClientDriver()
-    {
-        return new FarragoJdbcClientDriver();
-    }
+    protected abstract FarragoAbstractJdbcDriver newClientDriver();
 
     protected boolean isJRockit()
     {
