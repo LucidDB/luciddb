@@ -37,6 +37,8 @@ import org.eigenbase.relopt.*;
 import java.util.logging.*;
 import net.sf.farrago.trace.*;
 
+import org.eigenbase.relopt.hep.*;
+
 /**
  * FirewaterPushDistinctRule removes a top-level LhxAggRel step on the single
  * Firewater instance so that only each partition must do a DISTINCT check.
@@ -57,66 +59,59 @@ public class FirewaterPushDistinctRule extends RelOptRule {
      */
     private FirewaterPushDistinctRule()
     {
-        super(new RelOptRuleOperand(AggregateRel.class, ANY));
+        super(new RelOptRuleOperand(
+                    AggregateRel.class,
+                    new RelOptRuleOperand(
+                        AggregateRel.class,
+                        new RelOptRuleOperand(
+                            UnionRel.class, ANY))));
     }
 
-    // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         AggregateRel agg = (AggregateRel) call.rels[0];
-        if (agg.getGroupCount() < 1)
+        AggregateRel child = (AggregateRel) call.rels[1];
+        UnionRel uni = (UnionRel) call.rels[2];
+
+        //tracer.info("OHYEAH CALLED\n\n");
+        // Assert that the top node is groupless and child is grouping for
+        // distinct.
+        if (child.getGroupCount() != 1)
+            return;
+        // Assert that the aggs have been pushed through the union
+        if (!(((HepRelVertex)uni.getInput(0)).getCurrentRel() instanceof AggregateRel))
             return;
 
-        tracer.info("ONMATCH CALLED\n\n");
+
+        // Assert that the key we're grouping by (count_key) is the
+        // PARTITION_COLUMN stored in the table.
         String count_key = agg.getChild().getRowType().getFields()[0].getName();
 
         boolean is_partition_column = false;
-        // TODO: figure out how to get partition column from node, either by
-        // getting a column set, server, or table props, and comparing
-        // it to count_key
-        // commented code below to help me remember later.
-        /*MedJdbcQueryRel otherRel =
-            (MedJdbcQueryRel) call.rels[2];
-        MedJdbcColumnSet columnSet = otherRel.getColumnSet();
-        // here we'd get columnSet.partition_column;
-        MedJdbcDataServer server = columnSet.getDirectory().getServer();
+        // Grab the FemLocalTable from the catalog.
+        // (Commented out w.i.p. since it wasn't working right and haven't
+        // fixed it yet.)
         FarragoRepos repos =
-            FarragoRelUtil.getPreparingStmt(tableRel).getRepos();
-            */
-        // this needs a femlocaltable
-        //Properties tableProps =
-        //    FarragoCatalogUtil.getStorageOptionsAsProperties(repos, (FemLocalTable)table);
+            FarragoRelUtil.getPreparingStmt(call.rels[0]).getRepos();
+        RelOptTable tab = agg.getTable();
+        //CwmCatalog catalog = repos.getSelfAsCatalog();
+        /*for (CwmModelElement element : catalog.getOwnedElement()) {
+            if (element instanceof FemLocalTable) {
+                Properties tableProps =
+                    FarragoCatalogUtil.getStorageOptionsAsProperties(repos, (FemLocalTable)table);
+                    */
 
+        is_partition_column = true;
         if (!is_partition_column)
             return;
 
-        /*
-        for (AggregateCall aggCall : agg.getAggCallList()) {
-            tracer.info("AGG LIST\n\n");
-            tracer.info(aggCall.toString());
-            tracer.info(aggCall.getName());
-            for (Integer i : aggCall.getArgList())
-                tracer.info(i.toString() + ",");
-            RelDataType r = aggCall.getType();
-            tracer.info(":\n");
-            tracer.info(r.toString());
-            for (RelDataTypeField f : r.getFieldList())
-                tracer.info(f.getName() + ";" + f.getIndex() + ";");
-        }
-        */
+        FennelAggRel newtop = new FennelAggRel(
+            agg.getCluster(),
+            child.getChild(),
+            agg.getGroupCount(),
+            agg.getAggCallList());
 
-        RelNode fennelInput = mergeTraitsAndConvert(agg.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                agg.getChild());
-        if (fennelInput == null)
-            return;
-
-        FennelAggRel fenn = new FennelAggRel(
-                agg.getCluster(),
-                fennelInput,
-                agg.getGroupCount(),
-                agg.getAggCallList());
-        call.transformTo(fenn);
+        call.transformTo(newtop);
     }
 }
 
