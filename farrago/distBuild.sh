@@ -148,6 +148,8 @@ cp csvjdbc/license.txt $LIB_DIR/csvjdbc.license.txt
 cp sqlline.jar $LIB_DIR
 cp sqlline/LICENSE $LIB_DIR/sqlline.license
 cp jline.jar $LIB_DIR
+cp junit/junit.jar $LIB_DIR
+cp jtds/jtds-1.2.jar $LIB_DIR
 cp jgrapht/jgrapht-jdk1.5.jar $LIB_DIR
 cp jgrapht/license-LGPL.txt $LIB_DIR/jgrapht.license.txt
 cp jgrapht/license-LGPL.txt $LIB_DIR/vjdbc.license.txt
