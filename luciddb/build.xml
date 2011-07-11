@@ -717,6 +717,8 @@ ${farrago.test.jvmargs}
       <include
         name="net/sf/farrago/release/*"/>
       <include
+        name="org/eigenbase/sql/validate/SqlValidatorException.class"/>
+      <include
         name="org/eigenbase/util/EigenbaseContextException.class"/>
       <include
         name="org/eigenbase/util/EigenbaseException.class"/>
@@ -724,6 +726,8 @@ ${farrago.test.jvmargs}
         name="org/eigenbase/util/property/*"/>
       <include
         name="org/eigenbase/util14/ConnectStringParser.class"/>
+      <include
+        name="org/eigenbase/util14/EigenbaseValidatorException.class"/>
     </fileset>
 
     <jar jarfile="${luciddb.plugin.dir}/LucidDbClient.jar"
