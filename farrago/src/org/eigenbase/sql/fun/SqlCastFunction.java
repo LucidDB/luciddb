@@ -183,7 +183,9 @@ public class SqlCastFunction
         SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        if (SqlUtil.isNullLiteral(callBinding.getCall().operands[0], false)) {
+        if (SqlUtil.isNullLiteral(callBinding.getCall().operands[0], false)
+                || callBinding.getCall().operands[0] instanceof SqlDynamicParam)
+        {
             return true;
         }
         RelDataType validatedNodeType =
