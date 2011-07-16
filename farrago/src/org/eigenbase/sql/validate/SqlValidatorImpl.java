@@ -3292,6 +3292,7 @@ public class SqlValidatorImpl
         final List<SqlNode> expandedSelectItems = new ArrayList<SqlNode>();
         final List<String> aliasList = new ArrayList<String>();
         final List<RelDataType> typeList = new ArrayList<RelDataType>();
+
         for (int i = 0; i < selectItems.size(); i++) {
             SqlNode selectItem = selectItems.get(i);
             if (selectItem instanceof SqlSelect) {
@@ -3681,21 +3682,39 @@ public class SqlValidatorImpl
         // for dynamic parameter markers (SET x = ?).  But
         // maybe validateUpdate and validateInsert below will do
         // the job?
-        validateSelect(sqlSelect, unknownType);
 
+        // REVIEW ksecretan 15-July-2011: They didn't get a chance to
+        // since validateSelect() would bail.
+        // Let's use the update/insert targetRowType when available.
         IdentifierNamespace targetNamespace =
             (IdentifierNamespace) getNamespace(call.getTargetTable());
         validateNamespace(targetNamespace);
 
-        if (call.getUpdateCall() != null) {
-            validateUpdate(call.getUpdateCall());
-        }
-        if (call.getInsertCall() != null) {
-            validateInsert(call.getInsertCall());
-        }
-
         SqlValidatorTable table = targetNamespace.getTable();
         validateAccess(call.getTargetTable(), table, SqlAccessEnum.UPDATE);
+
+        RelDataType targetRowType = unknownType;
+
+        if (call.getUpdateCall() != null) {
+            SqlUpdate update = call.getUpdateCall();
+            validateUpdate(update);
+
+            targetRowType = createTargetRowType(
+                    table,
+                    update.getTargetColumnList(),
+                    true);
+        }
+        if (call.getInsertCall() != null) {
+            SqlInsert insert = call.getInsertCall();
+            validateInsert(insert);
+
+            targetRowType = createTargetRowType(
+                    table,
+                    insert.getTargetColumnList(),
+                    false);
+        }
+
+        validateSelect(sqlSelect, targetRowType);
     }
 
     /**
