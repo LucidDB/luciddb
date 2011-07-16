@@ -3696,25 +3696,27 @@ public class SqlValidatorImpl
         RelDataType targetRowType = unknownType;
 
         if (call.getUpdateCall() != null) {
-            SqlUpdate update = call.getUpdateCall();
-            validateUpdate(update);
-
             targetRowType = createTargetRowType(
                     table,
-                    update.getTargetColumnList(),
+                    call.getUpdateCall().getTargetColumnList(),
                     true);
         }
         if (call.getInsertCall() != null) {
-            SqlInsert insert = call.getInsertCall();
-            validateInsert(insert);
-
             targetRowType = createTargetRowType(
                     table,
-                    insert.getTargetColumnList(),
+                    call.getInsertCall().getTargetColumnList(),
                     false);
         }
 
         validateSelect(sqlSelect, targetRowType);
+
+        if (call.getUpdateCall() != null) {
+            validateUpdate(call.getUpdateCall());
+        }
+        if (call.getInsertCall() != null) {
+            validateInsert(call.getInsertCall());
+        }
+
     }
 
     /**
