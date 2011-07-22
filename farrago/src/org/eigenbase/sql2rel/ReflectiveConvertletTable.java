@@ -223,6 +223,19 @@ public class ReflectiveConvertletTable
     }
 
     /**
+     * Registers a convertlet for a given operator type
+     *
+     * @param clazz Operator type, say {@link
+     * org.eigenbase.sql.SqlAggFunction}
+     * @param convertlet Convertlet
+     */
+    protected void registerOpType(
+        Class<? extends SqlOperator> clazz, SqlRexConvertlet convertlet)
+    {
+        map.put(clazz, convertlet);
+    }
+
+    /**
      * Registers that one operator is an alias for another.
      *
      * @param alias Operator which is alias

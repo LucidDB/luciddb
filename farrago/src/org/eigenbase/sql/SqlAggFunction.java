@@ -71,6 +71,27 @@ public abstract class SqlAggFunction
         return true;
     }
 
+    /**
+     * Give chance for aggregate function to validate itself
+     * with respect to window.
+     *
+     * @param call the call to this operator
+     * @param validator the active validator
+     * @param scope validator scope
+     * @param operandScope validator scope in which to validate operands to this
+     * call; usually equal to scope, but not always because some operators
+     * introduce new scopes
+     * @param window from over clause.
+     */
+    public void validateWindowedAggregate(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope,
+        SqlWindow window)
+    {
+        // Default is to do accept.
+    }
     // override SqlFunction
     public void validateCall(
         SqlCall call,

@@ -3360,7 +3360,7 @@ public abstract class SqlOperatorTests
     public void testExpFunc()
     {
         // todo: implement in fennel
-        getTester().setFor(SqlStdOperatorTable.expFunc, VM_FENNEL);
+        getTester().setFor(SqlStdOperatorTable.expFunc);
         getTester().checkScalarApprox(
             "exp(2)",
             "DOUBLE NOT NULL",
@@ -4256,6 +4256,34 @@ public abstract class SqlOperatorTests
             new String[] {},
             null,
             0d);
+    }
+
+    public void testExpAvgFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.expAvgOperator, VM_EXPAND);
+        getTester().checkFails(
+            "^exp_avg(cast(null as varchar(2)), interval '1' second)^",
+            "(?s)Cannot apply 'EXP_AVG' to arguments of type 'EXP_AVG\\(<VARCHAR\\(2\\)>\\, <INTERVAL SECOND>\\)'\\. Supported form\\(s\\): 'EXP_AVG\\(<NUMERIC>\\, <INTERVAL_DAY_TIME>\\)'.*",
+            false);
+        getTester().checkFails(
+            "^exp_avg(cast(null as bigint), interval '1' second * 2)^",
+            "(?s)Argument to function 'EXP_AVG' must be a literal.*",
+            false);
+        getTester().checkType(
+            "EXP_AVG(CAST(NULL AS INTEGER), interval '1' second)", "INTEGER");
+        getTester().checkType(
+            "EXP_AVG(DISTINCT 1.5, interval '1' second)", "DECIMAL(2, 1)");
+
+        // TODO Add test cases to test results. Will need  way of generating
+        // TODO rows with rowtimes
+//        final String [] values = { "1.6", "1.6" };
+//        getTester().checkWinAgg(
+//            "EXP_AVG(x, interval '1' second)",
+//            values,
+//            "ORDER BY ???.ROWTIME RANGE INTERVAL '30' SECOND PRECEDING",
+//            "DECIMAL(2, 1) NOT NULL",
+//            Arrays.asList("1.6"),
+//            0d);
     }
 
     public void testStddevPopFunc()

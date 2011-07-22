@@ -1690,14 +1690,11 @@ public class SqlToRelConverter
         for (int i = 0; i < orderKeys.length; i++) {
             orderKeys[i] = bb.convertExpression(orderList.get(i));
         }
-        RexNode rexAgg = exprConverter.convertCall(bb, aggCall);
-
-        // Walk over the tree and apply 'over' to all agg functions. This is
-        // necessary because the returned expression is not necessarily a call
-        // to an agg function. For example, AVG(x) becomes SUM(x) / COUNT(x).
-        final RexShuttle visitor =
-            new HistogramShuttle(partitionKeys, orderKeys, window);
-        return rexAgg.accept(visitor);
+        RexNode rexAgg;
+        bb.setRexOverContext(window, partitionKeys, orderKeys);
+        rexAgg = exprConverter.convertCall(bb, aggCall);
+        bb.clearRexOverContext();
+        return (new RexShuttle()).apply(rexAgg);
     }
 
     /**
@@ -3755,6 +3752,8 @@ public class SqlToRelConverter
          */
         AggConverter agg;
 
+        SqlRexOverContext rexOverContext;
+
         /**
          * Project the groupby expressions out of the root of this sub-select.
          * Subqueries can reference group by expressions projected from the
@@ -3951,6 +3950,21 @@ public class SqlToRelConverter
             this.root = root;
             this.systemFieldList.clear();
             this.systemFieldList.addAll(validator.getSystemFields());
+        }
+
+        public void setRexOverContext(
+            final SqlWindow window,
+            final RexNode [] partitionKeys,
+            final RexNode [] orderKeys)
+        {
+            assert rexOverContext == null ;
+
+            rexOverContext = new SqlRexOverContext(
+                window, partitionKeys, orderKeys);
+        }
+
+        public void clearRexOverContext() {
+            rexOverContext = null;
         }
 
         /**
@@ -4362,6 +4376,11 @@ public class SqlToRelConverter
         {
             return columnMonotonicities;
         }
+
+        public SqlRexOverContext getRexOverContext()
+        {
+            return rexOverContext;
+        }
     }
 
     private static class DeferredLookup
@@ -4743,213 +4762,6 @@ public class SqlToRelConverter
         }
     }
 
-    /**
-     * Shuttle which walks over a tree of {@link RexNode}s and applies 'over' to
-     * all agg functions.
-     *
-     * <p>This is necessary because the returned expression is not necessarily a
-     * call to an agg function. For example,
-     *
-     * <blockquote><code>AVG(x)</code></blockquote>
-     *
-     * becomes
-     *
-     * <blockquote><code>SUM(x) / COUNT(x)</code></blockquote>
-     *
-     * <p>Any aggregate functions are converted to calls to the internal <code>
-     * $Histogram</code> aggregation function and accessors such as <code>
-     * $HistogramMin</code>; for example,
-     *
-     * <blockquote><code>MIN(x), MAX(x)</code></blockquote>
-     *
-     * are converted to
-     *
-     * <blockquote><code>$HistogramMin($Histogram(x)),
-     * $HistogramMax($Histogram(x))</code></blockquote>
-     *
-     * Common sub-expression elmination will ensure that only one histogram is
-     * computed.
-     */
-    private class HistogramShuttle
-        extends RexShuttle
-    {
-        private final RexNode [] partitionKeys;
-        private final RexNode [] orderKeys;
-        private final SqlWindow window;
-
-        HistogramShuttle(
-            RexNode [] partitionKeys,
-            RexNode [] orderKeys,
-            SqlWindow window)
-        {
-            this.partitionKeys = partitionKeys;
-            this.orderKeys = orderKeys;
-            this.window = window;
-        }
-
-        public RexNode visitCall(RexCall call)
-        {
-            final SqlOperator op = call.getOperator();
-            if (!(op instanceof SqlAggFunction)) {
-                return super.visitCall(call);
-            }
-            final SqlAggFunction aggOp = (SqlAggFunction) op;
-            final RelDataType type = call.getType();
-            RexNode [] exprs = call.getOperands();
-
-            boolean isUnboundedPreceding =
-                SqlWindowOperator.isUnboundedPreceding(window.getLowerBound());
-
-            // The fennel support for windowed Agg MIN/MAX only
-            // supports BIGINT and DOUBLE numeric types. If the
-            // expression result is numeric but not correct then pre
-            // and post CAST the data.  Example with INTEGER
-            // CAST(MIN(CAST(exp to BIGINT)) to INTEGER)
-            SqlFunction histogramOp =
-                isUnboundedPreceding ? null : getHistogramOp(aggOp);
-
-            // If a window contains only the current row, treat it as physical.
-            // (It could be logical too, but physical is simpler to implement.)
-            boolean physical = window.isRows();
-            if (!physical
-                && SqlWindowOperator.isCurrentRow(window.getLowerBound())
-                && SqlWindowOperator.isCurrentRow(window.getUpperBound()))
-            {
-                physical = true;
-            }
-
-            if (histogramOp != null) {
-                final RelDataType histogramType = computeHistogramType(type);
-
-                // For DECIMAL, since it's already represented as a bigint we
-                // want to do a reinterpretCast instead of a cast to avoid
-                // losing any precisision.
-                boolean renterpretCast =
-                    type.getSqlTypeName() == SqlTypeName.DECIMAL;
-
-                // Replace orignal expression with CAST of not one
-                // of the supported types
-                if (histogramType != type) {
-                    if (renterpretCast) {
-                        exprs[0] =
-                            rexBuilder.makeReinterpretCast(
-                                histogramType,
-                                exprs[0],
-                                rexBuilder.makeLiteral(false));
-                    } else {
-                        exprs[0] = rexBuilder.makeCast(histogramType, exprs[0]);
-                    }
-                }
-
-                RexCallBinding bind =
-                    new RexCallBinding(
-                        rexBuilder.getTypeFactory(),
-                        SqlStdOperatorTable.histogramAggFunction,
-                        exprs);
-
-                RexNode over =
-                    rexBuilder.makeOver(
-                        SqlStdOperatorTable.histogramAggFunction
-                        .inferReturnType(bind),
-                        SqlStdOperatorTable.histogramAggFunction,
-                        exprs,
-                        partitionKeys,
-                        orderKeys,
-                        window.getLowerBound(),
-                        window.getUpperBound(),
-                        physical,
-                        window.isAllowPartial(),
-                        false);
-
-                RexNode histogramCall =
-                    rexBuilder.makeCall(
-                        histogramType,
-                        histogramOp,
-                        over);
-
-                // If needed, post Cast result back to original
-                // type.
-                if (histogramType != type) {
-                    if (renterpretCast) {
-                        histogramCall =
-                            rexBuilder.makeReinterpretCast(
-                                type,
-                                histogramCall,
-                                rexBuilder.makeLiteral(false));
-                    } else {
-                        histogramCall =
-                            rexBuilder.makeCast(type, histogramCall);
-                    }
-                }
-
-                return histogramCall;
-            } else {
-                boolean needSum0 = aggOp == SqlStdOperatorTable.sumOperator;
-                SqlAggFunction aggOpToUse =
-                    needSum0 ? SqlStdOperatorTable.sumEmptyIsZeroOperator
-                    : aggOp;
-                return rexBuilder.makeOver(
-                    type,
-                    aggOpToUse,
-                    exprs,
-                    partitionKeys,
-                    orderKeys,
-                    window.getLowerBound(),
-                    window.getUpperBound(),
-                    physical,
-                    window.isAllowPartial(),
-                    needSum0);
-            }
-        }
-
-        /**
-         * Returns the histogram operator corresponding to a given aggregate
-         * function.
-         *
-         * <p>For example, <code>getHistogramOp({@link
-         * SqlStdOperatorTable#minOperator}}</code> returns {@link
-         * SqlStdOperatorTable#histogramMinFunction}.
-         *
-         * @param aggFunction An aggregate function
-         *
-         * @return Its histogram function, or null
-         */
-        SqlFunction getHistogramOp(SqlAggFunction aggFunction)
-        {
-            if (aggFunction == SqlStdOperatorTable.minOperator) {
-                return SqlStdOperatorTable.histogramMinFunction;
-            } else if (aggFunction == SqlStdOperatorTable.maxOperator) {
-                return SqlStdOperatorTable.histogramMaxFunction;
-            } else if (aggFunction == SqlStdOperatorTable.firstValueOperator) {
-                return SqlStdOperatorTable.histogramFirstValueFunction;
-            } else if (aggFunction == SqlStdOperatorTable.lastValueOperator) {
-                return SqlStdOperatorTable.histogramLastValueFunction;
-            } else {
-                return null;
-            }
-        }
-
-        /**
-         * Returns the type for a histogram function. It is either the actual
-         * type or an an approximation to it.
-         */
-        private RelDataType computeHistogramType(RelDataType type)
-        {
-            if (SqlTypeUtil.isExactNumeric(type)
-                && (type.getSqlTypeName() != SqlTypeName.BIGINT))
-            {
-                return new BasicSqlType(SqlTypeName.BIGINT);
-            } else if (
-                SqlTypeUtil.isApproximateNumeric(type)
-                && (type.getSqlTypeName() != SqlTypeName.DOUBLE))
-            {
-                return new BasicSqlType(SqlTypeName.DOUBLE);
-            } else {
-                return type;
-            }
-        }
-    }
-
     public enum QueryContext {
         TOP,
         SUBQUERY,
@@ -4958,5 +4770,4 @@ public class SqlToRelConverter
         OTHER
     }
 }
-
 // End SqlToRelConverter.java

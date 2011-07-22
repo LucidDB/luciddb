@@ -84,6 +84,11 @@ public interface SqlRexContext
      * Converts a literal.
      */
     RexNode convertLiteral(SqlLiteral literal);
+
+    /**
+     * Returns context for evaluating windowed aggregates
+     */
+    SqlRexOverContext getRexOverContext();
 }
 
 // End SqlRexContext.java

@@ -157,6 +157,41 @@ public abstract class FarragoTestUDR
         }
     }
 
+    public static void performSql(
+        String query,
+        PreparedStatement resultInserter)
+    throws SQLException
+    {
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn =
+                DriverManager.getConnection(
+                    "jdbc:default:connection");
+            stmt = conn.createStatement();
+            int inserterColumnCount =
+                resultInserter.getParameterMetaData().getParameterCount();
+            rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                for (int i = 1; i <= inserterColumnCount; i++) {
+                    resultInserter.setObject(i, rs.getObject(i));
+                }
+                resultInserter.executeUpdate();
+            }
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
+
     public static String executeSql(String sql)
         throws SQLException
     {

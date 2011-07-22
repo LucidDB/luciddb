@@ -62,6 +62,16 @@ public class SqlNodeToRexConverterImpl
     {
         final SqlRexConvertlet convertlet = convertletTable.get(call);
         if (convertlet != null) {
+            if (convertlet instanceof SqlRexAggConvertlet) {
+                SqlRexOverContext overContext = cx.getRexOverContext();
+                if (overContext != null) {
+                    return ((SqlRexAggConvertlet) convertlet).convertCall(
+                        cx, call,
+                        overContext.getWindow(),
+                        overContext.getPartitionKeys(),
+                        overContext.getOrderKeys());
+                }
+            }
             return convertlet.convertCall(cx, call);
         }
 

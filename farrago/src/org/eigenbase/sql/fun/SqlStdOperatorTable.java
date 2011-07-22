@@ -659,6 +659,12 @@ public class SqlStdOperatorTable
     // WINDOW Aggregate Functions
     //-------------------------------------------------------------
     /**
+     * <code>EXP_AVG</code> aggregate function.
+     */
+    public static final SqlExpAvgFunction expAvgOperator =
+        new SqlExpAvgFunction(null);
+
+    /**
      * <code>HISTORAM</code> aggregate function support. Used by window
      * aggregate versions of MIN/MAX
      */

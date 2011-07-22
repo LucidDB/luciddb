@@ -125,6 +125,7 @@ public class SqlAdvisorTest
             "Keyword(ELEMENT)",
             "Keyword(EXISTS)",
             "Keyword(EXP)",
+            "Keyword(EXP_AVG)",
             "Keyword(EXTRACT)",
             "Keyword(FALSE)",
             "Keyword(FIRST_VALUE)",
@@ -1128,6 +1129,7 @@ public class SqlAdvisorTest
             + "Keyword(ELEMENT)\n"
             + "Keyword(EXISTS)\n"
             + "Keyword(EXP)\n"
+            + "Keyword(EXP_AVG)\n"
             + "Keyword(EXTRACT)\n"
             + "Table(EMP)\n";
         assertComplete(sql, expected, "e");

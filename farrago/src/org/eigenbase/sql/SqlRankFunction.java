@@ -77,6 +77,39 @@ public class SqlRankFunction
         return true;
     }
 
+    @Override
+    public void validateWindowedAggregate(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope,
+        SqlWindow window)
+    {
+        super.validateWindowedAggregate(
+            call, validator, scope, operandScope, window);
+        if (call.isName("RANK") || call.isName("DENSE_RANK")) {
+            // 6.10 rule 6a Function RANk & DENSE_RANK require OBC
+            SqlNodeList orderList = window.getOrderList();
+            if ((null == orderList || orderList.size() == 0)
+                && !SqlWindowOperator.isTableSorted(scope))
+            {
+                throw validator.newValidationError(
+                    call,
+                    EigenbaseResource.instance().FuncNeedsOrderBy.ex());
+            }
+
+            // Run framing checks if there are any
+            if ((window.getUpperBound() != null)
+                || (window.getLowerBound() != null))
+            {
+                // 6.10 Rule 6a
+                    throw validator.newValidationError(
+                        window.getOperands()[SqlWindow.IsRows_OPERAND],
+                        EigenbaseResource.instance().RankWithFrame.ex());
+            }
+        }
+    }
+
     public void validateCall(
         SqlCall call,
         SqlValidator validator,

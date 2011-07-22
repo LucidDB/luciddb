@@ -313,33 +313,21 @@ public class SqlWindowOperator
             }
         }
 
+        if (windowCall != null) {
+            SqlOperator callOperator = windowCall.getOperator();
+            if (callOperator instanceof SqlAggFunction) {
+                ((SqlAggFunction) callOperator).validateWindowedAggregate(
+                    windowCall, validator, scope, operandScope, window);
+            }
+        }
+
         boolean isRows =
             SqlLiteral.booleanValue(operands[SqlWindow.IsRows_OPERAND]);
         SqlNode lowerBound = operands[SqlWindow.LowerBound_OPERAND],
             upperBound = operands[SqlWindow.UpperBound_OPERAND];
 
-        boolean triggerFunction = false;
-        if (null != windowCall) {
-            if (windowCall.isName("RANK") || windowCall.isName("DENSE_RANK")) {
-                triggerFunction = true;
-            }
-        }
-
-        // 6.10 rule 6a Function RANk & DENSE_RANK require OBC
-        if ((null == orderList) && triggerFunction && !isTableSorted(scope)) {
-            throw validator.newValidationError(
-                call,
-                EigenbaseResource.instance().FuncNeedsOrderBy.ex());
-        }
-
         // Run framing checks if there are any
         if ((null != upperBound) || (null != lowerBound)) {
-            // 6.10 Rule 6a
-            if (triggerFunction) {
-                throw validator.newValidationError(
-                    operands[SqlWindow.IsRows_OPERAND],
-                    EigenbaseResource.instance().RankWithFrame.ex());
-            }
             SqlTypeFamily orderTypeFam = null;
 
             // SQL03 7.10 Rule 11a
@@ -590,7 +578,7 @@ public class SqlWindowOperator
      * This method retrieves the list of columns for the current table then
      * walks through the list looking for a column that is monotonic (sorted)
      */
-    private static boolean isTableSorted(SqlValidatorScope scope)
+    protected static boolean isTableSorted(SqlValidatorScope scope)
     {
         List<SqlMoniker> columnNames = new ArrayList<SqlMoniker>();
 

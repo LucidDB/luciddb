@@ -307,6 +307,26 @@ public abstract class SqlTypeStrategies
             SqlTypeFamily.NUMERIC,
             SqlTypeFamily.DATETIME_INTERVAL);
 
+    public static final SqlSingleOperandTypeChecker
+        otcNumericDayTimeIntervalLit = new FamilyOperandTypeChecker(
+            SqlTypeFamily.NUMERIC,
+            SqlTypeFamily.INTERVAL_DAY_TIME)
+    {
+        public boolean checkOperandTypes(
+            SqlCallBinding callBinding, boolean throwOnFailure)
+        {
+            //checking if char types
+            if (!super.checkOperandTypes(callBinding, throwOnFailure)) {
+                return false;
+            }
+
+            // check that the 2nd argument is a literal
+            return SqlTypeStrategies.otcNotNullLit.checkSingleOperandType(
+                callBinding,
+                callBinding.getCall().operands[1], 0, throwOnFailure);
+        }
+    };
+
     public static final SqlSingleOperandTypeChecker otcIntervalNumeric =
         new FamilyOperandTypeChecker(
             SqlTypeFamily.DATETIME_INTERVAL,

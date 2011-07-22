@@ -28,9 +28,12 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.SqlIntervalQualifier.TimeUnit;
+import org.eigenbase.sql.SqlWindowOperator.OffsetRange;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql2rel.SqlToRelConverter.Blackboard;
 import org.eigenbase.util.*;
 
 
@@ -171,6 +174,9 @@ public class StandardConvertletTable
         //
         // Similarly STDDEV_POP and STDDEV_SAMP, VAR_POP and VAR_SAMP.
         registerOp(
+            SqlStdOperatorTable.expAvgOperator,
+            new ExpAvgConvertlet());
+        registerOp(
             SqlStdOperatorTable.avgOperator,
             new AvgVarianceConvertlet(SqlAvgAggFunction.Subtype.AVG));
         registerOp(
@@ -244,6 +250,8 @@ public class StandardConvertletTable
                     }
                 });
         }
+
+        registerOpType(SqlAggFunction.class, new AggConvertlet());
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -591,21 +599,6 @@ public class StandardConvertletTable
         return cx.getRexBuilder().makeCall(fun, exprs);
     }
 
-    public RexNode convertAggregateFunction(
-        SqlRexContext cx,
-        SqlAggFunction fun,
-        SqlCall call)
-    {
-        final SqlNode [] operands = call.getOperands();
-        final RexNode [] exprs;
-        if (call.isCountStar()) {
-            exprs = RexNode.EMPTY_ARRAY;
-        } else {
-            exprs = convertExpressionList(cx, operands);
-        }
-        return cx.getRexBuilder().makeCall(fun, exprs);
-    }
-
     private static RexNode makeConstructorCall(
         SqlRexContext cx,
         SqlFunction constructor,
@@ -870,6 +863,377 @@ public class StandardConvertletTable
             return value;
         }
         return cx.getRexBuilder().makeCast(resType, value);
+    }
+
+    /**
+     *
+     * Convertlet to convert aggregate functions.
+     *
+     * <p>Any aggregate functions are converted to calls to the internal <code>
+     * $Histogram</code> aggregation function and accessors such as <code>
+     * $HistogramMin</code>; for example,
+     *
+     * <blockquote><code>MIN(x), MAX(x)</code></blockquote>
+     *
+     * are converted to
+     *
+     * <blockquote><code>$HistogramMin($Histogram(x)),
+     * $HistogramMax($Histogram(x))</code></blockquote>
+     *
+     * Common sub-expression elmination will ensure that only one histogram is
+     * computed.
+     */
+    private static class AggConvertlet extends SqlRexAggConvertlet {
+
+        RexNode windowedAggFor(
+            SqlRexContext cx,
+            RexCall call,
+            SqlWindow window,
+            RexNode [] partitionKeys,
+            RexNode [] orderKeys)
+        {
+            final RexBuilder rexBuilder = cx.getRexBuilder();
+            final SqlOperator op = call.getOperator();
+            assert (op instanceof SqlAggFunction);
+
+            final SqlAggFunction aggOp = (SqlAggFunction) op;
+            final RelDataType type = call.getType();
+            RexNode [] exprs = call.getOperands();
+
+            boolean isUnboundedPreceding =
+                SqlWindowOperator.isUnboundedPreceding(window.getLowerBound());
+
+            // The fennel support for windowed Agg MIN/MAX only
+            // supports BIGINT and DOUBLE numeric types. If the
+            // expression result is numeric but not correct then pre
+            // and post CAST the data.  Example with INTEGER
+            // CAST(MIN(CAST(exp to BIGINT)) to INTEGER)
+            SqlFunction histogramOp =
+                isUnboundedPreceding ? null : getHistogramOp(aggOp);
+
+            // If a window contains only the current row, treat it as physical.
+            // (It could be logical too, but physical is simpler to implement.)
+            boolean physical = window.isRows();
+            if (!physical
+                && SqlWindowOperator.isCurrentRow(window.getLowerBound())
+                && SqlWindowOperator.isCurrentRow(window.getUpperBound()))
+            {
+                physical = true;
+            }
+
+            if (histogramOp != null) {
+                final RelDataType histogramType = computeHistogramType(type);
+
+                // For DECIMAL, since it's already represented as a bigint we
+                // want to do a reinterpretCast instead of a cast to avoid
+                // losing any precisision.
+                boolean renterpretCast =
+                    type.getSqlTypeName() == SqlTypeName.DECIMAL;
+
+                // Replace orignal expression with CAST of not one
+                // of the supported types
+                if (histogramType != type) {
+                    if (renterpretCast) {
+                        exprs[0] =
+                            rexBuilder.makeReinterpretCast(
+                                histogramType,
+                                exprs[0],
+                                rexBuilder.makeLiteral(false));
+                    } else {
+                        exprs[0] = rexBuilder.makeCast(histogramType, exprs[0]);
+                    }
+                }
+
+                RexCallBinding bind =
+                    new RexCallBinding(
+                        rexBuilder.getTypeFactory(),
+                        SqlStdOperatorTable.histogramAggFunction,
+                        exprs);
+
+                RexNode over =
+                    rexBuilder.makeOver(
+                        SqlStdOperatorTable.histogramAggFunction
+                        .inferReturnType(bind),
+                        SqlStdOperatorTable.histogramAggFunction,
+                        exprs,
+                        partitionKeys,
+                        orderKeys,
+                        window.getLowerBound(),
+                        window.getUpperBound(),
+                        physical,
+                        window.isAllowPartial(),
+                        false);
+
+                RexNode histogramCall =
+                    rexBuilder.makeCall(
+                        histogramType,
+                        histogramOp,
+                        over);
+
+                // If needed, post Cast result back to original
+                // type.
+                if (histogramType != type) {
+                    if (renterpretCast) {
+                        histogramCall =
+                            rexBuilder.makeReinterpretCast(
+                                type,
+                                histogramCall,
+                                rexBuilder.makeLiteral(false));
+                    } else {
+                        histogramCall =
+                            rexBuilder.makeCast(type, histogramCall);
+                    }
+                }
+
+                return histogramCall;
+            } else {
+                boolean needSum0 = aggOp == SqlStdOperatorTable.sumOperator;
+                SqlAggFunction aggOpToUse =
+                    needSum0 ? SqlStdOperatorTable.sumEmptyIsZeroOperator
+                    : aggOp;
+                return rexBuilder.makeOver(
+                    type,
+                    aggOpToUse,
+                    exprs,
+                    partitionKeys,
+                    orderKeys,
+                    window.getLowerBound(),
+                    window.getUpperBound(),
+                    physical,
+                    window.isAllowPartial(),
+                    needSum0);
+            }
+        }
+
+        /**
+         * Returns the histogram operator corresponding to a given aggregate
+         * function.
+         *
+         * <p>For example, <code>getHistogramOp({@link
+         * SqlStdOperatorTable#minOperator}}</code> returns {@link
+         * SqlStdOperatorTable#histogramMinFunction}.
+         *
+         * @param aggFunction An aggregate function
+         *
+         * @return Its histogram function, or null
+         */
+        SqlFunction getHistogramOp(SqlAggFunction aggFunction)
+        {
+            if (aggFunction == SqlStdOperatorTable.minOperator) {
+                return SqlStdOperatorTable.histogramMinFunction;
+            } else if (aggFunction == SqlStdOperatorTable.maxOperator) {
+                return SqlStdOperatorTable.histogramMaxFunction;
+            } else if (aggFunction == SqlStdOperatorTable.firstValueOperator) {
+                return SqlStdOperatorTable.histogramFirstValueFunction;
+            } else if (aggFunction == SqlStdOperatorTable.lastValueOperator) {
+                return SqlStdOperatorTable.histogramLastValueFunction;
+            } else {
+                return null;
+            }
+        }
+
+        /**
+         * Returns the type for a histogram function. It is either the actual
+         * type or an an approximation to it.
+         */
+        private RelDataType computeHistogramType(RelDataType type)
+        {
+            if (SqlTypeUtil.isExactNumeric(type)
+                && (type.getSqlTypeName() != SqlTypeName.BIGINT))
+            {
+                return new BasicSqlType(SqlTypeName.BIGINT);
+            } else if (
+                SqlTypeUtil.isApproximateNumeric(type)
+                && (type.getSqlTypeName() != SqlTypeName.DOUBLE))
+            {
+                return new BasicSqlType(SqlTypeName.DOUBLE);
+            } else {
+                return type;
+            }
+        }
+        @Override
+        RexNode convertCall(
+            SqlRexContext cx,
+            SqlCall call,
+            SqlWindow window,
+            RexNode[] partitionKeys,
+            RexNode[] orderKeys)
+        {
+            final SqlNode [] operands = call.getOperands();
+            final RexNode [] exprs;
+            if (call.isCountStar()) {
+                exprs = RexNode.EMPTY_ARRAY;
+            } else {
+                exprs = convertExpressionList(cx, operands);
+            }
+            RexCall aggNode =
+                (RexCall) cx.getRexBuilder().makeCall(
+                    call.getOperator(), exprs);
+
+            return (window == null) ? aggNode : windowedAggFor(
+                cx, aggNode, window, partitionKeys, orderKeys);
+        }
+    }
+
+    private static class ExpAvgConvertlet extends AggConvertlet
+    {
+
+        private static final SqlIntervalQualifier secondsWithMillies =
+            new SqlIntervalQualifier(
+                TimeUnit.SECOND, 10, null, 3, SqlParserPos.ZERO);
+
+        RexNode convertCall(
+            SqlRexContext cx,
+            SqlCall call,
+            SqlWindow window,
+            RexNode[] partitionKeys,
+            RexNode[] orderKeys)
+        {
+            if (window.isRows()) {
+                throw Util.needToImplement("EXP_AVG on physical window");
+            }
+            SqlNode halfLifeSqlNode = call.getOperands()[1];
+            assert (halfLifeSqlNode instanceof SqlLiteral);
+
+            Object obj = ((SqlLiteral) halfLifeSqlNode).getValue();
+            long halfLife;
+            if (obj instanceof SqlIntervalLiteral.IntervalValue) {
+                halfLife =
+                    SqlParserUtil.intervalToMillis(
+                        (SqlIntervalLiteral.IntervalValue) obj);
+            } else {
+                throw Util.newInternal("unexpected literal " + halfLifeSqlNode);
+            }
+            RexNode valueNode = cx.convertExpression(call.getOperands()[0]);
+            RelDataType valueType = valueNode.getType();
+            long maxWindowMillies = maxWindowSizeFor(valueType, halfLife);
+            SqlWindow decayWindow = windowFor(window, valueType, halfLife);
+            SqlWindowOperator.OffsetRange offsetRange =
+                decayWindow.getOffsetAndRange();
+            long range = offsetRange.range;
+            RexNode orderKey = orderKeys[0];
+            RexBuilder rexBuilder = cx.getRexBuilder();
+            RexNode halfLifeNode =
+                rexBuilder.makeBigintLiteral(BigDecimal.valueOf(halfLife));
+            RexNode rangeNode =
+                rexBuilder.makeBigintLiteral(BigDecimal.valueOf(range));
+            RexNode millisNode = rexBuilder.makeReinterpretCast(
+                cx.getTypeFactory().createSqlType(SqlTypeName.BIGINT),
+                orderKey, rexBuilder.makeLiteral(false));
+            RexNode epochStart = rexBuilder.makeCall(
+                SqlStdOperatorTable.modFunc, millisNode, rangeNode);
+            RexNode mod2range = rexBuilder.makeCall(
+                SqlStdOperatorTable.modFunc,
+                millisNode,
+                rexBuilder.makeBigintLiteral(BigDecimal.valueOf(range * 2)));
+            RexNode isEvenEpoch = rexBuilder.makeCall(
+                SqlStdOperatorTable.lessThanOperator, mod2range, rangeNode);
+            RexNode valueIsNull = rexBuilder.makeCall(
+                SqlStdOperatorTable.isNullOperator, valueNode);
+            RexNode valueNotNull = rexBuilder.makeCall(
+                SqlStdOperatorTable.isNotNullOperator, valueNode);
+            RexLiteral decayRate = rexBuilder.makeApproxLiteral(
+                BigDecimal.valueOf(Math.sqrt(2) / halfLife));
+            RexLiteral zero = rexBuilder.makeApproxLiteral(
+                BigDecimal.valueOf(0));
+            RexNode one = rexBuilder.makeApproxLiteral(BigDecimal.valueOf(1));
+            RexNode oldWindowScale = rexBuilder.makeApproxLiteral(
+                BigDecimal.valueOf(Math.exp(-range * Math.sqrt(2)/halfLife)));
+            RexNode evenScalingFactor = rexBuilder.makeCall(
+                SqlStdOperatorTable.caseOperator, isEvenEpoch,
+                one, oldWindowScale);
+            RexNode oddScalingFactor = rexBuilder.makeCall(
+                SqlStdOperatorTable.caseOperator, isEvenEpoch,
+                oldWindowScale, one);
+
+            RexNode expWeight = rexBuilder.makeCall(
+                SqlStdOperatorTable.expFunc, rexBuilder.makeCall(
+                    SqlStdOperatorTable.multiplyOperator,
+                    epochStart, decayRate));
+            RexNode weightedValue = rexBuilder.makeCall(
+                SqlStdOperatorTable.multiplyOperator,
+                valueNode, expWeight);
+            RexNode evenSumOperand = rexBuilder.makeCall(
+                SqlStdOperatorTable.caseOperator, isEvenEpoch,
+                weightedValue, zero);
+            RexNode oddSumOperand = rexBuilder.makeCall(
+                SqlStdOperatorTable.caseOperator, isEvenEpoch,
+                zero, weightedValue);
+            RexNode evenSum = windowedAggFor(
+                cx,
+                (RexCall) rexBuilder.makeCall(
+                    SqlStdOperatorTable.sumOperator, evenSumOperand),
+                decayWindow, partitionKeys, orderKeys);
+            RexNode oddSum = windowedAggFor(
+                cx,
+                (RexCall) rexBuilder.makeCall(
+                    SqlStdOperatorTable.sumOperator, oddSumOperand),
+                decayWindow, partitionKeys, orderKeys);
+            RexNode sumNode = rexBuilder.makeCall(
+                SqlStdOperatorTable.plusOperator,
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.multiplyOperator,
+                    evenScalingFactor, evenSum),
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.multiplyOperator,
+                    oddScalingFactor, oddSum));
+            RexNode evenCountOperand = rexBuilder.makeCall(
+                SqlStdOperatorTable.caseOperator,
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.andOperator, isEvenEpoch, valueNotNull),
+                expWeight, zero);
+            RexNode oddCountOperand = rexBuilder.makeCall(
+                SqlStdOperatorTable.caseOperator,
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.orOperator, isEvenEpoch, valueIsNull),
+                zero, expWeight);
+            RexNode evenCount = windowedAggFor(
+                cx,
+                (RexCall) rexBuilder.makeCall(
+                    SqlStdOperatorTable.sumOperator, evenCountOperand),
+                decayWindow, partitionKeys, orderKeys);
+            RexNode oddCount = windowedAggFor(
+                cx,
+                (RexCall) rexBuilder.makeCall(
+                    SqlStdOperatorTable.sumOperator, oddCountOperand),
+                decayWindow, partitionKeys, orderKeys);
+            RexNode countNode = rexBuilder.makeCall(
+                SqlStdOperatorTable.plusOperator,
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.multiplyOperator,
+                    evenScalingFactor, evenCount),
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.multiplyOperator,
+                    oddScalingFactor, oddCount));
+            return RexUtil.maybeCast(
+                rexBuilder, valueType,
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.divideOperator, sumNode, countNode));
+        }
+
+        private long maxWindowSizeFor(RelDataType valueType, long halfLife) {
+            int prec = valueType.getPrecision();
+            return (long) (halfLife * (prec / Math.log10(2)) + 1);
+        }
+
+        private SqlWindow windowFor(
+            SqlWindow oldWindow, RelDataType valueType, long halfLife)
+        {
+            long maxRange = maxWindowSizeFor(valueType, halfLife);
+            OffsetRange oldOffsetAndRange = oldWindow.getOffsetAndRange();
+            if (oldOffsetAndRange.range <= maxRange) {
+                return oldWindow;
+            }
+           String intervalStr = (new BigDecimal(
+               oldOffsetAndRange.offset + maxRange).movePointLeft(3))
+               .toString();
+            SqlWindow window = (SqlWindow) oldWindow.clone();
+            SqlLiteral interval = SqlLiteral.createInterval(
+                1, intervalStr, secondsWithMillies, SqlParserPos.ZERO);
+            window.setLowerBound(
+                SqlWindowOperator.createPreceding(interval, SqlParserPos.ZERO));
+            return window;
+        }
     }
 
     private static class AvgVarianceConvertlet implements SqlRexConvertlet
