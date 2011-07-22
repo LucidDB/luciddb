@@ -57,6 +57,12 @@ mathAbs(
     RegisterRef<long long>* result,
     RegisterRef<long long>* x);
 
+//! mathExp. e^x.
+void
+mathExp(
+    RegisterRef<double>* result,
+    RegisterRef<double>* x);
+
 //! mathPow. Calculates x^y.
 //!
 //! Throws an error and sets the result to null if x<0 and y is not an integer

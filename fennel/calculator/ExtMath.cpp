@@ -135,6 +135,20 @@ mathAbs(
 }
 
 void
+mathExp(
+    RegisterRef<double>* result,
+    RegisterRef<double>* x)
+{
+    assert(StandardTypeDescriptor::isApprox(x->type()));
+
+    if (x->isNull()) {
+        result->toNull();
+    } else {
+        result->value(exp(x->value()));
+    }
+}
+
+void
 mathPow(
     RegisterRef<double>* result,
     RegisterRef<double>* x,
@@ -228,6 +242,11 @@ ExtMathRegister(ExtendedInstructionTable* eit)
         "ABS", params_2D,
         (ExtendedInstruction2<double, double>*) NULL,
         &mathAbs);
+
+    eit->add(
+        "EXP", params_2D,
+        (ExtendedInstruction2<double, double>*) NULL,
+        &mathExp);
 
     eit->add(
         "ABS", params_2I,
