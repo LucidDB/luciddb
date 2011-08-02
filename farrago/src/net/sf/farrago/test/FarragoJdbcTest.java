@@ -3465,6 +3465,23 @@ public class FarragoJdbcTest
     }
 
     /**
+     * Tests valid usage of a dynamic parameter nested within a cast
+     * call within a function call.
+     */
+    public void testNestedCastedDynamicParameter()
+        throws Exception
+    {
+        String sql = "select (case when empid = cast(? as int) then empid "
+          + "else 0 end) from sales.emps where "
+          + "name=cast(cast(? as varchar(20)) as varchar(21))";
+        preparedStmt = connection.prepareStatement(sql);
+        preparedStmt.setInt(1, 30);
+        preparedStmt.setString(2, "Fred");
+        resultSet = preparedStmt.executeQuery();
+        compareResultSet(Collections.singleton("30"));
+    }
+
+    /**
      * Tests metadata for dynamic parameter in an UPDATE statement.
      */
     public void testDynamicParameterInUpdate()
