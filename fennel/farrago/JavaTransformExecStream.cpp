@@ -191,10 +191,15 @@ ExecStreamResult JavaTransformExecStream::execute(
         pOutAccessor->produceData(pBuffer + cb);
         FENNEL_TRACE(TRACE_FINER, "wrote " << cb << " bytes");
         return EXECRC_BUF_OVERFLOW;
-    } else if (cb < 0) {
-        FENNEL_TRACE(TRACE_FINER, "underflow or adapter (sink) queue is full.");
-        // if inputs are empty, request for more data from upstream.
+    } else if (cb == -1) {
+        FENNEL_TRACE(TRACE_FINER, "underflow");
         checkEmptyInputs();
+        return EXECRC_BUF_UNDERFLOW;
+    } else if (cb == -2) {
+        FENNEL_TRACE(TRACE_FINER, "Adapter sink(queue) is full");
+        // TODO We should be returning EXECRC_YIELD here.
+        // Adapter (RowSink) API needs to be changed to notify scheduler
+        // to "wake up" the transform XO when bytebuffer is freed.
         return EXECRC_QUANTUM_EXPIRED;
     } else {
         FENNEL_TRACE(TRACE_FINER, "marking EOS");
