@@ -129,6 +129,7 @@ mkdir $BIN_DIR
 # copy thirdparty libs
 cd $THIRDPARTY_DIR
 cp janino/janino.jar $LIB_DIR
+cp janino/commons-compiler*.jar $LIB_DIR
 cp janino/new_bsd_license.txt $LIB_DIR/janino.license.txt
 cp resgen/lib/eigenbase-resgen.jar $LIB_DIR
 cp resgen/lib/eigenbase-xom.jar $LIB_DIR
@@ -161,6 +162,7 @@ cp vjdbc/lib/vjdbc_server.jar $LIB_DIR
 cp vjdbc/lib/commons-logging-1.1.jar $LIB_DIR
 cp vjdbc/lib/commons-dbcp-1.4.jar $LIB_DIR
 cp vjdbc/lib/commons-digester-1.7.jar $LIB_DIR
+cp vjdbc/lib/commons-pool-1.3.jar $LIB_DIR
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt
 # get rid of this dangling symlink; it causes trouble for cp
 rm -f stlport/lib/libstlport_gcc_debug.so
