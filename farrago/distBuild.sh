@@ -172,6 +172,7 @@ if $dist_fennel; then
 fi
 cp jetty/lib/*.jar $LIB_DIR
 cp jetty/LICENSE-APACHE-2.0.txt $LIB_DIR/jetty.license.txt
+cp jackson-all-1.8.3.jar $LIB_DIR
 
 if $remove_debug; then
     rm -f $LIB_DIR/fennel/*debug*

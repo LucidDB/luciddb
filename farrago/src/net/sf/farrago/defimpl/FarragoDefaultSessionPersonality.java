@@ -855,6 +855,12 @@ public class FarragoDefaultSessionPersonality
             return o.toString();
         }
     }
+
+    public JmiJsonUtil newJmiJsonUtil()
+    {
+        return FarragoJmiJsonUtil.getInstance();
+    }
+
 }
 
 // End FarragoDefaultSessionPersonality.java

@@ -35,13 +35,14 @@ import org.eigenbase.util.*;
 
 /**
  * Service to enable clients to get information about repository objects via
- * LURQL queries withou needing any of the underlying server classes.
+ * LURQL queries without needing any of the underlying server classes.
  * @author chard
  */
 public class FarragoLurqlService
 {
     protected DataSource dataSource;
     protected Logger tracer;
+    private JmiJsonUtil jmiJsonUtil = null;
 
     /**
      * Creates an instance of the FarragoLurqlService for a given server
@@ -55,8 +56,90 @@ public class FarragoLurqlService
         DataSource dataSource,
         Logger tracer)
     {
+        this(dataSource, tracer, null);
+    }
+
+    public FarragoLurqlService(
+        DataSource dataSource,
+        Logger tracer,
+        JmiJsonUtil jmiJsonUtil)
+    {
         this.dataSource = dataSource;
         this.tracer = tracer;
+        this.jmiJsonUtil = jmiJsonUtil;
+    }
+
+    public JmiJsonUtil getJmiJsonUtil()
+    {
+        return jmiJsonUtil;
+    }
+
+    protected Collection<RefBaseObject> parseInterchange(
+        RefPackage target,
+        String interchangeString,
+        InterchangeFormat format)
+    {
+        Collection<RefBaseObject> result = null;
+        switch (format) {
+        case XMI:
+            result =
+                JmiObjUtil.importFromXmiString(target, interchangeString);
+            break;
+        case JSON:
+            result = getJmiJsonUtil().importFromJsonString(
+                target,
+                interchangeString);
+            break;
+        default:
+            result = null;
+        }
+        return result;
+    }
+
+    protected Collection<RefBaseObject> getRemoteObjects(
+        String wrappedLurqlQuery,
+        RefPackage target,
+        InterchangeFormat format)
+    {
+        Connection c = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+        Collection<RefBaseObject> result = null;
+        try {
+            c = dataSource.getConnection();
+            stmt = c.createStatement();
+            rs = stmt.executeQuery(wrappedLurqlQuery);
+            String interchangeString = StringChunker.readChunks(rs, 2);
+            tracer.fine("Interchange data is:\n" + interchangeString);
+            result = parseInterchange(target, interchangeString, format);
+            rs.close();
+            rs = null;
+            stmt.close();
+            stmt = null;
+            c.close();
+            c = null;
+        } catch (SQLException e) {
+            tracer.warning("Error executing query '" + wrappedLurqlQuery + "'");
+            tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                rs = null;
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (c != null) {
+                    c.close();
+                }
+            } catch (SQLException se) {
+            } finally {
+                stmt = null;
+                c = null;
+            }
+        }
+        return result;
     }
 
     /**
@@ -71,6 +154,21 @@ public class FarragoLurqlService
         String lurqlQuery,
         RefPackage target)
     {
+        return executeLurql(lurqlQuery, target, InterchangeFormat.XMI);
+    }
+
+    public Collection<RefBaseObject> executeLurql(
+        String lurqlQuery,
+        RefPackage target,
+        InterchangeFormat format)
+    {
+        // if no JSON parse helper provided, force XMI
+        if (format.equals(InterchangeFormat.JSON)
+            && (getJmiJsonUtil() == null))
+        {
+            format = InterchangeFormat.XMI;
+        }
+        String wrappedQuery = constructQuery(lurqlQuery, format);
         Connection c = null;
         Statement stmt = null;
         ResultSet rs = null;
@@ -78,11 +176,11 @@ public class FarragoLurqlService
         try {
             c = dataSource.getConnection();
             stmt = c.createStatement();
-            rs = stmt.executeQuery(constructQuery(lurqlQuery));
+            rs = stmt.executeQuery(wrappedQuery);
             String xmiString = StringChunker.readChunks(rs, 2);
-            result = JmiObjUtil.importFromXmiString(
-                target,
-                xmiString);
+            tracer.finer("Interchange data is:\n" + xmiString);
+            result = parseInterchange(target, xmiString, format);
+            tracer.fine("Remotely imported " + result.size() + " objects");
             rs.close();
             rs = null;
             stmt.close();
@@ -114,20 +212,42 @@ public class FarragoLurqlService
     }
 
     /**
-     * Wraps a LURQL query string into a call to the LURQL-XMI UDX. Note that
+     * Wraps a LURQL query into a call to the LURQL-XMI UDX. Note that
      * we currently swallow all newline characters because of bug FRG-418
      * (newlines get encoded as Unicode literals, processed improperly).
+     *
      * @param lurqlQuery String containing LURQL query
-     * @return String containing the appropriate UDX call wrapping the LURQL
+     * @param format InterchangeFormat option to indicate the format
+     * @return String containing wrapped LURQL query
      */
-    private String constructQuery(String lurqlQuery)
+    private String constructQuery(String lurqlQuery, InterchangeFormat format)
     {
         final SqlBuilder sqlBuilder = new SqlBuilder(SqlDialect.EIGENBASE);
-        sqlBuilder.append("SELECT * FROM TABLE(SYS_BOOT.MGMT.GET_LURQL_XMI(")
-            .literal(lurqlQuery.replaceAll("\n", " "))
+        sqlBuilder.append("SELECT * FROM TABLE(SYS_BOOT.MGMT.GET_LURQL_");
+        sqlBuilder.append(format.toString()).append("(")
+            .literal(lurqlQuery.replace('\n', ' '))
             .append("))");
         return sqlBuilder.getSql();
     }
-}
 
+    public void getMetamodel(RefPackage extent)
+    {
+        final SqlBuilder query = new SqlBuilder(SqlDialect.EIGENBASE);
+        query.append("SELECT * FROM TABLE(SYS_BOOT.MGMT.GET_METAMODEL_XMI(")
+            .literal("FarragoMetamodel")
+            .append("))");
+        getRemoteObjects(query.getSql(), extent, InterchangeFormat.XMI);
+    }
+
+    /**
+     * Enumeration for the formats supported for exchanging object descriptions
+     * from the server to a client.
+     * @author chard
+     *
+     */
+    public enum InterchangeFormat {
+        XMI, JSON
+    }
+
+}
 // End FarragoLurqlService.java

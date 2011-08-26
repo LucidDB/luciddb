@@ -279,9 +279,18 @@ public abstract class FarragoReposUtil
         String extentName)
         throws Exception
     {
+        OutputStream outStream = new FileOutputStream(file);
+        exportExtent(mdrRepos, outStream, extentName);
+    }
+
+    public static void exportExtent(
+        MDRepository mdrRepos,
+        OutputStream outStream,
+        String extentName)
+        throws Exception
+    {
         RefPackage refPackage = mdrRepos.getExtent(extentName);
         XMIWriter xmiWriter = createXmiWriter();
-        OutputStream outStream = new FileOutputStream(file);
         try {
             xmiWriter.write(outStream, refPackage, "1.2");
         } finally {
@@ -335,7 +344,7 @@ public abstract class FarragoReposUtil
 
             xmiReader.read(
                 filter,
-                file.toURL().toString(),
+                file.toURI().toURL().toString(),
                 extent);
 
             if (filter.getNumInvalidCharsFiltered() > 0) {
@@ -373,7 +382,7 @@ public abstract class FarragoReposUtil
         }
         return metaPackage;
     }
-    
+
     private static void mainExportSubModel(String [] args)
         throws Exception
     {
@@ -402,7 +411,7 @@ public abstract class FarragoReposUtil
             modelLoader.loadModel(FARRAGO_CATALOG_EXTENT, false);
             importSubModel(
                 modelLoader.getMdrRepos(),
-                file.toURL());
+                file.toURI().toURL());
         } finally {
             modelLoader.close();
         }

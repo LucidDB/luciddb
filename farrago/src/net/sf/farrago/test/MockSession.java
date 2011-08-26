@@ -33,7 +33,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.oj.rex.*;
-import org.eigenbase.jmi.JmiQueryProcessor;
+import org.eigenbase.jmi.*;
 import org.eigenbase.resgen.ResourceDefinition;
 import org.eigenbase.rel.metadata.ChainedRelMetadataProvider;
 import org.eigenbase.rel.TableModificationRel;
@@ -634,6 +634,11 @@ public class MockSession
             FarragoDataWrapperCache wrapperCache,
             FarragoSessionIndexMap baseIndexMap,
             Long newRoot)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public JmiJsonUtil newJmiJsonUtil()
         {
             throw new UnsupportedOperationException();
         }

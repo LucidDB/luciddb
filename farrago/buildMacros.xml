@@ -405,6 +405,7 @@ ${farrago.test.jvmargs}
     <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
     <!-- REVIEW jvs 22-Sept-2009:  do we need ALL of these? -->
     <fileset dir="${jetty.dir}" includes="lib/*.jar"/>
+  	<pathelement location="${thirdparty.dir}/jackson-all-1.8.3.jar"/>
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.nojdbc.classpath" refid="farrago.3p.nojdbc.classpath"/>

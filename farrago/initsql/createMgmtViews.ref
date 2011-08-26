@@ -1529,6 +1529,21 @@
 > language java parameter style system defined java no sql
 > external name 'class net.sf.farrago.syslib.FarragoLurqlUDR.getXMI';
 > 
+> CREATE or replace FUNCTION get_metamodel_xmi(
+>   extent_name varchar(65535))
+> returns table(
+>   chunk_idx integer,
+>   xmi_result varchar(32767))
+> language java parameter style system defined java no sql
+> external name 'class net.sf.farrago.syslib.FarragoLurqlUDR.getMetamodelXMI';
+> 
+> CREATE or replace FUNCTION get_lurql_json(
+>   lurql_query varchar(65535))
+> returns table(
+>   chunk_idx integer,
+>   json_result varchar(32767))
+> language java parameter style system defined java no sql
+> external name 'class net.sf.farrago.syslib.FarragoLurqlUDR.getJSON';
 > 
 > -- End createMgmtViews.sql
 > 

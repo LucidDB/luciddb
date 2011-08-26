@@ -52,6 +52,15 @@ public class FarragoServiceTest extends FarragoTestCase
     private DataSource dataSource;
     private final AtomicInteger openCount = new AtomicInteger();
     private final String libraryFileName;
+    // empty maps for dummy params; protected in case subclasses need values
+    protected final Map<String, String> dummyWrapperOptions =
+        Collections.<String, String>emptyMap();
+    protected final Map<String, String> dummyServerOptions =
+        new HashMap<String, String>();
+    protected final Map<String, String> dummyTableOptions =
+        Collections.<String, String>emptyMap();
+    protected final Map<String, String> dummyColumnOptions =
+        new HashMap<String, String>();
 
     /**
      * Creates a FarragoServiceTest.
@@ -63,9 +72,18 @@ public class FarragoServiceTest extends FarragoTestCase
     public FarragoServiceTest(String testName) throws Exception
     {
         super(testName);
-        libraryFileName =
-            System.getProperty("net.sf.farrago.home")
-            + "/plugin/FarragoMedJdbc.jar";
+        libraryFileName = getPluginDir() + "/FarragoMedJdbc.jar";
+    }
+
+    /**
+     * Determines where we'll find the SQL/MED plugin, so derived projects can
+     * override. By default, this is the <code>plugin</code> directory
+     * directly under the installation directory.
+     * @return String containing the server's plugin directory
+     */
+    protected String getPluginDir()
+    {
+        return System.getProperty("net.sf.farrago.home") + "/plugin";
     }
 
     @Override
@@ -207,8 +225,8 @@ public class FarragoServiceTest extends FarragoTestCase
                 .getServerProperties(
                     UUID.randomUUID().toString(),
                     libraryFileName,
-                    Collections.<String, String>emptyMap(),
-                    Collections.<String, String>emptyMap());
+                    dummyWrapperOptions,
+                    dummyServerOptions);
         assertEquals(
             "["
             + "DriverProperty("
@@ -252,8 +270,8 @@ public class FarragoServiceTest extends FarragoTestCase
                     .getServerProperties(
                         UUID.randomUUID().toString(),
                         libraryFileName + ".bad.jar",
-                        Collections.<String, String>emptyMap(),
-                        Collections.<String, String>emptyMap());
+                        dummyWrapperOptions,
+                        dummyServerOptions);
             fail("expected error, got " + infoList);
         } catch (SQLException e) {
             assertEquals(
@@ -272,7 +290,7 @@ public class FarragoServiceTest extends FarragoTestCase
                 .getPluginProperties(
                     UUID.randomUUID().toString(),
                     libraryFileName,
-                    Collections.<String, String>emptyMap());
+                    dummyWrapperOptions);
         assertEquals(
             "[]",
             toString(infoList));
@@ -282,7 +300,7 @@ public class FarragoServiceTest extends FarragoTestCase
                 .getPluginProperties(
                     UUID.randomUUID().toString(),
                     "class " + MedMockForeignDataWrapper.class.getName(),
-                    Collections.<String, String>emptyMap());
+                    dummyWrapperOptions);
         assertEquals(
             "["
             + "DriverProperty("
@@ -308,7 +326,7 @@ public class FarragoServiceTest extends FarragoTestCase
             getMedService()
                 .browseTable(
                     "SYS_MOCK_FOREIGN_DATA_SERVER",
-                    Collections.<String, String>emptyMap());
+                    dummyTableOptions);
         assertEquals(
             "["
             + "DriverProperty("
@@ -339,8 +357,8 @@ public class FarragoServiceTest extends FarragoTestCase
             getMedService()
                 .browseColumn(
                     "SYS_MOCK_FOREIGN_DATA_SERVER",
-                    Collections.<String, String>emptyMap(),
-                    Collections.<String, String>emptyMap());
+                    dummyTableOptions,
+                    dummyColumnOptions);
         assertEquals(
             "["
             + "DriverProperty("
@@ -446,6 +464,17 @@ public class FarragoServiceTest extends FarragoTestCase
             result.get(0).getMessage());
     }
 
+    protected List<String> getExpectedCompletions()
+    {
+        return Arrays.asList(
+            "Schema(SQLJ)",
+            "Schema(INFORMATION_SCHEMA)",
+            "Schema(SALES)",
+            "Table(DEPTS)",
+            "Table(EMPS)",
+            "Table(TEMPS)");
+    }
+
     /**
      * Tests the SQL completion hints through the SQL advisor service. Note this
      * does not need to test completion itself comprehensively; that happens in
@@ -456,21 +485,14 @@ public class FarragoServiceTest extends FarragoTestCase
         String sql = "select * from sales.^";
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
         final String[] replaced = { null };
-        List<String> expected = Arrays.asList(
-            "Schema(SQLJ)",
-            "Schema(INFORMATION_SCHEMA)",
-            "Schema(SALES)",
-            "Table(DEPTS)",
-            "Table(EMPS)",
-            "Table(TEMPS)");
         List<FarragoSqlAdvisorService.SqlItem> results = getSqlAdvisorService()
             .getCompletionHints(sap.sql, sap.cursor, replaced, "SALES");
-        assertEquals(expected.size(), results.size());
+        assertEquals(getExpectedCompletions().size(), results.size());
         List<String> strVals = new ArrayList<String>();
         for (FarragoSqlAdvisorService.SqlItem si : results) {
             strVals.add(si.toString());
         }
-        assertTrue(expected.containsAll(strVals));
+        assertTrue(getExpectedCompletions().containsAll(strVals));
         tracer.warning(replaced[0]);
     }
 

@@ -85,7 +85,7 @@ public class FarragoMedService
         if (options.isEmpty()) {
             sqlBuilder.append(
                 // Attempt to work around dtbug-2387.
-                false
+                true
                 ? "table sys_boot.mgmt.browse_connect_empty_options"
                 : "select * from (values ('k', 'v')) where true");
         } else {
@@ -358,7 +358,7 @@ public class FarragoMedService
             .append(", ")
             .literal(locale.toString())
             .append("))");
-        final String sql = selectSqlBuilder.getSql();
+        final String sql = selectSqlBuilder.getSql().replace('\n', ' ');
         return getProperties(methodName, sql);
     }
 
@@ -390,7 +390,7 @@ public class FarragoMedService
             .append(", ")
             .literal(locale.toString())
             .append("))");
-        final String sql = selectSqlBuilder.getSql();
+        final String sql = selectSqlBuilder.getSql().replace('\n', ' ');
         return getProperties(methodName, sql);
     }
 

@@ -402,6 +402,14 @@ public interface FarragoSessionPersonality
         FarragoDataWrapperCache wrapperCache,
         FarragoSessionIndexMap baseIndexMap,
         Long newRoot);
+
+    /**
+     * Returns a JMI/JSON processing utility object appropriate to the
+     * personality.
+     *
+     * @return JmiJsonUtility subclass appropriate to the personality
+     */
+    public JmiJsonUtil newJmiJsonUtil();
 }
 
 // End FarragoSessionPersonality.java
