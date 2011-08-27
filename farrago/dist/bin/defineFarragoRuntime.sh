@@ -13,10 +13,12 @@ fi
 # If you are trying to give additional memory usable by queries
 # see this doc: http://pub.eigenbase.org/wiki/LucidDbBufferPoolSizing
 # Upping Java Heap will unlikely help queries on "large" datasets
-JAVA_ARGS="-Xms256m -Xmx256m -XX:MaxPermSize=128m -cp `cat $MAIN_DIR/bin/classpath.gen` \
+JAVA_MEM="-Xms256m -Xmx256m -XX:MaxPermSize=128m"
+JAVA_ARGS_CLIENT="-cp `cat $MAIN_DIR/bin/classpath.gen` \
   -Dnet.sf.farrago.home=$MAIN_DIR \
   -Dorg.eigenbase.util.AWT_WORKAROUND=off \
   -Djava.util.logging.config.file=$MAIN_DIR/trace/Trace.properties"
+JAVA_ARGS="$JAVA_MEM $JAVA_ARGS_CLIENT"
 
 SQLLINE_JAVA_ARGS="sqlline.SqlLine"
 

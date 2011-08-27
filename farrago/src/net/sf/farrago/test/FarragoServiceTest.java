@@ -104,6 +104,23 @@ public class FarragoServiceTest extends FarragoTestCase
         return buf.toString();
     }
 
+    // generic version of above
+    private <T> String listToString(List<T> list)
+    {
+        if (list.isEmpty()) {
+            return "[]";
+        }
+        StringBuilder buf = new StringBuilder();
+        String sep = "[";
+        for (T element : list) {
+            buf.append(sep);
+            sep = ", ";
+            buf.append(element.toString());
+        }
+        buf.append("]");
+        return buf.toString();
+    }
+
     private FarragoMedService getMedService()
     {
         return new FarragoMedService(
@@ -358,6 +375,140 @@ public class FarragoServiceTest extends FarragoTestCase
             + "choices: [x, null, y])"
             + "]",
             toString(infoList));
+    }
+
+    /**
+     * Unit test for {@link FarragoMedService#browseForeignSchemas(String)}.
+     */
+    public void testMedBrowseForeignSchemas() throws SQLException
+    {
+        List<FarragoMedService.ForeignSchemaInfo> infoList =
+            getMedService().browseForeignSchemas("HSQLDB_DEMO");
+        assertEquals(
+            "["
+            + "ForeignSchemaInfo(schemaName: INFORMATION_SCHEMA, "
+            + "description: null), "
+            + "ForeignSchemaInfo(schemaName: PUBLIC, description: null), "
+            + "ForeignSchemaInfo(schemaName: SALES, description: null)"
+            + "]",
+            listToString(infoList));
+
+        infoList =
+            getMedService()
+            .browseForeignSchemas("SYS_MOCK_FOREIGN_DATA_SERVER");
+        assertEquals("[]", listToString(infoList));
+    }
+
+    /**
+     * Unit test for {@link FarragoMedService#browseForeignSchemaTables(
+     * String, String)}.
+     */
+    public void testMedBrowseForeignSchemaTables() throws SQLException
+    {
+        List<FarragoMedService.ForeignSchemaTableAndColumnInfo> infoList =
+            getMedService().browseForeignSchemaTables("HSQLDB_DEMO", "SALES");
+        assertEquals(
+            "["
+            + "ForeignSchemaTableAndColumnInfo(tableName: BITFLIP, "
+            + "description: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: DEPT, "
+            + "description: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: EMP, "
+            + "description: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: SALGRADE, "
+            + "description: null)"
+            + "]",
+            listToString(infoList));
+    }
+
+    /**
+     * Unit test for {@link FarragoMedService#browseForeignSchemaColumns(
+     * String, String)}.
+     */
+    public void testMedBrowseForeignSchemaColumns() throws SQLException
+    {
+        List<FarragoMedService.ForeignSchemaTableAndColumnInfo> infoList =
+            getMedService().browseForeignSchemaColumns("HSQLDB_DEMO", "SALES");
+        assertEquals(
+            "["
+            + "ForeignSchemaTableAndColumnInfo(tableName: BITFLIP, "
+            + "columnName: B1, ordinal: 0, dataType: BOOLEAN, precision: 1, "
+            + "decDigits: 0, isNullable: true, formattedDataType: BOOLEAN, "
+            + "description: null, defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: BITFLIP, "
+            + "columnName: B2, ordinal: 1, dataType: BOOLEAN, precision: 1, "
+            + "decDigits: 0, isNullable: false, formattedDataType: BOOLEAN, "
+            + "description: null, defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: DEPT, "
+            + "columnName: DEPTNO, ordinal: 0, dataType: INTEGER, "
+            + "precision: 10, decDigits: 0, isNullable: true, "
+            + "formattedDataType: INTEGER, description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: DEPT, "
+            + "columnName: DNAME, ordinal: 1, dataType: VARCHAR, "
+            + "precision: 1024, decDigits: 0, isNullable: true, "
+            + "formattedDataType: VARCHAR(1024), description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: DEPT, "
+            + "columnName: LOC, ordinal: 2, dataType: VARCHAR, "
+            + "precision: 1024, decDigits: 0, isNullable: true, "
+            + "formattedDataType: VARCHAR(1024), description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: EMP, "
+            + "columnName: EMPNO, ordinal: 0, dataType: INTEGER, "
+            + "precision: 10, decDigits: 0, isNullable: true, "
+            + "formattedDataType: INTEGER, description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: EMP, "
+            + "columnName: ENAME, ordinal: 1, dataType: VARCHAR, "
+            + "precision: 1024, decDigits: 0, isNullable: true, "
+            + "formattedDataType: VARCHAR(1024), description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: EMP, "
+            + "columnName: JOB, ordinal: 2, dataType: VARCHAR, "
+            + "precision: 1024, decDigits: 0, isNullable: true, "
+            + "formattedDataType: VARCHAR(1024), description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: EMP, "
+            + "columnName: MGR, ordinal: 3, dataType: INTEGER, precision: 10, "
+            + "decDigits: 0, isNullable: true, formattedDataType: INTEGER, "
+            + "description: null, defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: EMP, "
+            + "columnName: HIREDATE, ordinal: 4, dataType: DATE, precision: 0, "
+            + "decDigits: 0, isNullable: true, formattedDataType: DATE, "
+            + "description: null, defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: EMP, "
+            + "columnName: SAL, ordinal: 5, dataType: DECIMAL, precision: 19, "
+            + "decDigits: 0, isNullable: true, "
+            + "formattedDataType: DECIMAL(19, 0), description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: EMP, "
+            + "columnName: COMM, ordinal: 6, dataType: DECIMAL, precision: 19, "
+            + "decDigits: 0, isNullable: true, "
+            + "formattedDataType: DECIMAL(19, 0), description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: EMP, "
+            + "columnName: DEPTNO, ordinal: 7, dataType: INTEGER, "
+            + "precision: 10, decDigits: 0, isNullable: true, "
+            + "formattedDataType: INTEGER, description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: SALGRADE, "
+            + "columnName: GRADE, ordinal: 0, dataType: INTEGER, "
+            + "precision: 10, decDigits: 0, isNullable: true, "
+            + "formattedDataType: INTEGER, description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: SALGRADE, "
+            + "columnName: LOSAL, ordinal: 1, dataType: INTEGER, "
+            + "precision: 10, decDigits: 0, isNullable: true, "
+            + "formattedDataType: INTEGER, description: null, "
+            + "defaultValue: null), "
+            + "ForeignSchemaTableAndColumnInfo(tableName: SALGRADE, "
+            + "columnName: HISAL, ordinal: 2, dataType: INTEGER, "
+            + "precision: 10, decDigits: 0, isNullable: true, "
+            + "formattedDataType: INTEGER, description: null, "
+            + "defaultValue: null)"
+            + "]",
+            listToString(infoList));
     }
 
     /**

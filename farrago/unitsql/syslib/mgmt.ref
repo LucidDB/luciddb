@@ -122,7 +122,7 @@
 | SALES               |              |
 +---------------------+--------------+
 > 
-> select * from table(sys_boot.mgmt.browse_foreign_tables('HSQLDB_DEMO', 'SALES'));
+> select * from table(sys_boot.mgmt.browse_foreign_schema_tables('HSQLDB_DEMO', 'SALES'));
 +-------------+--------------+
 | TABLE_NAME  | DESCRIPTION  |
 +-------------+--------------+
@@ -132,7 +132,7 @@
 | SALGRADE    |              |
 +-------------+--------------+
 > 
-> select * from table(sys_boot.mgmt.browse_foreign_columns('HSQLDB_DEMO', 'SALES'));
+> select * from table(sys_boot.mgmt.browse_foreign_schema_columns('HSQLDB_DEMO', 'SALES'));
 +-------------+--------------+----------+-----------+------------+-------------+--------------+---------------------+--------------+----------------+
 | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  | FORMATTED_DATATYPE  | DESCRIPTION  | DEFAULT_VALUE  |
 +-------------+--------------+----------+-----------+------------+-------------+--------------+---------------------+--------------+----------------+

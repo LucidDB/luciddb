@@ -3292,6 +3292,7 @@ public class SqlValidatorImpl
         final List<SqlNode> expandedSelectItems = new ArrayList<SqlNode>();
         final List<String> aliasList = new ArrayList<String>();
         final List<RelDataType> typeList = new ArrayList<RelDataType>();
+
         for (int i = 0; i < selectItems.size(); i++) {
             SqlNode selectItem = selectItems.get(i);
             if (selectItem instanceof SqlSelect) {
@@ -3681,11 +3682,33 @@ public class SqlValidatorImpl
         // for dynamic parameter markers (SET x = ?).  But
         // maybe validateUpdate and validateInsert below will do
         // the job?
-        validateSelect(sqlSelect, unknownType);
 
+        // REVIEW ksecretan 15-July-2011: They didn't get a chance to
+        // since validateSelect() would bail.
+        // Let's use the update/insert targetRowType when available.
         IdentifierNamespace targetNamespace =
             (IdentifierNamespace) getNamespace(call.getTargetTable());
         validateNamespace(targetNamespace);
+
+        SqlValidatorTable table = targetNamespace.getTable();
+        validateAccess(call.getTargetTable(), table, SqlAccessEnum.UPDATE);
+
+        RelDataType targetRowType = unknownType;
+
+        if (call.getUpdateCall() != null) {
+            targetRowType = createTargetRowType(
+                    table,
+                    call.getUpdateCall().getTargetColumnList(),
+                    true);
+        }
+        if (call.getInsertCall() != null) {
+            targetRowType = createTargetRowType(
+                    table,
+                    call.getInsertCall().getTargetColumnList(),
+                    false);
+        }
+
+        validateSelect(sqlSelect, targetRowType);
 
         if (call.getUpdateCall() != null) {
             validateUpdate(call.getUpdateCall());
@@ -3694,8 +3717,6 @@ public class SqlValidatorImpl
             validateInsert(call.getInsertCall());
         }
 
-        SqlValidatorTable table = targetNamespace.getTable();
-        validateAccess(call.getTargetTable(), table, SqlAccessEnum.UPDATE);
     }
 
     /**

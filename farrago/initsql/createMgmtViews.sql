@@ -1116,6 +1116,42 @@ no sql
 external name
 'class net.sf.farrago.syslib.FarragoMedUDR.browseForeignSchemas';
 
+-- Returns which tables are available inside a given foreign schema
+-- (such as from browse_foreign_schemas) that is inside a foreign server.
+create or replace function browse_foreign_schema_tables(
+  foreign_server_name varchar(128),
+  schema_name varchar(128))
+returns table(
+  table_name varchar(128),
+  description varchar(4096))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoMedUDR.browseForeignSchemaTables';
+
+-- Returns column-level information when available on all the tables inside
+-- a given foreign schema inside a foreign server.
+create or replace function browse_foreign_schema_columns(
+  foreign_server_name varchar(128),
+  schema_name varchar(128))
+returns table(
+  table_name varchar(128),
+  column_name varchar(128),
+  ordinal integer,
+  datatype varchar(128),
+  "PRECISION" integer,
+  dec_digits integer,
+  is_nullable boolean,
+  formatted_datatype varchar(128),
+  description varchar(4096),
+  default_value varchar(128))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoMedUDR.browseForeignSchemaColumns';
+
 --
 -- Datetime conversion functions
 --

@@ -694,6 +694,42 @@ ${farrago.test.jvmargs}
 
   <!-- create plugin/LucidDbClient.jar -->
   <target name="buildClientJar" depends="makePluginDirs">
+    <delete file="${luciddb.plugin.dir}/LucidDbClient.jar" />
+    <fileset id="farrago_classes" dir="${farrago.classes.dir}">
+      <include
+        name="org/luciddb/jdbc/LucidDbClientDriver.class"/>
+      <include
+        name="org/luciddb/jdbc/LucidDbRmiDriver.class"/>
+      <include
+        name="org/luciddb/test/LucidDbTestCleanup.class"/>
+      <include
+        name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
+      <include
+        name="net/sf/farrago/jdbc/client/FarragoVjdbcHttpClientDriver.class"/>
+      <include
+        name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
+      <include
+        name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcHttpClientDriver.class"/>
+      <include
+        name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
+      <include
+        name="net/sf/farrago/jdbc/FarragoJdbcUtil*.class"/>
+      <include
+        name="net/sf/farrago/release/*"/>
+      <include
+        name="org/eigenbase/sql/validate/SqlValidatorException.class"/>
+      <include
+        name="org/eigenbase/util/EigenbaseContextException.class"/>
+      <include
+        name="org/eigenbase/util/EigenbaseException.class"/>
+      <include
+        name="org/eigenbase/util/property/*"/>
+      <include
+        name="org/eigenbase/util14/ConnectStringParser.class"/>
+      <include
+        name="org/eigenbase/util14/EigenbaseValidatorException.class"/>
+    </fileset>
+
     <jar jarfile="${luciddb.plugin.dir}/LucidDbClient.jar"
       filesetmanifest="skip">
       <zipgroupfileset dir="${vjdbc.dir}/lib">
@@ -706,28 +742,7 @@ ${farrago.test.jvmargs}
       <fileset dir="${luciddb.dir}/classes">
         <include name="FarragoRelease.properties"/>
       </fileset>
-      <fileset dir="${farrago.classes.dir}">
-        <include
-          name="org/luciddb/jdbc/LucidDbClientDriver.class"/>
-        <include
-          name="org/luciddb/jdbc/LucidDbRmiDriver.class"/>
-        <include
-          name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
-        <include
-          name="net/sf/farrago/jdbc/client/FarragoVjdbcHttpClientDriver.class"/>
-        <include
-          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
-        <include
-          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcHttpClientDriver.class"/>
-        <include
-          name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
-        <include
-          name="net/sf/farrago/release/*"/>
-        <include
-          name="org/eigenbase/util/property/*"/>
-        <include
-          name="org/eigenbase/util14/ConnectStringParser.class"/>
-      </fileset>
+      <fileset refid="farrago_classes" />
     </jar>
     <!-- Build a minimal job that does not include commons logging -->
     <jar jarfile="${luciddb.plugin.dir}/LucidDbClient-minimal.jar"
@@ -741,28 +756,7 @@ ${farrago.test.jvmargs}
       <fileset dir="${luciddb.dir}/classes">
         <include name="FarragoRelease.properties"/>
       </fileset>
-      <fileset dir="${farrago.classes.dir}">
-        <include
-          name="org/luciddb/jdbc/LucidDbClientDriver.class"/>
-        <include
-          name="org/luciddb/jdbc/LucidDbRmiDriver.class"/>
-        <include
-          name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
-        <include
-          name="net/sf/farrago/jdbc/client/FarragoVjdbcHttpClientDriver.class"/>
-        <include
-          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
-        <include
-          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcHttpClientDriver.class"/>
-        <include
-          name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
-        <include
-          name="net/sf/farrago/release/*"/>
-        <include
-          name="org/eigenbase/util/property/*"/>
-        <include
-          name="org/eigenbase/util14/ConnectStringParser.class"/>
-      </fileset>
+      <fileset refid="farrago_classes" />
     </jar>
   </target>
 
