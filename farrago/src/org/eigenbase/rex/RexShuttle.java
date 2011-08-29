@@ -56,6 +56,7 @@ public class RexShuttle
             return new RexOver(
                 over.getType(),
                 over.getAggOperator(),
+                over.getQualifier(),
                 clonedOperands,
                 window);
         } else {
@@ -94,6 +95,7 @@ public class RexShuttle
             return new RexCall(
                 call.getType(),
                 call.getOperator(),
+                call.getQualifier(),
                 clonedOperands);
         } else {
             return call;

@@ -101,6 +101,12 @@ public class ExtInstructionDefTable
         new CalcProgramBuilder.ExtInstrDef("WinAggAdd", 2);
     public static final CalcProgramBuilder.ExtInstrDef histogramDrop =
         new CalcProgramBuilder.ExtInstrDef("WinAggDrop", 2);
+    public static final CalcProgramBuilder.ExtInstrDef distinctInit =
+        new CalcProgramBuilder.ExtInstrDef("WinDistinctInit", 2);
+    public static final CalcProgramBuilder.ExtInstrDef distinctAdd =
+        new CalcProgramBuilder.ExtInstrDef("WinDistinctAdd", 2);
+    public static final CalcProgramBuilder.ExtInstrDef distinctDrop =
+        new CalcProgramBuilder.ExtInstrDef("WinDistinctDrop", 2);
     public static final CalcProgramBuilder.ExtInstrDef histogramGetMax =
         new CalcProgramBuilder.ExtInstrDef("WinAggMax", 2);
     public static final CalcProgramBuilder.ExtInstrDef histogramGetMin =
@@ -109,6 +115,8 @@ public class ExtInstructionDefTable
         new CalcProgramBuilder.ExtInstrDef("WinAggFirstValue", 2);
     public static final CalcProgramBuilder.ExtInstrDef histogramGetLastValue =
         new CalcProgramBuilder.ExtInstrDef("WinAggLastValue", 2);
+    public static final CalcProgramBuilder.ExtInstrDef isLastDistinctFunction =
+        new CalcProgramBuilder.ExtInstrDef("IsLastDistinct", 2);
 }
 
 // End ExtInstructionDefTable.java

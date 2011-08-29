@@ -24,6 +24,8 @@
 #include "fennel/calculator/ExtendedInstructionTable.h"
 #include "fennel/calculator/WinAggHistogram.h"
 #include "fennel/calculator/WinAggHistogramStrA.h"
+#include "fennel/calculator/WinDistinct.h"
+#include "fennel/calculator/WinDistinctStrA.h"
 #include "fennel/calculator/RegisterReference.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 
@@ -74,6 +76,32 @@ void histogramAlloc(
         histogramObject;
 }
 
+void distinctAlloc(
+    RegisterRef<char*>* result,
+    RegisterReference* targetDataType)
+{
+    StandardTypeDescriptorOrdinal dType = targetDataType->type();
+
+    PBuffer histogramObject = NULL;
+    if (StandardTypeDescriptor::isExact(dType)) {
+        histogramObject =
+            reinterpret_cast<PBuffer>(new WinDistinct<int64_t>);
+    } else if (StandardTypeDescriptor::isApprox(dType)) {
+        histogramObject =
+            reinterpret_cast<PBuffer>(new WinDistinct<double>);
+    } else if (StandardTypeDescriptor::isArray(dType)) {
+        histogramObject =
+            reinterpret_cast<PBuffer>(new WinDistinctStrA);
+    } else {
+//         TODO: find out what exception to throw
+        throw SqlState::instance().code22001();
+    }
+
+    TupleDatum *bind = result->getBinding(false);
+    *(reinterpret_cast<PBuffer*>(const_cast<PBuffer>(bind->pData))) =
+        histogramObject;
+}
+
 //! add - Template function that implements the ADD row function for
 //! the specified data type.
 //!
@@ -81,7 +109,7 @@ void histogramAlloc(
 //! node - Register with new data to be added to window
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void add(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
+inline void addAgg(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
 {
     // cast otherData buffer pointer to our working structure
     TupleDatum *bind = aggDataBlock->getBinding(false);
@@ -94,12 +122,40 @@ inline void add(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
     pAcc->addRow(node);
 }
 
-inline void add(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
+inline void addAgg(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
 {
     // cast otherData buffer pointer to our working structure
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogramStrA *pAcc =
         *(reinterpret_cast<WinAggHistogramStrA**>(
+            const_cast<PBuffer>(bind->pData)));
+
+    // Process the new node.
+    pAcc->addRow(node);
+}
+
+template <typename STDTYPE>
+inline void addDistinct(
+    RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
+{
+    // cast otherData buffer pointer to our working structure
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinDistinct<STDTYPE> *pAcc =
+        *(reinterpret_cast<WinDistinct<STDTYPE>**>(
+            const_cast<PBuffer>(bind->pData)));
+
+
+    // Process the new node.
+    pAcc->addRow(node);
+}
+
+inline void addDistinct(
+    RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
+{
+    // cast otherData buffer pointer to our working structure
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinDistinctStrA *pAcc =
+        *(reinterpret_cast<WinDistinctStrA**>(
             const_cast<PBuffer>(bind->pData)));
 
     // Process the new node.
@@ -115,7 +171,8 @@ inline void add(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
 //!        data value must be the same one submitted to ADD
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void drop(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
+inline void dropAgg(
+    RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
 {
     // cast otherData buffer pointer to our working structure
     TupleDatum *bind = aggDataBlock->getBinding(false);
@@ -127,11 +184,36 @@ inline void drop(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
     pAcc->dropRow(node);
 }
 
-inline void drop(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
+inline void dropAgg(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
 {
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogramStrA *pAcc =
         *(reinterpret_cast<WinAggHistogramStrA**>(
+            const_cast<PBuffer>(bind->pData)));
+
+    pAcc->dropRow(node);
+}
+
+template <typename STDTYPE>
+inline void dropDistinct(
+    RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
+{
+    // cast otherData buffer pointer to our working structure
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinDistinct<STDTYPE> *pAcc =
+        *(reinterpret_cast<WinDistinct<STDTYPE>**>(
+            const_cast<PBuffer>(bind->pData)));
+
+    // Process the row
+    pAcc->dropRow(node);
+}
+
+inline void dropDistinct(
+    RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
+{
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinDistinctStrA *pAcc =
+        *(reinterpret_cast<WinDistinctStrA**>(
             const_cast<PBuffer>(bind->pData)));
 
     pAcc->dropRow(node);
@@ -263,6 +345,27 @@ void WinAggInit(RegisterRef<char*>* result, RegisterRef<TDT>* targetDataType)
     histogramAlloc(result, targetDataType);
 }
 
+template <typename TDT>
+void WinDistinctInit(
+    RegisterRef<char*>* result, RegisterRef<TDT>* targetDataType)
+{
+    distinctAlloc(result, targetDataType);
+}
+
+void IsLastDistinct(
+    RegisterRef<int32_t>* result,
+    RegisterRef<char*>* distinctDataBlock)
+    {
+        // cast otherData buffer pointer to our working structure
+        TupleDatum *bind = distinctDataBlock->getBinding(false);
+        WinDistinctBase *pAcc =
+            *(reinterpret_cast<WinDistinctBase **>(
+                const_cast<PBuffer>(bind->pData)));
+
+        // return count
+        result->value(pAcc->isLastDistinct());
+    }
+
 //! firstValue - Template function that returns the first value which entered
 //! the window
 //!
@@ -344,14 +447,28 @@ void WinAggAdd(
     RegisterRef<int64_t>* node,
     RegisterRef<char*>* aggDataBlock)
 {
-    add(node, aggDataBlock);
+    addAgg(node, aggDataBlock);
 }
 
 void WinAggDrop(
     RegisterRef<int64_t>* node,
     RegisterRef<char*>* aggDataBlock)
 {
-    drop(node, aggDataBlock);
+    dropAgg(node, aggDataBlock);
+}
+
+void WinDistinctAdd(
+    RegisterRef<int64_t>* node,
+    RegisterRef<char*>* aggDataBlock)
+{
+    addDistinct(node, aggDataBlock);
+}
+
+void WinDistinctDrop(
+    RegisterRef<int64_t>* node,
+    RegisterRef<char*>* aggDataBlock)
+{
+    dropDistinct(node, aggDataBlock);
 }
 
 void WinAggMin(
@@ -403,14 +520,28 @@ void WinAggAdd(
     RegisterRef<double>* node,
     RegisterRef<char*>* aggDataBlock)
 {
-    add(node, aggDataBlock);
+    addAgg(node, aggDataBlock);
 }
 
 void WinAggDrop(
     RegisterRef<double>* node,
     RegisterRef<char*>* aggDataBlock)
 {
-    drop(node, aggDataBlock);
+    dropAgg(node, aggDataBlock);
+}
+
+void WinDistinctAdd(
+    RegisterRef<double>* node,
+    RegisterRef<char*>* aggDataBlock)
+{
+    addDistinct(node, aggDataBlock);
+}
+
+void WinDistinctDrop(
+    RegisterRef<double>* node,
+    RegisterRef<char*>* aggDataBlock)
+{
+    dropDistinct(node, aggDataBlock);
 }
 
 void WinAggAvg(
@@ -462,16 +593,29 @@ void WinAggAdd(
     RegisterRef<char*>* node,
     RegisterRef<char*>* aggDataBlock)
 {
-    add(node, aggDataBlock);
+    addAgg(node, aggDataBlock);
 }
 
 void WinAggDrop(
     RegisterRef<char*>* node,
     RegisterRef<char*>* aggDataBlock)
 {
-    drop(node, aggDataBlock);
+    dropAgg(node, aggDataBlock);
 }
 
+void WinDistinctAdd(
+    RegisterRef<char*>* node,
+    RegisterRef<char*>* aggDataBlock)
+{
+    addDistinct(node, aggDataBlock);
+}
+
+void WinDistinctDrop(
+    RegisterRef<char*>* node,
+    RegisterRef<char*>* aggDataBlock)
+{
+    dropDistinct(node, aggDataBlock);
+}
 
 void WinAggMin(
     RegisterRef<char*>* node,
@@ -552,6 +696,26 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         (ExtendedInstruction2<char*,int8_t>*) NULL,
         &WinAggInit);
 
+    eit->add(
+        "WinDistinctInit", params_mm64_init,
+        (ExtendedInstruction2<char*,int64_t>*) NULL,
+        &WinDistinctInit);
+
+    eit->add(
+        "WinDistinctInit", params_mm32_init,
+        (ExtendedInstruction2<char*,int32_t>*) NULL,
+        &WinDistinctInit);
+
+    eit->add(
+        "WinDistinctInit", params_mm16_init,
+        (ExtendedInstruction2<char*,int16_t>*) NULL,
+        &WinDistinctInit);
+
+    eit->add(
+        "WinDistinctInit", params_mm8_init,
+        (ExtendedInstruction2<char*,int8_t>*) NULL,
+        &WinDistinctInit);
+
     // Now the Add/Drop and functions for integers
     vector<StandardTypeDescriptorOrdinal> params_ad_I64;
     params_ad_I64.push_back(STANDARD_TYPE_INT_64);
@@ -566,6 +730,16 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         "WinAggDrop", params_ad_I64,
         (ExtendedInstruction2<int64_t, char*>*) NULL,
         &WinAggDrop);
+
+    eit->add(
+        "WinDistinctAdd", params_ad_I64,
+        (ExtendedInstruction2<int64_t, char*>*) NULL,
+        &WinDistinctAdd);
+
+    eit->add(
+        "WinDistinctDrop", params_ad_I64,
+        (ExtendedInstruction2<int64_t, char*>*) NULL,
+        &WinDistinctDrop);
 
     vector<StandardTypeDescriptorOrdinal> params_I64_funcs;
     params_I64_funcs.push_back(STANDARD_TYPE_INT_64);
@@ -606,6 +780,15 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         (ExtendedInstruction2<int64_t, char*>*) NULL,
         &WinAggLastValue);
 
+    vector<StandardTypeDescriptorOrdinal> params_bool_funcs;
+    params_bool_funcs.push_back(STANDARD_TYPE_BOOL);
+    params_bool_funcs.push_back(STANDARD_TYPE_VARBINARY);
+
+    eit->add(
+        "IsLastDistinct", params_bool_funcs,
+        (ExtendedInstruction2<int32_t, char*>*) NULL,
+        &IsLastDistinct);
+
     // Add in  real number support
     vector<StandardTypeDescriptorOrdinal> params_mmd_init;
     params_mmd_init.push_back(STANDARD_TYPE_VARBINARY);
@@ -616,6 +799,11 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         (ExtendedInstruction2<char*,double>*) NULL,
         &WinAggInit);
 
+    eit->add(
+        "WinDistinctInit", params_mmd_init,
+        (ExtendedInstruction2<char*,double>*) NULL,
+        &WinDistinctInit);
+
     vector<StandardTypeDescriptorOrdinal> params_mmr_init;
     params_mmr_init.push_back(STANDARD_TYPE_VARBINARY);
     params_mmr_init.push_back(STANDARD_TYPE_REAL);
@@ -624,6 +812,11 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         "WinAggInit", params_mmr_init,
         (ExtendedInstruction2<char*,float>*) NULL,
         &WinAggInit);
+
+    eit->add(
+        "WinDistinctInit", params_mmr_init,
+        (ExtendedInstruction2<char*,float>*) NULL,
+        &WinDistinctInit);
 
     vector<StandardTypeDescriptorOrdinal> params_DBL_funcs;
     params_DBL_funcs.push_back(STANDARD_TYPE_DOUBLE);
@@ -638,6 +831,16 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         "WinAggDrop", params_DBL_funcs,
         (ExtendedInstruction2<double, char*>*) NULL,
         &WinAggDrop);
+
+    eit->add(
+        "WinDistinctAdd", params_DBL_funcs,
+        (ExtendedInstruction2<double, char*>*) NULL,
+        &WinDistinctAdd);
+
+    eit->add(
+        "WinDistinctDrop", params_DBL_funcs,
+        (ExtendedInstruction2<double, char*>*) NULL,
+        &WinDistinctDrop);
 
     eit->add(
         "WinAggMin", params_DBL_funcs,
@@ -679,6 +882,11 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         (ExtendedInstruction2<char*,char*>*) NULL,
         &WinAggInit);
 
+    eit->add(
+        "WinDistinctInit", params_mmvc_init,
+        (ExtendedInstruction2<char*,char*>*) NULL,
+        &WinDistinctInit);
+
     vector<StandardTypeDescriptorOrdinal> params_StrA_funcs;
     params_StrA_funcs.push_back(STANDARD_TYPE_VARCHAR);
     params_StrA_funcs.push_back(STANDARD_TYPE_VARBINARY);
@@ -692,6 +900,16 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         "WinAggDrop", params_StrA_funcs,
         (ExtendedInstruction2<char*, char*>*) NULL,
         &WinAggDrop);
+
+    eit->add(
+        "WinDistinctAdd", params_StrA_funcs,
+        (ExtendedInstruction2<char *, char*>*) NULL,
+        &WinDistinctAdd);
+
+    eit->add(
+        "WinDistinctDrop", params_StrA_funcs,
+        (ExtendedInstruction2<char*, char*>*) NULL,
+        &WinDistinctDrop);
 
     eit->add(
         "WinAggMin", params_StrA_funcs,
@@ -722,6 +940,11 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         (ExtendedInstruction2<char*,char*>*) NULL,
         &WinAggInit);
 
+    eit->add(
+        "WinDistinctInit", params_mmc_init,
+        (ExtendedInstruction2<char*,char*>*) NULL,
+        &WinDistinctInit);
+
     vector<StandardTypeDescriptorOrdinal> params_StrA2_funcs;
     params_StrA2_funcs.push_back(STANDARD_TYPE_CHAR);
     params_StrA2_funcs.push_back(STANDARD_TYPE_VARBINARY);
@@ -735,6 +958,16 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         "WinAggDrop", params_StrA2_funcs,
         (ExtendedInstruction2<char*, char*>*) NULL,
         &WinAggDrop);
+
+    eit->add(
+        "WinDistinctAdd", params_StrA2_funcs,
+        (ExtendedInstruction2<char *, char*>*) NULL,
+        &WinDistinctAdd);
+
+    eit->add(
+        "WinDistinctDrop", params_StrA2_funcs,
+        (ExtendedInstruction2<char*, char*>*) NULL,
+        &WinDistinctDrop);
 
     eit->add(
         "WinAggMin", params_StrA2_funcs,

@@ -34,6 +34,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.*;
 
 
@@ -345,6 +346,31 @@ public class FennelWindowRel
         return planner.makeCost(rowsIn, rowsIn * count, 0);
     }
 
+    /**
+     * Creates a FemTupleDescriptor from a list of RexNodes representing a row.
+     *
+     * @param repos repos storing object definitions
+     * @param nodeList List of RexWinAggCalls
+     *
+     * @return generated tuple descriptor
+     */
+    protected static FemTupleDescriptor createTupleDescriptor(
+        FarragoMetadataFactory repos,
+        FennelRelImplementor implementor,
+        List<RexWinAggCall> nodeList)
+    {
+        FemTupleDescriptor tupleDesc =
+            FennelRelUtil.createTupleDescriptorFromRexNode(repos, nodeList);
+        for (RexWinAggCall call : nodeList) {
+            if (call.isDistinct()) {
+                RelDataType type = implementor.getTypeFactory().createSqlType(
+                    SqlTypeName.VARBINARY, 8);
+                FennelRelUtil.addTupleAttrDescriptor(repos, tupleDesc, type);
+            }
+        }
+        return tupleDesc;
+    }
+
     // for toStreamDef()
     protected void fillStreamDef(
         FemWindowStreamDef def,
@@ -468,10 +494,10 @@ public class FennelWindowRel
                             repos, Util.toList(bitSet)));
                 }
 
-                List<RexNode> dups =
+                List<RexWinAggCall> dups =
                     removeDuplicates(translator, partition.overList);
                 final FemTupleDescriptor bucketDesc =
-                    FennelRelUtil.createTupleDescriptorFromRexNode(repos, dups);
+                    createTupleDescriptor(repos, implementor, dups);
                 windowPartitionDef.setBucketDesc(bucketDesc);
 
                 windowPartitionDef.setPartitionKeyList(
@@ -584,7 +610,7 @@ public class FennelWindowRel
 
     // TODO: add a duplicate-elimination feature to RexProgram, use that, and
     //   obsolete this method
-    private List<RexNode> removeDuplicates(
+    private List<RexWinAggCall> removeDuplicates(
         RexToCalcTranslator translator,
         List<RexWinAggCall> outputExps)
     {
@@ -597,7 +623,7 @@ public class FennelWindowRel
             }
             dups.put(key, node);
         }
-        List<RexNode> nodes = new ArrayList<RexNode>(dups.size());
+        List<RexWinAggCall> nodes = new ArrayList<RexWinAggCall>(dups.size());
         for (RexWinAggCall node : outputExps) {
             Object key = translator.getKey(node);
             if (dups.containsKey(key)) {
@@ -802,6 +828,7 @@ public class FennelWindowRel
         public RexWinAggCall addOver(
             RelDataType type,
             SqlAggFunction operator,
+            SqlSelectKeyword qualifier,
             RexNode [] operands,
             RexProgramBuilder programBuilder)
         {
@@ -825,6 +852,7 @@ public class FennelWindowRel
                 new RexWinAggCall(
                     operator,
                     type,
+                    qualifier,
                     clonedOperands,
                     overList.size());
             overList.add(aggCall);
@@ -864,10 +892,11 @@ public class FennelWindowRel
         public RexWinAggCall(
             SqlAggFunction aggFun,
             RelDataType type,
+            SqlSelectKeyword qualifier,
             RexNode [] operands,
             int ordinal)
         {
-            super(type, aggFun, operands);
+            super(type, aggFun, qualifier, operands);
             this.ordinal = ordinal;
         }
     }

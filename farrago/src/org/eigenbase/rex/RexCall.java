@@ -56,12 +56,14 @@ public class RexCall
     public final RexNode [] operands;
     private final RelDataType type;
     private final RexKind kind;
+    private final SqlSelectKeyword qualifier;
 
     //~ Constructors -----------------------------------------------------------
 
     protected RexCall(
         RelDataType type,
         SqlOperator op,
+        SqlSelectKeyword qualifier,
         RexNode [] operands)
     {
         assert type != null : "precondition: type != null";
@@ -71,6 +73,7 @@ public class RexCall
         this.op = op;
         this.operands = operands;
         this.kind = sqlKindToRexKind(op.getKind());
+        this.qualifier = qualifier;
         assert this.kind != null : op;
         this.digest = computeDigest(true);
 
@@ -83,6 +86,14 @@ public class RexCall
         if (op instanceof SqlBinaryOperator) {
             assert (operands.length == 2);
         }
+    }
+
+    protected RexCall(
+        RelDataType type,
+        SqlOperator op,
+        RexNode [] operands)
+    {
+        this(type, op, null, operands);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -181,6 +192,10 @@ public class RexCall
             // "SYSTEM_USER", not "SYSTEM_USER()".
         } else {
             sb.append("(");
+            if (qualifier == SqlSelectKeyword.Distinct) {
+                sb.append(qualifier);
+                sb.append(' ');
+            }
             Util.appendList(sb, operands);
             sb.append(")");
         }
@@ -208,6 +223,11 @@ public class RexCall
         return visitor.visitCall(this);
     }
 
+    public SqlSelectKeyword getQualifier()
+    {
+        return qualifier;
+    }
+
     public RelDataType getType()
     {
         return type;
@@ -218,6 +238,7 @@ public class RexCall
         return new RexCall(
             type,
             op,
+            qualifier,
             RexUtil.clone(operands));
     }
 
@@ -234,6 +255,11 @@ public class RexCall
     public SqlOperator getOperator()
     {
         return op;
+    }
+
+    public boolean isDistinct()
+    {
+        return qualifier == SqlSelectKeyword.Distinct;
     }
 
     /**

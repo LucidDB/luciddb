@@ -48,10 +48,10 @@ public class SqlHistogramAggFunction
 
     //~ Constructors -----------------------------------------------------------
 
-    public SqlHistogramAggFunction(RelDataType type)
+    public SqlHistogramAggFunction(String name, RelDataType type)
     {
         super(
-            "$HISTOGRAM",
+            name,
             SqlKind.OTHER_FUNCTION,
 
             //            SqlTypeStrategies.rtiFirstArgType,

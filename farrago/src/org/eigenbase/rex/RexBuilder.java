@@ -200,6 +200,7 @@ public class RexBuilder
      */
     public RexNode makeCall(
         SqlOperator op,
+        SqlSelectKeyword qualifier,
         RexNode ... exprs)
     {
         // TODO jvs 12-Jun-2010:  Find a better place for this;
@@ -242,7 +243,14 @@ public class RexBuilder
                 fixExprs[i] = exprs[i];
             }
         }  */
-        return new RexCall(type, op, fixExprs);
+        return new RexCall(type, op, qualifier, fixExprs);
+    }
+
+    public RexNode makeCall(
+        SqlOperator op,
+        RexNode ... exprs)
+    {
+        return makeCall(op, null, exprs);
     }
 
     /**
@@ -300,6 +308,7 @@ public class RexBuilder
     public RexNode makeOver(
         RelDataType type,
         SqlAggFunction operator,
+        SqlSelectKeyword qualifier,
         RexNode [] exprs,
         RexNode [] partitionKeys,
         RexNode [] orderKeys,
@@ -320,7 +329,8 @@ public class RexBuilder
                 lowerBound,
                 upperBound,
                 physical);
-        final RexOver over = new RexOver(type, operator, exprs, window);
+        final RexOver over = new RexOver(
+            type, operator, qualifier, exprs, window);
         RexNode result = over;
 
         // This should be correct but need time to go over test results.
@@ -335,6 +345,7 @@ public class RexBuilder
                     new RexOver(
                         bigintType,
                         SqlStdOperatorTable.countOperator,
+                        qualifier,
                         exprs,
                         window),
                     makeLiteral(
@@ -357,6 +368,7 @@ public class RexBuilder
                         new RexOver(
                             bigintType,
                             SqlStdOperatorTable.countOperator,
+                            null,
                             RexNode.EMPTY_ARRAY,
                             window),
                         makeLiteral(

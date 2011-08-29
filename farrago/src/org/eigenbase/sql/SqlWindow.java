@@ -171,6 +171,18 @@ public class SqlWindow
         return SqlLiteral.booleanValue(operands[IsRows_OPERAND]);
     }
 
+    /**
+     * Is this row based or single row?
+     * @return true if can be treated as physical
+     */
+    public boolean isPhysical() {
+        if (isRows()) {
+            return true;
+        }
+        return SqlWindowOperator.isCurrentRow(getLowerBound())
+            && SqlWindowOperator.isCurrentRow(getUpperBound());
+    }
+
     public SqlNodeList getOrderList()
     {
         return (SqlNodeList) operands[OrderList_OPERAND];

@@ -157,7 +157,7 @@ public class CalcRexImplementorTableImpl
         Util.pre(
             !aggImplementationMap.containsKey(agg),
             "!aggImplementationMap.containsKey(op)");
-        aggImplementationMap.put(agg, impl);
+        aggImplementationMap.put(agg, new DistinctAggImplementor(impl));
     }
 
     // implement CalcRexImplementorTable
@@ -687,23 +687,26 @@ public class CalcRexImplementorTableImpl
         // max work over windows.
         registerAgg(
             SqlStdOperatorTable.histogramAggFunction,
-            new HistogramAggRexImplementor());
+            new HistogramAggRexImplementor(
+                ExtInstructionDefTable.histogramInit,
+                ExtInstructionDefTable.histogramAdd,
+                ExtInstructionDefTable.histogramDrop));
         register(
             SqlStdOperatorTable.histogramMinFunction,
             new HistogramResultRexImplementor(
-                SqlStdOperatorTable.minOperator));
+                ExtInstructionDefTable.histogramGetMin));
         register(
             SqlStdOperatorTable.histogramMaxFunction,
             new HistogramResultRexImplementor(
-                SqlStdOperatorTable.maxOperator));
+                ExtInstructionDefTable.histogramGetMax));
         register(
             SqlStdOperatorTable.histogramFirstValueFunction,
             new HistogramResultRexImplementor(
-                SqlStdOperatorTable.firstValueOperator));
+                ExtInstructionDefTable.histogramGetFirstValue));
         register(
             SqlStdOperatorTable.histogramLastValueFunction,
             new HistogramResultRexImplementor(
-                SqlStdOperatorTable.lastValueOperator));
+                ExtInstructionDefTable.histogramGetLastValue));
         registerAgg(
             SqlStdOperatorTable.sumEmptyIsZeroOperator,
             new SumEmptyIsZeroCalcRexImplementor());
@@ -2437,6 +2440,133 @@ public class CalcRexImplementorTableImpl
         }
     }
 
+    private static class DistinctAggImplementor
+        extends HistogramAggRexImplementor
+    {
+
+        private final CalcRexAggImplementor aggImplementor;
+
+        public DistinctAggImplementor(CalcRexAggImplementor aggImplementor) {
+            super(
+                ExtInstructionDefTable.distinctInit,
+                ExtInstructionDefTable.distinctAdd,
+                ExtInstructionDefTable.distinctDrop);
+            this.aggImplementor = aggImplementor;
+        }
+
+        CalcReg makeDistinctReg(RexToCalcTranslator translator) {
+            return translator.builder.newAuxiliaryOutput(OpType.Varbinary, 8);
+        }
+
+        CalcReg implementOperand(RexCall call, RexToCalcTranslator translator) {
+            final CalcReg result = super.implementOperand(call, translator);
+            if (result.getOpType().isExact()) {
+                if (result.getOpType() != OpType.Int8) {
+                    CalcReg regCast = translator.builder.newLocal(
+                        OpType.Int8, -1);
+                    CalcProgramBuilder.cast.add(
+                        translator.builder, regCast, result);
+                    return regCast;
+                }
+            } else if (result.getOpType().isApprox()) {
+                if (result.getOpType() != OpType.Double) {
+                    CalcReg regCast = translator.builder.newLocal(
+                        OpType.Double, -1);
+                    CalcProgramBuilder.cast.add(
+                        translator.builder, regCast, result);
+                    return regCast;
+                }
+            }
+            return result;
+        }
+
+        String jumpIfNotDistinct(
+            CalcReg distinctReg, RexToCalcTranslator translator)
+        {
+            CalcReg boolReg = translator.builder.newLocal(
+                CalcProgramBuilder.OpType.Bool,
+                -1);
+            ExtInstructionDefTable.isLastDistinctFunction.add(
+                translator.builder, boolReg, distinctReg);
+            String result = translator.newLabel();
+            CalcProgramBuilder.jumpFalseInstruction.add(
+                translator.builder,
+                translator.builder.newLine(result),
+                boolReg);
+            return result;
+        }
+
+        @Override
+        public void implementInitialize(
+            RexCall call,
+            CalcReg accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            if (call.isDistinct()) {
+                CalcReg reg = makeDistinctReg(translator);
+                super.implementInitialize(call, reg, translator);
+            }
+            aggImplementor.implementInitialize(
+                call, accumulatorRegister, translator);
+        }
+
+        @Override
+        public void implementInitAdd(
+            RexCall call,
+            CalcReg accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            assert !call.isDistinct(); // not for group by
+            aggImplementor.implementInitAdd(
+                call, accumulatorRegister, translator);
+        }
+
+        @Override
+        public void implementAdd(
+            RexCall call,
+            CalcReg accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            if (call.isDistinct()) {
+                CalcReg reg = makeDistinctReg(translator);
+                super.implementAdd(call, reg, translator);
+                String notDistinct = jumpIfNotDistinct(reg, translator);
+                aggImplementor.implementAdd(
+                    call, accumulatorRegister, translator);
+                translator.builder.addLabel(notDistinct);
+            } else {
+                aggImplementor.implementAdd(
+                    call, accumulatorRegister, translator);
+            }
+        }
+
+        @Override
+        public void implementDrop(
+            RexCall call,
+            CalcReg accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            if (call.isDistinct()) {
+                CalcReg reg = makeDistinctReg(translator);
+                super.implementDrop(call, reg, translator);
+                String notDistinct = jumpIfNotDistinct(reg, translator);
+                aggImplementor.implementDrop(
+                    call, accumulatorRegister, translator);
+                translator.builder.addLabel(notDistinct);
+            } else {
+                aggImplementor.implementDrop(
+                    call, accumulatorRegister, translator);
+            }
+        }
+
+        @Override
+        public boolean canImplement(RexCall call)
+        {
+            // TODO Auto-generated method stub
+            return aggImplementor.canImplement(call);
+        }
+    }
+
     /**
      * Implementation of the <code>COUNT</code> aggregate function, {@link
      * SqlStdOperatorTable#countOperator}.
@@ -3253,8 +3383,24 @@ public class CalcRexImplementorTableImpl
     private static class HistogramAggRexImplementor
         extends AbstractCalcRexAggImplementor
     {
-        public HistogramAggRexImplementor()
+        protected final InstructionDef initInstr;
+        protected final InstructionDef addInstr;
+        protected final InstructionDef dropInstr;
+
+        public HistogramAggRexImplementor(
+            InstructionDef initInstr,
+            InstructionDef addInstr,
+            InstructionDef dropInstr)
         {
+            this.initInstr = initInstr;
+            this.addInstr = addInstr;
+            this.dropInstr = dropInstr;
+        }
+
+        CalcReg implementOperand(RexCall call, RexToCalcTranslator translator) {
+            assert call.operands.length == 1;
+            RexNode operand = call.operands[0];
+            return translator.implementNode(operand);
         }
 
         public void implementInitialize(
@@ -3262,9 +3408,8 @@ public class CalcRexImplementorTableImpl
             CalcReg accumulatorRegister,
             RexToCalcTranslator translator)
         {
-            assert call.operands.length == 1;
-            CalcReg reg0 = translator.implementNode(call.operands[0]);
-            ExtInstructionDefTable.histogramInit.add(
+            final CalcReg reg0 = implementOperand(call, translator);
+            initInstr.add(
                 translator.builder,
                 accumulatorRegister,
                 reg0);
@@ -3275,9 +3420,8 @@ public class CalcRexImplementorTableImpl
             CalcReg accumulatorRegister,
             RexToCalcTranslator translator)
         {
-            assert call.operands.length == 1;
-            final CalcReg reg0 = translator.implementNode(call.operands[0]);
-            ExtInstructionDefTable.histogramAdd.add(
+            final CalcReg reg0 = implementOperand(call, translator);
+            addInstr.add(
                 translator.builder,
                 reg0,
                 accumulatorRegister);
@@ -3288,9 +3432,8 @@ public class CalcRexImplementorTableImpl
             CalcReg accumulatorRegister,
             RexToCalcTranslator translator)
         {
-            assert call.operands.length == 1;
-            final CalcReg reg0 = translator.implementNode(call.operands[0]);
-            ExtInstructionDefTable.histogramDrop.add(
+            final CalcReg reg0 = implementOperand(call, translator);
+            dropInstr.add(
                 translator.builder,
                 reg0,
                 accumulatorRegister);
@@ -3314,11 +3457,11 @@ public class CalcRexImplementorTableImpl
     private static class HistogramResultRexImplementor
         extends AbstractCalcRexImplementor
     {
-        private final SqlAggFunction function;
+        private final InstructionDef instrDef;
 
-        public HistogramResultRexImplementor(SqlAggFunction function)
+        public HistogramResultRexImplementor(InstructionDef instrDef)
         {
-            this.function = function;
+            this.instrDef = instrDef;
         }
 
         public CalcReg implement(
@@ -3333,18 +3476,6 @@ public class CalcRexImplementorTableImpl
             final RexNode operand = call.operands[0];
             CalcReg reg0 = translator.implementNode(operand);
 
-            final CalcProgramBuilder.ExtInstrDef instrDef;
-            if (function == SqlStdOperatorTable.minOperator) {
-                instrDef = ExtInstructionDefTable.histogramGetMin;
-            } else if (function == SqlStdOperatorTable.maxOperator) {
-                instrDef = ExtInstructionDefTable.histogramGetMax;
-            } else if (function == SqlStdOperatorTable.firstValueOperator) {
-                instrDef = ExtInstructionDefTable.histogramGetFirstValue;
-            } else if (function == SqlStdOperatorTable.lastValueOperator) {
-                instrDef = ExtInstructionDefTable.histogramGetLastValue;
-            } else {
-                throw Util.newInternal("invalid function " + function);
-            }
             instrDef.add(translator.builder, resultReg, reg0);
 
             return resultReg;

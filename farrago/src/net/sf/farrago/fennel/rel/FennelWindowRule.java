@@ -325,6 +325,7 @@ public abstract class FennelWindowRule
             new RexShuttle() {
                 public RexNode visitOver(RexOver over)
                 {
+                    super.visitOver(over);
                     // Look up the aggCall which this expr was translated to.
                     final FennelWindowRel.RexWinAggCall aggCall =
                         aggMap.get(over);
@@ -507,6 +508,7 @@ public abstract class FennelWindowRule
         return fennelPartition.addOver(
             over.getType(),
             over.getAggOperator(),
+            over.getQualifier(),
             over.getOperands(),
             programBuilder);
     }

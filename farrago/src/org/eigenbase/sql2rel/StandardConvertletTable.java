@@ -33,7 +33,6 @@ import org.eigenbase.sql.SqlWindowOperator.OffsetRange;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql2rel.SqlToRelConverter.Blackboard;
 import org.eigenbase.util.*;
 
 
@@ -898,6 +897,7 @@ public class StandardConvertletTable
 
             final SqlAggFunction aggOp = (SqlAggFunction) op;
             final RelDataType type = call.getType();
+            SqlSelectKeyword qualifier = call.getQualifier();
             RexNode [] exprs = call.getOperands();
 
             boolean isUnboundedPreceding =
@@ -913,13 +913,7 @@ public class StandardConvertletTable
 
             // If a window contains only the current row, treat it as physical.
             // (It could be logical too, but physical is simpler to implement.)
-            boolean physical = window.isRows();
-            if (!physical
-                && SqlWindowOperator.isCurrentRow(window.getLowerBound())
-                && SqlWindowOperator.isCurrentRow(window.getUpperBound()))
-            {
-                physical = true;
-            }
+            final boolean physical = window.isPhysical();
 
             if (histogramOp != null) {
                 final RelDataType histogramType = computeHistogramType(type);
@@ -944,7 +938,7 @@ public class StandardConvertletTable
                     }
                 }
 
-                RexCallBinding bind =
+                final RexCallBinding bind =
                     new RexCallBinding(
                         rexBuilder.getTypeFactory(),
                         SqlStdOperatorTable.histogramAggFunction,
@@ -955,6 +949,7 @@ public class StandardConvertletTable
                         SqlStdOperatorTable.histogramAggFunction
                         .inferReturnType(bind),
                         SqlStdOperatorTable.histogramAggFunction,
+                        qualifier,
                         exprs,
                         partitionKeys,
                         orderKeys,
@@ -994,6 +989,7 @@ public class StandardConvertletTable
                 return rexBuilder.makeOver(
                     type,
                     aggOpToUse,
+                    qualifier,
                     exprs,
                     partitionKeys,
                     orderKeys,
@@ -1061,6 +1057,7 @@ public class StandardConvertletTable
         {
             final SqlNode [] operands = call.getOperands();
             final RexNode [] exprs;
+            final boolean isDistinct = isDistinct(call);
             if (call.isCountStar()) {
                 exprs = RexNode.EMPTY_ARRAY;
             } else {
@@ -1068,10 +1065,20 @@ public class StandardConvertletTable
             }
             RexCall aggNode =
                 (RexCall) cx.getRexBuilder().makeCall(
-                    call.getOperator(), exprs);
+                    call.getOperator(),
+                    isDistinct ? SqlSelectKeyword.Distinct : null,
+                    exprs);
 
             return (window == null) ? aggNode : windowedAggFor(
-                cx, aggNode, window, partitionKeys, orderKeys);
+                cx, aggNode,
+                window, partitionKeys, orderKeys);
+        }
+
+        protected static boolean isDistinct(SqlCall call) {
+            SqlLiteral quantifier = call.getFunctionQuantifier();
+            return
+                quantifier != null
+                && quantifier.getValue() == SqlSelectKeyword.Distinct;
         }
     }
 
@@ -1092,6 +1099,9 @@ public class StandardConvertletTable
             if (window.isRows()) {
                 throw Util.needToImplement("EXP_AVG on physical window");
             }
+            final boolean distinct = isDistinct(call);
+            final SqlSelectKeyword qualifier =
+                distinct ? SqlSelectKeyword.Distinct : null;
             SqlNode halfLifeSqlNode = call.getOperands()[1];
             assert (halfLifeSqlNode instanceof SqlLiteral);
 
@@ -1106,15 +1116,12 @@ public class StandardConvertletTable
             }
             RexNode valueNode = cx.convertExpression(call.getOperands()[0]);
             RelDataType valueType = valueNode.getType();
-            long maxWindowMillies = maxWindowSizeFor(valueType, halfLife);
             SqlWindow decayWindow = windowFor(window, valueType, halfLife);
             SqlWindowOperator.OffsetRange offsetRange =
                 decayWindow.getOffsetAndRange();
             long range = offsetRange.range;
             RexNode orderKey = orderKeys[0];
             RexBuilder rexBuilder = cx.getRexBuilder();
-            RexNode halfLifeNode =
-                rexBuilder.makeBigintLiteral(BigDecimal.valueOf(halfLife));
             RexNode rangeNode =
                 rexBuilder.makeBigintLiteral(BigDecimal.valueOf(range));
             RexNode millisNode = rexBuilder.makeReinterpretCast(
@@ -1162,12 +1169,14 @@ public class StandardConvertletTable
             RexNode evenSum = windowedAggFor(
                 cx,
                 (RexCall) rexBuilder.makeCall(
-                    SqlStdOperatorTable.sumOperator, evenSumOperand),
+                    SqlStdOperatorTable.sumOperator,
+                    qualifier, evenSumOperand),
                 decayWindow, partitionKeys, orderKeys);
             RexNode oddSum = windowedAggFor(
                 cx,
                 (RexCall) rexBuilder.makeCall(
-                    SqlStdOperatorTable.sumOperator, oddSumOperand),
+                    SqlStdOperatorTable.sumOperator,
+                    qualifier, oddSumOperand),
                 decayWindow, partitionKeys, orderKeys);
             RexNode sumNode = rexBuilder.makeCall(
                 SqlStdOperatorTable.plusOperator,
@@ -1190,12 +1199,14 @@ public class StandardConvertletTable
             RexNode evenCount = windowedAggFor(
                 cx,
                 (RexCall) rexBuilder.makeCall(
-                    SqlStdOperatorTable.sumOperator, evenCountOperand),
+                    SqlStdOperatorTable.sumOperator,
+                    qualifier, evenCountOperand),
                 decayWindow, partitionKeys, orderKeys);
             RexNode oddCount = windowedAggFor(
                 cx,
                 (RexCall) rexBuilder.makeCall(
-                    SqlStdOperatorTable.sumOperator, oddCountOperand),
+                    SqlStdOperatorTable.sumOperator,
+                    qualifier, oddCountOperand),
                 decayWindow, partitionKeys, orderKeys);
             RexNode countNode = rexBuilder.makeCall(
                 SqlStdOperatorTable.plusOperator,

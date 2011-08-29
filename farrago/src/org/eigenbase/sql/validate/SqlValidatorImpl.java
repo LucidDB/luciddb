@@ -3997,6 +3997,7 @@ public class SqlValidatorImpl
 
     public void validateAggregateParams(
         SqlCall aggFunction,
+        boolean isOver,
         SqlValidatorScope scope)
     {
         // For agg(expr), expr cannot itself contain aggregate function

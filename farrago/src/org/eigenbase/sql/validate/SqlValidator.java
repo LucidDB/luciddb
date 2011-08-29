@@ -283,9 +283,11 @@ public interface SqlValidator
      * Validates parameters for aggregate function.
      *
      * @param aggFunction function containing COLUMN_LIST parameter
+     * @param isOver is this part of OVER clause
      * @param scope Syntactic scope
      */
-    void validateAggregateParams(SqlCall aggFunction, SqlValidatorScope scope);
+    void validateAggregateParams(
+        SqlCall aggFunction, boolean isOver, SqlValidatorScope scope);
 
     /**
      * Validates a COLUMN_LIST parameter

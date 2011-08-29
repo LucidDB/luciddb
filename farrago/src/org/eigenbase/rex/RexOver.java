@@ -67,10 +67,11 @@ public class RexOver
     RexOver(
         RelDataType type,
         SqlAggFunction op,
+        SqlSelectKeyword qualifier,
         RexNode [] operands,
         RexWindow window)
     {
-        super(type, op, operands);
+        super(type, op, qualifier, operands);
         assert op.isAggregator() : "precondition: op.isAggregator()";
         assert op instanceof SqlAggFunction;
         assert window != null : "precondition: window != null";
@@ -106,6 +107,7 @@ public class RexOver
         return new RexOver(
             getType(),
             getAggOperator(),
+            getQualifier(),
             operands,
             window);
     }

@@ -23,6 +23,7 @@
 package org.eigenbase.relopt;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.reltype.RelDataTypeFactory;
 
 
 /**
@@ -71,6 +72,8 @@ public interface RelImplementor
      * @return Interpretation of the return value is left to the implementor
      */
     Object visitChildInternal(RelNode child, int ordinal);
+
+    RelDataTypeFactory getTypeFactory();
 }
 
 // End RelImplementor.java

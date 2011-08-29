@@ -669,7 +669,7 @@ public class SqlStdOperatorTable
      * aggregate versions of MIN/MAX
      */
     public static final SqlAggFunction histogramAggFunction =
-        new SqlHistogramAggFunction(null);
+        new SqlHistogramAggFunction("$HISTOGRAM", null);
 
     /**
      * <code>HISTOGRAM_MIN</code> window aggregate function.

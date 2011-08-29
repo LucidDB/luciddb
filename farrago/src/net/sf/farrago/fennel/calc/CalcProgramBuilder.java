@@ -424,7 +424,8 @@ public class CalcProgramBuilder
      */
     public enum RegisterSetType
     {
-        Output('O'), Input('I'), Literal('C'), Local('L'), Status('S');
+        Output('O'), Input('I'), Literal('C'), Local('L'), Status('S'),
+            AuxiliaryOutput('A');
 
         final char prefix;
         static final int ValueCount = RegisterSetType.values().length;
@@ -502,6 +503,30 @@ public class CalcProgramBuilder
         this.outputComments = outputComments;
     }
 
+    /**
+     * Change all AuxilaryOuput registers to Output, putting them after
+     * all other outputs.
+     */
+    protected void moveAuxiliaryOutputsToOutput() {
+        List<CalcReg> auxilaries =
+            registersByType.get(RegisterSetType.AuxiliaryOutput);
+        if (auxilaries == null) {
+            return;
+        }
+        List<CalcReg> outputs =
+            registersByType.get(RegisterSetType.Output);
+        if (outputs == null) {
+            outputs = new ArrayList<CalcReg>();
+            registersByType.put(RegisterSetType.Output, outputs);
+        }
+        for (CalcReg reg : auxilaries) {
+            reg.index = outputs.size();
+            reg.registerType = RegisterSetType.Output;
+            outputs.add(reg);
+        }
+        registersByType.remove(RegisterSetType.AuxiliaryOutput);
+    }
+
     protected void compilationAssert(
         boolean cond,
         String msg)
@@ -542,6 +567,7 @@ public class CalcProgramBuilder
      */
     public String getProgram(BitSet usedInputFields)
     {
+        moveAuxiliaryOutputsToOutput();
         validate();
 
         // Optimize by removing unused input registers.
@@ -914,6 +940,20 @@ public class CalcProgramBuilder
             type,
             null,
             RegisterSetType.Output,
+            storageBytes);
+    }
+
+    /**
+     * Generates a reference to an auxiliary output register.
+     */
+    public CalcReg newAuxiliaryOutput(
+        OpType type,
+        int storageBytes)
+    {
+        return newRegister(
+            type,
+            null,
+            RegisterSetType.AuxiliaryOutput,
             storageBytes);
     }
 

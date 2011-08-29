@@ -57,13 +57,15 @@ static const int64_t INT_TEST_MAX =  105; // max data value below
 
 static int64_t intTestData[][SAMPLE_SIZE] =
 {
-    { 12,   33,  52,  14,  10,  63,   5,   2,  49, 105 }, // test data values
-    { 12,   12,  12,  12,  10,  10,   5,   2,   2,   2 }, // running MIN values
-    { 12,   33,  52,  52,  52,  63,  63,  63,  63, 105 }, // running MAX values
-    { 12,   45,  97, 111, 121, 184, 189, 191, 240, 345 }, // running SUM values
+    { 12,   33,  52,  14,  10,  63,   5,   14,  2,  105 }, // test data values
+    { 12,   12,  12,  12,  10,  10,   5,   5,  2,   2 }, // running MIN values
+    { 12,   33,  52,  52,  52,  63,  63,  63,  63,  105 }, // running MAX values
+    { 12,   45,  97, 111, 121, 184, 189, 203, 205, 310 }, // running SUM values
     { 12,   12,  12,  12,  12,  12,  12,  12,  12,  12 }, // running FIRST_VALUE
     { 105, 105, 105, 105, 105, 105, 105, 105, 105, 105 }, // running LAST_VALUE
 };
+static bool intDistinctTestData [] =
+    { 1, 1, 1, 1, 1, 1, 1, 0, 1, 1 };
 
 
 static const double DBL_TEST_MIN = 1.5; // min data value below
@@ -72,30 +74,32 @@ static const double DBL_TEST_MAX = 874.5; // max data value below
 static double dblTestData[][SAMPLE_SIZE] =
 {
     // data values
-    { 63.5, 63.1, 92.9,  1.5,  6.3, 38.5, 23.1, 874.5,  44.7, 498.0 },
+    { 63.5, 63.1, 92.9,  1.5,  6.3, 38.5, 23.1, 1.5, 874.5,  498.0 },
     // running MIN
-    { 63.5, 63.1, 63.1,  1.5,  1.5,  1.5,  1.5,   1.5,   1.5,   1.5 },
+    { 63.5, 63.1, 63.1,  1.5,  1.5,  1.5,  1.5,   1.5,    1.5,   1.5 },
     // running MAX
-    { 63.5, 63.5, 92.9, 92.9, 92.9, 92.9, 92.9, 874.5, 874.5, 874.5 },
+    { 63.5, 63.5, 92.9, 92.9, 92.9, 92.9, 92.9, 92.9, 874.5, 874.5 },
     // running SUM
-    { 63.5, 126.6, 219.5, 221.0, 227.3, 265.8, 288.9, 1163.4, 1208.1, 1706.1 },
+    { 63.5, 126.6, 219.5, 221.0, 227.3, 265.8, 288.9, 290.4, 1164.9, 1662.9 },
     // running FIRST_VALUE
     { 63.5, 63.5, 63.5, 63.5, 63.5, 63.5, 63.5,  63.5,  63.5,  63.5 },
     // running LAST_VALUE
     { 498.0, 498.0, 490.0, 498.0, 498.0, 498.0, 498.0, 498.0, 498.0, 498.0 },
 };
+static bool dblDistinctTestData [SAMPLE_SIZE] =
+    { 1, 1, 1, 1, 1, 1, 1, 0, 1, 1 };
 
 #define STR_SAMPLE_SIZE 4
 
 static const char *str1 = "abcd";
-static const char *str2 = "qrst";
-static const char *str3 = "abc ";
+static const char *str2 = "qrs ";
+static const char *str3 = "qrs ";
 static const char *str4 = "noot";
 
 static const char* strAddTestData[][STR_SAMPLE_SIZE] =
 {
     { str1, str2, str3, str4 },   // data values
-    { str1, str1, str3, str3 },   // running MIN
+    { str1, str1, str1, str1 },   // running MIN
     { str1, str2, str2, str2 },   // running MAX
     { NULL, NULL, NULL, NULL },   // (not used)
     { str1, str1, str1, str1 },   // running FIRST_VALUE
@@ -105,8 +109,8 @@ static const char* strAddTestData[][STR_SAMPLE_SIZE] =
 static const char* strDropTestData[][STR_SAMPLE_SIZE] =
 {
     { str1, str2, str3, str4 },   // data values
-    { str3, str3, str4, NULL },   // running MIN
-    { str2, str4, str4, NULL },   // running MAX
+    { str4, str4, str4, NULL },   // running MIN
+    { str2, str2, str4, NULL },   // running MAX
     { NULL, NULL, NULL, NULL },   // (not used)
     { str2, str3, str4, NULL },   // running FIRST_VALUE
     { str4, str4, str4, NULL },   // running LAST_VALUE
@@ -209,9 +213,10 @@ CalcExtWinAggFuncTest::initWindowedAggDataBlock(
         pg << "I c,4;" << endl;
     }
 
-    pg << "O vb,4;" << endl;
+    pg << "O vb,8,vb,8;" << endl;
     pg << "T;" << endl;
     pg << "CALL 'WinAggInit(O0,I0);" << endl;
+    pg << "CALL 'WinDistinctInit(O1,I0);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -240,20 +245,22 @@ void
 WinAggAddTest(
     TupleDataWithBuffer* winAggTuple,
     DTYPE testData[][SAMPLE_SIZE],
+    const bool distinctData[],
     StandardTypeDescriptorOrdinal dType,
     void (*check)(TupleDataWithBuffer*,DTYPE[][SAMPLE_SIZE],int))
 {
     ostringstream pg("");
 
     if (StandardTypeDescriptor::isExact(dType)) {
-        pg << "O s8,s8,s8,s8,s8,s8,s8;" << endl;
-        pg << "I s8,vb,4;" <<endl;
+        pg << "O s8,s8,s8,s8,s8,s8,s8,bo;" << endl;
+        pg << "I s8,vb,8,vb,8;" <<endl;
     } else if (StandardTypeDescriptor::isApprox(dType)) {
-        pg << "O s8,d,d,d,d,d,d;" << endl;
-        pg << "I d,vb,4;" <<endl;
+        pg << "O s8,d,d,d,d,d,d,bo;" << endl;
+        pg << "I d,vb,8,vb,8;" <<endl;
     }
     pg << "T;" << endl;
     pg << "CALL 'WinAggAdd(I0,I1);" << endl;
+    pg << "CALL 'WinDistinctAdd(I0,I2);" << endl;
     pg << "CALL 'WinAggCount(O0,I1);" << endl;
     pg << "CALL 'WinAggSum(O1,I1);" << endl;
     pg << "CALL 'WinAggAvg(O2,I1);" << endl;
@@ -261,6 +268,7 @@ WinAggAddTest(
     pg << "CALL 'WinAggMax(O4,I1);" << endl;
     pg << "CALL 'WinAggFirstValue(O5,I1);" << endl;
     pg << "CALL 'WinAggLastValue(O6,I1);" << endl;
+    pg << "CALL 'IsLastDistinct(O7,I2);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -284,6 +292,7 @@ WinAggAddTest(
 
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
+        (*inTuple)[2] = (*winAggTuple)[1];
 
         TupleDatum* pTD = &((*inTuple)[0]);
         pTD->pData = reinterpret_cast<PConstBuffer>(
@@ -291,7 +300,10 @@ WinAggAddTest(
 
         calc.exec();
 
-        (*check)(&outTuple,testData,i);
+        (*check)(&outTuple,testData, i);
+        BOOST_CHECK_EQUAL(
+            distinctData[i],
+            *(reinterpret_cast<const int32_t*>(outTuple[7].pData)));
     }
     assert(
         10 == *(reinterpret_cast<int64_t*>(
@@ -304,20 +316,22 @@ void
 WinAggDropTest(
     TupleDataWithBuffer* winAggTuple,
     DTYPE testData[][SAMPLE_SIZE],
+    const bool distinctData[],
     StandardTypeDescriptorOrdinal dType,
     void (*check)(TupleDataWithBuffer*,DTYPE[][SAMPLE_SIZE],int))
 {
     ostringstream pg("");
 
     if (StandardTypeDescriptor::isExact(dType)) {
-        pg << "O s8,s8,s8,s8,s8,s8,s8;" << endl;
-        pg << "I s8,vb,4;" <<endl;
+        pg << "O s8,s8,s8,s8,s8,s8,s8,bo;" << endl;
+        pg << "I s8,vb,8,vb,8;" <<endl;
     } else if (StandardTypeDescriptor::isApprox(dType)) {
-        pg << "O s8,d,d,d,d,d,d;" << endl;
-        pg << "I d,vb,4;" <<endl;
+        pg << "O s8,d,d,d,d,d,d,bo;" << endl;
+        pg << "I d,vb,8,vb,8;" <<endl;
     }
     pg << "T;" << endl;
     pg << "CALL 'WinAggDrop(I0,I1);" << endl;
+    pg << "CALL 'WinDistinctDrop(I0,I2);" << endl;
     pg << "CALL 'WinAggCount(O0,I1);" << endl;
     pg << "CALL 'WinAggSum(O1,I1);" << endl;
     pg << "CALL 'WinAggAvg(O2,I1);" << endl;
@@ -325,6 +339,7 @@ WinAggDropTest(
     pg << "CALL 'WinAggMax(O4,I1);" << endl;
     pg << "CALL 'WinAggFirstValue(O5,I1);" << endl;
     pg << "CALL 'WinAggLastValue(O6,I1);" << endl;
+    pg << "CALL 'IsLastDistinct(O7,I2);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -350,6 +365,7 @@ WinAggDropTest(
 
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
+        (*inTuple)[2] = (*winAggTuple)[1];
 
         pTD->pData = reinterpret_cast<PConstBuffer>(
             &testData[TEST_DATA_INDEX][i]);
@@ -372,19 +388,21 @@ WinAggAddTestStr(
     ostringstream pg("");
 
     if (StandardTypeDescriptor::isVariableLenArray(dType)) {
-        pg << "O s8, vc,4, vc,4, vc,4, vc,4;" << endl;
-        pg << "I vc,4,vb,4;" <<endl;
+        pg << "O s8, vc,4, vc,4, vc,4, vc,4,bo;" << endl;
+        pg << "I vc,4,vb,8,vb,8;" <<endl;
     } else if (StandardTypeDescriptor::isArray(dType)) {
-        pg << "O s8, c,4, c,4, c,4, c,4;" << endl;
-        pg << "I c,4,vb,4;" <<endl;
+        pg << "O s8, c,4, c,4, c,4, c,4,bo;" << endl;
+        pg << "I c,4,vb,8,vb,8;" <<endl;
     }
     pg << "T;" << endl;
     pg << "CALL 'WinAggAdd(I0,I1);" << endl;
+    pg << "CALL 'WinDistinctAdd(I0,I2);" << endl;
     pg << "CALL 'WinAggCount(O0,I1);" << endl;
     pg << "CALL 'WinAggMin(O1,I1);" << endl;
     pg << "CALL 'WinAggMax(O2,I1);" << endl;
     pg << "CALL 'WinAggFirstValue(O3,I1);" << endl;
     pg << "CALL 'WinAggLastValue(O4,I1);" << endl;
+    pg << "CALL 'IsLastDistinct(O5,I2);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -408,6 +426,7 @@ WinAggAddTestStr(
 
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
+        (*inTuple)[2] = (*winAggTuple)[1];
 
         TupleDatum* pTD = &((*inTuple)[0]);
         pTD->pData =
@@ -432,19 +451,21 @@ WinAggDropTestStr(
     ostringstream pg("");
 
     if (StandardTypeDescriptor::isVariableLenArray(dType)) {
-        pg << "O s8, vc,4, vc,4, vc,4, vc,4;" << endl;
-        pg << "I vc,4,vb,4;" <<endl;
+        pg << "O s8, vc,4, vc,4, vc,4, vc,4,bo;" << endl;
+        pg << "I vc,4,vb,8,vb,8;" <<endl;
     } else if (StandardTypeDescriptor::isArray(dType)) {
-        pg << "O s8, c,4, c,4, c,4, c,4;" << endl;
-        pg << "I c,4,vb,4;" <<endl;
+        pg << "O s8, c,4, c,4, c,4, c,4,bo;" << endl;
+        pg << "I c,4,vb,8,vb,8;" <<endl;
     }
     pg << "T;" << endl;
     pg << "CALL 'WinAggDrop(I0,I1);" << endl;
+    pg << "CALL 'WinDistinctDrop(I0,I2);" << endl;
     pg << "CALL 'WinAggCount(O0,I1);" << endl;
     pg << "CALL 'WinAggMin(O1,I1);" << endl;
     pg << "CALL 'WinAggMax(O2,I1);" << endl;
     pg << "CALL 'WinAggFirstValue(O3,I1);" << endl;
     pg << "CALL 'WinAggLastValue(O4,I1);" << endl;
+    pg << "CALL 'IsLastDistinct(O5,I2);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -470,6 +491,7 @@ WinAggDropTestStr(
 
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
+        (*inTuple)[2] = (*winAggTuple)[1];
 
         pTD->pData = reinterpret_cast<PConstBuffer>(
             testData[TEST_DATA_INDEX][i]);
@@ -634,9 +656,11 @@ CalcExtWinAggFuncTest::testCalcExtMinMaxInt()
     TupleDataWithBuffer intAggTuple;
     initWindowedAggDataBlock(&intAggTuple, STANDARD_TYPE_INT_64);
     WinAggAddTest(
-        &intAggTuple, intTestData, STANDARD_TYPE_INT_64, checkAddInt);
+        &intAggTuple, intTestData, intDistinctTestData,
+        STANDARD_TYPE_INT_64, checkAddInt);
     WinAggDropTest(
-        &intAggTuple, intTestData, STANDARD_TYPE_INT_64, checkDropInt);
+        &intAggTuple, intTestData, dblDistinctTestData,
+        STANDARD_TYPE_INT_64, checkDropInt);
 }
 
 void
@@ -649,9 +673,11 @@ CalcExtWinAggFuncTest::testCalcExtMinMaxDbl()
     TupleDataWithBuffer dblAggTuple;
     initWindowedAggDataBlock(&dblAggTuple, STANDARD_TYPE_DOUBLE);
     WinAggAddTest(
-        &dblAggTuple, dblTestData, STANDARD_TYPE_DOUBLE, checkAddDbl);
+        &dblAggTuple, dblTestData, dblDistinctTestData,
+        STANDARD_TYPE_DOUBLE, checkAddDbl);
     WinAggDropTest(
-        &dblAggTuple, dblTestData, STANDARD_TYPE_DOUBLE, checkDropDbl);
+        &dblAggTuple, dblTestData, dblDistinctTestData,
+        STANDARD_TYPE_DOUBLE, checkDropDbl);
 }
 
 void

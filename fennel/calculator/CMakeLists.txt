@@ -51,6 +51,7 @@ StringToHex.cpp
 ExtMath.cpp
 ExtDynamicVariable.cpp
 WinAggHistogramStrA.cpp
+WinDistinctStrA.cpp
 ExtWinAggFuncs.cpp
 NoisyArithmetic.cpp
 CalcExecStream.cpp
