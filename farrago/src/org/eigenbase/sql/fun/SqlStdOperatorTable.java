@@ -1254,7 +1254,9 @@ public class SqlStdOperatorTable
      * <code>EXTRACT(HOUR FROM INTERVAL '364 23:59:59')</code> returns <code>
      * 23</code>
      */
-    public static final SqlFunction extractFunc = new SqlExtractFunction();
+    public static final SqlFunction extractFunc = new SqlExtractFunction(true);
+    public static final SqlFunction extractFuncInt =
+        new SqlExtractFunction(false);
 
     /**
      * The ELEMENT operator, used to convert a multiset with only one item to a

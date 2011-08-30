@@ -21,8 +21,15 @@
 */
 package org.eigenbase.sql.fun;
 
+import java.util.ArrayList;
+
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.SqlIntervalQualifier.TimeUnit;
+import org.eigenbase.sql.SqlLiteral.SqlSymbol;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.*;
 
 
@@ -42,14 +49,15 @@ public class SqlExtractFunction
 
     // SQL2003, Part 2, Section 4.4.3 - extract returns a exact numeric
     // TODO: Return type should be decimal for seconds
-    public SqlExtractFunction()
+    public SqlExtractFunction(boolean decimalForSeconds)
     {
         super(
             "EXTRACT",
             SqlKind.OTHER_FUNCTION,
-            SqlTypeStrategies.rtiNullableBigint,
+            decimalForSeconds
+                ? rtiNullableCustom : SqlTypeStrategies.rtiNullableBigint,
             null,
-            SqlTypeStrategies.otcIntervalSameX2,
+            otcCustom,
             SqlFunctionCategory.System);
     }
 
@@ -73,6 +81,76 @@ public class SqlExtractFunction
         operands[1].unparse(writer, leftPrec, rightPrec);
         writer.endFunCall(frame);
     }
+
+    @Override
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
+    {
+        super.validateCall(call, validator, scope, operandScope);
+        SqlCallBinding binding = new SqlCallBinding(validator, scope, call);
+        TimeUnit field = (TimeUnit) binding.getSymbolLiteralOperand(0);
+        RelDataType type = binding.getOperandType(1);
+        boolean valid = true;
+        if (type.getSqlTypeName() == SqlTypeName.DATE) {
+            valid = field.ordinal() <= TimeUnit.DAY.ordinal();
+        } else if (type.getSqlTypeName() == SqlTypeName.TIME) {
+            valid = field.ordinal() >= TimeUnit.HOUR.ordinal();
+        } else if (type.getSqlTypeName() == SqlTypeName.INTERVAL_DAY_TIME) {
+            valid = field.ordinal() >= TimeUnit.DAY.ordinal();
+        } else if (type.getSqlTypeName() == SqlTypeName.INTERVAL_YEAR_MONTH) {
+            valid = field.ordinal() <= TimeUnit.MONTH.ordinal();
+        }
+        if (!valid) {
+            throw binding.newValidationSignatureError();
+        }
+    }
+
+    private static final SqlOperandTypeChecker otcCustom =
+        new CompositeOperandTypeChecker(
+            CompositeOperandTypeChecker.Composition.SEQUENCE,
+            SqlTypeStrategies.otcNotNullLit,
+            SqlTypeStrategies.otcDatetimeOrInterval)
+        {
+            public String getAllowedSignatures(SqlOperator op, String opName)
+            {
+                StringBuilder ret = new StringBuilder();
+                for (SqlTypeFamily f : new SqlTypeFamily[] {
+                    SqlTypeFamily.DATETIME_INTERVAL, SqlTypeFamily.DATETIME})
+                {
+                    if (ret.length() > 0) {
+                        ret.append(NL);
+                    }
+                    ArrayList<String> list = new ArrayList<String>();
+                    list.add("TIMEUNIT");
+                    list.add(f.toString());
+                    ret.append(SqlUtil.getAliasedSignature(op, opName, list));
+                }
+                return ret.toString();
+            }
+        };
+
+    private static final SqlReturnTypeInference rtiCustom =
+        new SqlReturnTypeInference() {
+            public RelDataType inferReturnType(SqlOperatorBinding opBinding)
+            {
+                SqlSymbol timeUnit = opBinding.getSymbolLiteralOperand(0);
+                if (timeUnit == TimeUnit.SECOND) {
+                    return opBinding.getTypeFactory().createSqlType(
+                        SqlTypeName.DECIMAL,
+                        5,
+                        3);
+                }
+                return SqlTypeStrategies.rtiBigint.inferReturnType(opBinding);
+            }
+        };
+
+    private static final SqlReturnTypeInference rtiNullableCustom =
+        new SqlTypeTransformCascade(
+            rtiCustom,
+            SqlTypeTransforms.toNullable);
 }
 
 // End SqlExtractFunction.java

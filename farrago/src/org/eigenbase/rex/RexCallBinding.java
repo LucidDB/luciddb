@@ -23,6 +23,7 @@ package org.eigenbase.rex;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.SqlLiteral.SqlSymbol;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
@@ -59,6 +60,12 @@ public class RexCallBinding
     public String getStringLiteralOperand(int ordinal)
     {
         return RexLiteral.stringValue(operands[ordinal]);
+    }
+
+    // implement SqlOperatorBinding
+    public SqlSymbol getSymbolLiteralOperand(int ordinal)
+    {
+        return RexLiteral.symbolValue(operands[ordinal]);
     }
 
     // implement SqlOperatorBinding

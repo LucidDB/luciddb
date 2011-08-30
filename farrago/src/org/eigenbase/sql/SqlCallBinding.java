@@ -25,6 +25,7 @@ import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
+import org.eigenbase.sql.SqlLiteral.SqlSymbol;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
@@ -99,6 +100,13 @@ public class SqlCallBinding
     {
         SqlNode node = call.operands[ordinal];
         return SqlLiteral.stringValue(node);
+    }
+
+    // implement SqlOperatorBinding
+    public SqlSymbol getSymbolLiteralOperand(int ordinal)
+    {
+        SqlNode node = call.operands[ordinal];
+        return SqlLiteral.symbolValue(node);
     }
 
     // implement SqlOperatorBinding

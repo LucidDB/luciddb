@@ -33,6 +33,7 @@ import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.SqlLiteral.SqlSymbol;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
@@ -555,6 +556,12 @@ public class RexLiteral
     {
         final Comparable value = findValue(node);
         return (value == null) ? null : ((NlsString) value).getValue();
+    }
+
+    public static SqlSymbol symbolValue(RexNode node)
+    {
+        final Comparable value = findValue(node);
+        return (SqlSymbol) value;
     }
 
     private static Comparable findValue(RexNode node)

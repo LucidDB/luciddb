@@ -69,6 +69,8 @@ public class ExtInstructionDefTable
         new CalcProgramBuilder.ExtInstrSizeDef("CurrentTime");
     public static final CalcProgramBuilder.ExtInstrDef currentTimestamp =
         new CalcProgramBuilder.ExtInstrSizeDef("CurrentTimestamp");
+    public static final CalcProgramBuilder.ExtInstrDef extractFunc =
+        new CalcProgramBuilder.ExtInstrDef("ExtractFunc", 3);
     public static final CalcProgramBuilder.ExtInstrDef exp =
         new CalcProgramBuilder.ExtInstrDef("EXP", 2);
     public static final CalcProgramBuilder.ExtInstrDef log =

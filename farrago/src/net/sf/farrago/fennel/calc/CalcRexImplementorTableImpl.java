@@ -488,6 +488,10 @@ public class CalcRexImplementorTableImpl
             SqlStdOperatorTable.concatOperator,
             new ConcatImplementor());
 
+        registerInstr(
+            SqlStdOperatorTable.extractFunc,
+            ExtInstructionDefTable.extractFunc);
+
         register(
             SqlStdOperatorTable.expFunc,
             new MakeOperandsDoubleImplementor(ExtInstructionDefTable.exp));

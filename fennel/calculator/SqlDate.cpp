@@ -239,6 +239,67 @@ int64_t LocalTimestamp(boost::local_time::time_zone_ptr tzPtr)
     return diff.total_milliseconds();
 }
 
+/**
+ * TimeUnitOrdinal should match the ordinals in
+ *  org.eigenbase.sql.SqlIntervalQualifier.TimeUnit
+ */
+enum TimeUnitOrdinal
+{
+    TIMEUNIT_YEAR = 0,
+    TIMEUNIT_MONTH = 1,
+    TIMEUNIT_DAY = 2,
+    TIMEUNIT_HOUR = 3,
+    TIMEUNIT_MINUTE = 4,
+    TIMEUNIT_SECOND = 5
+};
+
+const int64_t ms_per_second = 1000LL;
+const int64_t ms_per_minute = ms_per_second * 60;
+const int64_t ms_per_hour = ms_per_minute * 60;
+const int64_t ms_per_day = ms_per_hour * 24;
+
+int64_t extractFromTimestamp(
+    int64_t time,
+    int32_t timeunit)
+{
+    // Time is in milliseconds since epoch
+    if (timeunit == TIMEUNIT_YEAR
+        || timeunit == TIMEUNIT_MONTH
+        || timeunit == TIMEUNIT_DAY)
+    {
+        ptime t = from_time_t((time < 0 ? (time - 999) : time) / 1000);
+        date d = t.date();
+        if (timeunit == TIMEUNIT_YEAR) {
+            return d.year();
+        } else if (timeunit == TIMEUNIT_MONTH) {
+            return d.month();
+        } else {
+            return d.day();
+        }
+    } else {
+        switch (timeunit) {
+        case TIMEUNIT_HOUR:
+            if (time < 0) {
+                return (ms_per_day + (time % ms_per_day)) / ms_per_hour;
+            }
+            return (time % ms_per_day) / ms_per_hour;
+        case TIMEUNIT_MINUTE:
+            if (time < 0) {
+                return (ms_per_hour + (time % ms_per_hour)) / ms_per_minute;
+            }
+            return (time % ms_per_hour) / ms_per_minute;
+        case TIMEUNIT_SECOND:
+            // return milliseconds
+            if (time < 0) {
+                return ms_per_minute + (time % ms_per_minute);
+            }
+            return time % ms_per_minute;
+            break;
+        default:
+            throw "Invalid time unit";
+        }
+    }
+}
 
 FENNEL_END_NAMESPACE
 

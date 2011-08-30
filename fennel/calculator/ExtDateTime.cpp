@@ -24,6 +24,9 @@
 #include "fennel/calculator/ExtendedInstructionTable.h"
 #include "fennel/calculator/SqlDate.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/gregorian/gregorian_types.hpp>
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 using namespace boost::local_time;
@@ -254,6 +257,24 @@ void LocalTimestamp(
     result->value(LocalTimestamp(tzPtr));
 }
 
+void ExtractFunc(
+    RegisterRef<int64_t>* result,
+    RegisterRef<int32_t>* timeunit,
+    RegisterRef<int64_t>* time)
+{
+    assert(result->type() == STANDARD_TYPE_INT_64);
+    assert(time->type() == STANDARD_TYPE_INT_64);
+    assert(timeunit->type() == STANDARD_TYPE_INT_32);
+
+    if (time->isNull()) {
+        result->toNull();
+        return;
+    }
+    // Time is in milliseconds since epoch
+    int64_t value = time->value();
+    int32_t unitValue = timeunit->value();
+    result->value(extractFromTimestamp(value, unitValue));
+}
 
 void
 ExtDateTimeRegister(ExtendedInstructionTable* eit)
@@ -400,6 +421,16 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
         (ExtendedInstruction2<int64_t, int32_t>*) NULL,
         &CurrentTimestamp);
 
+    vector<StandardTypeDescriptorOrdinal> params_I64_I32_I64;
+    params_I64_I32_I64.push_back(STANDARD_TYPE_INT_64);
+    params_I64_I32_I64.push_back(STANDARD_TYPE_INT_32);
+    params_I64_I32_I64.push_back(STANDARD_TYPE_INT_64);
+
+    eit->add(
+        "ExtractFunc",
+        params_I64_I32_I64,
+        (ExtendedInstruction3<int64_t, int32_t, int64_t>*) NULL,
+        &ExtractFunc);
 }
 
 FENNEL_END_CPPFILE("$Id$");

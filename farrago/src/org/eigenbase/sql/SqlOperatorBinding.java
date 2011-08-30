@@ -104,6 +104,18 @@ public abstract class SqlOperatorBinding
     }
 
     /**
+     * Gets the symbol value of a numeric literal operand.
+     *
+     * @param ordinal zero-based ordinal of operand of interest
+     *
+     * @return symbol value
+     */
+    public SqlLiteral.SqlSymbol getSymbolLiteralOperand(int ordinal)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Determines whether a bound operand is NULL.
      *
      * <p>This is only relevant for SQL validation.

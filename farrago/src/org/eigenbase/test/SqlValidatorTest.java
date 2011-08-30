@@ -5942,18 +5942,28 @@ public class SqlValidatorTest
 
     public void testExtract()
     {
-        // TODO: Need to have extract return decimal type for seconds
-        // so we can have seconds fractions
+        checkExpType(
+            "extract(second from interval '1.1' second)",
+            "DECIMAL(5, 3) NOT NULL");
         checkExpType(
             "extract(year from interval '1-2' year to month)",
             "BIGINT NOT NULL");
         checkExp("extract(minute from interval '1.1' second)");
+        checkExp("extract(minute from time '01:03:05.345')");
+        checkExp("extract(year from date '1976-12-23')");
+        checkExp("extract(year from timestamp '1976-12-23 01:03:05.345')");
 
         checkWholeExpFails(
             "extract(minute from interval '11' month)",
             "(?s).*Cannot apply.*");
         checkWholeExpFails(
             "extract(year from interval '11' second)",
+            "(?s).*Cannot apply.*");
+        checkWholeExpFails(
+            "extract(minute from date '1976-12-23')",
+            "(?s).*Cannot apply.*");
+        checkWholeExpFails(
+            "extract(year from time '01:03:05.345')",
             "(?s).*Cannot apply.*");
     }
 

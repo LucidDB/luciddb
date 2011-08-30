@@ -214,6 +214,11 @@ int64_t FENNEL_CALCULATOR_EXPORT LocalTime(
 int64_t FENNEL_CALCULATOR_EXPORT LocalTimestamp(
     boost::local_time::time_zone_ptr tzPtr);
 
+/// Returns field from timestamp. (Seconds returns milliseconds)
+int64_t extractFromTimestamp(
+    int64_t time,
+    int32_t timeunit);
+
 FENNEL_END_NAMESPACE
 
 #endif

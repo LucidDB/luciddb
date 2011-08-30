@@ -479,19 +479,37 @@ public class StandardConvertletTable
         final RexBuilder rexBuilder = cx.getRexBuilder();
         final SqlNode [] operands = call.getOperands();
         final RexNode [] exprs = convertExpressionList(cx, operands);
+        final SqlIntervalQualifier.TimeUnit unit =
+            (TimeUnit) ((SqlLiteral) operands[0]).getValue();
 
-        // TODO: Will need to use decimal type for seconds with precision
-        RelDataType resType =
+        RelDataType workingType =
             cx.getTypeFactory().createSqlType(SqlTypeName.BIGINT);
+        workingType =
+            cx.getTypeFactory().createTypeWithNullability(
+                workingType,
+                exprs[1].getType().isNullable());
+        RelDataType resType = workingType;
+        if (unit == TimeUnit.SECOND) {
+            resType =
+                cx.getTypeFactory().createSqlType(SqlTypeName.DECIMAL, 5, 3);
         resType =
             cx.getTypeFactory().createTypeWithNullability(
                 resType,
                 exprs[1].getType().isNullable());
-        RexNode cast = rexBuilder.makeReinterpretCast(
-            resType, exprs[1], rexBuilder.makeLiteral(false));
+        }
 
-        SqlIntervalQualifier.TimeUnit unit =
-            ((SqlIntervalQualifier) operands[0]).getStartUnit();
+        if (!SqlTypeUtil.isInterval(exprs[1].getType())) {
+            RexNode res =
+                rexBuilder.makeCall(SqlStdOperatorTable.extractFuncInt, exprs);
+            if (workingType != resType) {
+                res = rexBuilder.makeReinterpretCast(
+                    resType, res, rexBuilder.makeLiteral(false));
+            }
+            return res;
+        }
+        RexNode cast = rexBuilder.makeReinterpretCast(
+            workingType, exprs[1], rexBuilder.makeLiteral(false));
+
         long val = unit.multiplier;
         RexNode factor = rexBuilder.makeExactLiteral(BigDecimal.valueOf(val));
         switch (unit) {
@@ -506,6 +524,7 @@ public class StandardConvertletTable
             break;
         case SECOND:
             val = SqlIntervalQualifier.TimeUnit.MINUTE.multiplier;
+            factor = null;
             break;
         case YEAR:
             val = 0;
@@ -520,19 +539,25 @@ public class StandardConvertletTable
         RexNode res = cast;
         if (val != 0) {
             RexNode modVal =
-                rexBuilder.makeExactLiteral(BigDecimal.valueOf(val), resType);
+                rexBuilder.makeExactLiteral(
+                    BigDecimal.valueOf(val), workingType);
             res =
                 rexBuilder.makeCall(
                     SqlStdOperatorTable.modFunc,
                     res,
                     modVal);
         }
-
-        res =
-            rexBuilder.makeCall(
-                SqlStdOperatorTable.divideIntegerOperator,
-                res,
-                factor);
+        if (factor != null) {
+            res =
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.divideIntegerOperator,
+                    res,
+                    factor);
+        }
+        if (workingType != resType) {
+            res = rexBuilder.makeReinterpretCast(
+                resType, res, rexBuilder.makeLiteral(false));
+        }
         return res;
     }
 

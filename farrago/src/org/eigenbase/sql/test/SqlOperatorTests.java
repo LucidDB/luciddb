@@ -3950,11 +3950,10 @@ public abstract class SqlOperatorTests
         getTester().setFor(SqlStdOperatorTable.fusionFunc, VM_FENNEL, VM_JAVA);
     }
 
-    public void testExtractFunc()
+    public void testExtractFuncInterval()
     {
         getTester().setFor(
             SqlStdOperatorTable.extractFunc,
-            VM_FENNEL,
             VM_JAVA);
 
         // Intervals
@@ -3970,12 +3969,10 @@ public abstract class SqlOperatorTests
             "extract(minute from interval '2 3:4:5.678' day to second)",
             "4",
             "BIGINT NOT NULL");
-
-        // TODO: Seconds should include precision
         getTester().checkScalar(
             "extract(second from interval '2 3:4:5.678' day to second)",
-            "5",
-            "BIGINT NOT NULL");
+            "5.678",
+            "DECIMAL(5, 3) NOT NULL");
         getTester().checkScalar(
             "extract(year from interval '4-2' year to month)",
             "4",
@@ -3987,6 +3984,81 @@ public abstract class SqlOperatorTests
         getTester().checkNull(
             "extract(month from cast(null as interval year))");
     }
+
+    public void testExtractFuncDateTime()
+    {
+        getTester().setFor(
+            SqlStdOperatorTable.extractFunc,
+            VM_JAVA);
+
+        // timestamps
+        getTester().checkScalar(
+            "extract(day from timestamp '1976-06-02 03:04:05.678')",
+            "2",
+            "BIGINT NOT NULL");
+        getTester().checkScalar(
+            "extract(hour from timestamp '1976-06-02 03:04:05.678')",
+            "3",
+            "BIGINT NOT NULL");
+        getTester().checkScalar(
+            "extract(minute from timestamp '1976-06-02 03:04:05.678')",
+            "4",
+            "BIGINT NOT NULL");
+        getTester().checkScalar(
+            "extract(second from timestamp '1976-06-02 03:04:05.678')",
+            "5.678",
+            "DECIMAL(5, 3) NOT NULL");
+        getTester().checkScalar(
+            "extract(minute from timestamp '1956-06-02 03:04:05.678')",
+            "4",
+            "BIGINT NOT NULL");
+        getTester().checkScalar(
+            "extract(second from timestamp '1956-06-02 03:04:05.678')",
+            "5.678",
+            "DECIMAL(5, 3) NOT NULL");
+        getTester().checkScalar(
+            "extract(year from timestamp '1976-06-02 03:04:05.678')",
+            "1976",
+            "BIGINT NOT NULL");
+        getTester().checkScalar(
+            "extract(month from timestamp '1976-06-02 03:04:05.678')",
+            "6",
+            "BIGINT NOT NULL");
+        getTester().checkNull(
+            "extract(month from cast(null as timestamp))");
+
+        // time
+        getTester().checkScalar(
+            "extract(hour from time '03:04:05.678')",
+            "3",
+            "BIGINT NOT NULL");
+        getTester().checkScalar(
+            "extract(minute from time '03:04:05.678')",
+            "4",
+            "BIGINT NOT NULL");
+        getTester().checkScalar(
+            "extract(second from time '03:04:05.678')",
+            "5.678",
+            "DECIMAL(5, 3) NOT NULL");
+        getTester().checkNull(
+            "extract(minute from cast(null as time))");
+
+        // date
+        getTester().checkScalar(
+            "extract(year from date '1976-06-02')",
+            "1976",
+            "BIGINT NOT NULL");
+        getTester().checkScalar(
+            "extract(month from date '1976-06-02')",
+            "6",
+            "BIGINT NOT NULL");
+        getTester().checkScalar(
+            "extract(day from date '1976-06-02')",
+            "2",
+            "BIGINT NOT NULL");
+        getTester().checkNull(
+            "extract(month from cast(null as date))");
+}
 
     public void testCeilFunc()
     {

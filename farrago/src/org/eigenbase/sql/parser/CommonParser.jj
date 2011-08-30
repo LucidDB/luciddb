@@ -3252,7 +3252,7 @@ SqlNode BuiltinFunctionCall() :
         }
         <LPAREN>
         unit = TimeUnit()
-        { args = startList(new SqlIntervalQualifier(unit, null,getPos())); }
+        { args = startList(SqlLiteral.createSymbol(unit, getPos())); }
         <FROM>
         e = Expression(ExprContext.ACCEPT_SUBQUERY) { args.add(e); }
         <RPAREN>
