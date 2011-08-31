@@ -3655,6 +3655,7 @@ SqlIdentifier ReservedFunctionName() :
 {
     (
         <ABS>
+        | <ANY>
         | <AVG>
         | <CARDINALITY>
         | <CHAR_LENGTH>
@@ -3668,6 +3669,7 @@ SqlIdentifier ReservedFunctionName() :
         | <CURRENT_TIMESTAMP>
         | <DENSE_RANK>
         | <ELEMENT>
+        | <EVERY>
         | <EXP_AVG>
         | <EXP>
         | <FIRST_VALUE>

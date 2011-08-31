@@ -97,6 +97,7 @@ public class SqlAdvisorTest
             "Keyword(-)",
             "Keyword(?)",
             "Keyword(ABS)",
+            "Keyword(ANY)",
             "Keyword(AVG)",
             "Keyword(CARDINALITY)",
             "Keyword(CASE)",
@@ -123,6 +124,7 @@ public class SqlAdvisorTest
             "Keyword(DATE)",
             "Keyword(DENSE_RANK)",
             "Keyword(ELEMENT)",
+            "Keyword(EVERY)",
             "Keyword(EXISTS)",
             "Keyword(EXP)",
             "Keyword(EXP_AVG)",
@@ -1127,6 +1129,7 @@ public class SqlAdvisorTest
             "Column(EMPNO)\n"
             + "Column(ENAME)\n"
             + "Keyword(ELEMENT)\n"
+            + "Keyword(EVERY)\n"
             + "Keyword(EXISTS)\n"
             + "Keyword(EXP)\n"
             + "Keyword(EXP_AVG)\n"

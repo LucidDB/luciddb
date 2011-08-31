@@ -855,6 +855,26 @@ public class StandardConvertletTable
     }
 
     /**
+     * Converts a BETWEEN expression.
+     *
+     * <p>Called automatically via reflection.
+     */
+    public RexNode convertAnyEvery(
+        SqlRexContext cx,
+        SqlAnyEveryAggFunction op,
+        SqlCall call)
+    {
+        SqlAggFunction newOp = op.isAny()
+            ? SqlStdOperatorTable.maxOperator
+            : SqlStdOperatorTable.minOperator;
+        return cx.convertExpression(
+            new SqlCall(
+                newOp,
+                call.operands,
+                call.getParserPosition()));
+    }
+
+    /**
      * Converts a LiteralChain expression: that is, concatenates the operands
      * immediately, to produce a single literal string.
      *
@@ -1059,7 +1079,8 @@ public class StandardConvertletTable
          */
         private RelDataType computeHistogramType(RelDataType type)
         {
-            if (SqlTypeUtil.isExactNumeric(type)
+            if ((SqlTypeUtil.isExactNumeric(type)
+                || type.getSqlTypeName() == SqlTypeName.BOOLEAN)
                 && (type.getSqlTypeName() != SqlTypeName.BIGINT))
             {
                 return new BasicSqlType(SqlTypeName.BIGINT);

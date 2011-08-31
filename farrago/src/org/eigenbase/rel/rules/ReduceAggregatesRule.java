@@ -77,9 +77,19 @@ public class ReduceAggregatesRule
     public void onMatch(RelOptRuleCall ruleCall)
     {
         AggregateRelBase oldAggRel = (AggregateRelBase) ruleCall.rels[0];
-        if (containsAvgStddevVarCall(oldAggRel.getAggCallList())) {
+        if (needsReducing(oldAggRel.getAggCallList())) {
             reduceAggs(ruleCall, oldAggRel);
         }
+    }
+
+    /**
+     * Returns whether aggregate is call to AVG, STDDEV_*, VAR_* etc.
+     *
+     * @param agg aggregate operation
+     */
+    private boolean needsReducing(Aggregation agg) {
+        return agg instanceof SqlAvgAggFunction
+            || agg instanceof SqlAnyEveryAggFunction;
     }
 
     /**
@@ -87,10 +97,10 @@ public class ReduceAggregatesRule
      *
      * @param aggCallList List of aggregate calls
      */
-    private boolean containsAvgStddevVarCall(List<AggregateCall> aggCallList)
+    private boolean needsReducing(List<AggregateCall> aggCallList)
     {
         for (AggregateCall call : aggCallList) {
-            if (call.getAggregation() instanceof SqlAvgAggFunction) {
+            if (needsReducing(call.getAggregation())) {
                 return true;
             }
         }
@@ -225,6 +235,17 @@ public class ReduceAggregatesRule
             default:
                 throw Util.unexpected(subtype);
             }
+        } else if (oldCall.getAggregation() instanceof SqlAnyEveryAggFunction) {
+            boolean isAny =
+                ((SqlAnyEveryAggFunction) oldCall.getAggregation()).isAny();
+            Aggregation minOrMax = isAny
+                ? SqlStdOperatorTable.maxOperator
+                : SqlStdOperatorTable.minOperator;
+            AggregateCall newCall = new AggregateCall(
+                minOrMax, false,
+                oldCall.getArgList(), oldCall.getType(), null);
+            return reduceAgg(
+                oldAggRel, newCall, newCalls, aggCallMapping, inputExprs);
         } else {
             // anything else:  preserve original call
             RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();

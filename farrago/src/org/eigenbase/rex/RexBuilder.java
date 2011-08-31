@@ -467,8 +467,40 @@ public class RexBuilder
             && SqlTypeUtil.isInterval(exp.getType()))
         {
             return makeCastIntervalToExact(type, exp);
+        } else if (type.getSqlTypeName()  == SqlTypeName.BOOLEAN
+            && SqlTypeUtil.isExactNumeric(exp.getType()))
+        {
+            return makeCastExactToBoolean(type, exp);
+        } else if (exp.getType().getSqlTypeName()  == SqlTypeName.BOOLEAN
+            && SqlTypeUtil.isExactNumeric(type))
+        {
+            return makeCastBooleanToExact(type, exp);
         }
         return makeAbstractCast(type, exp);
+    }
+
+    private RexNode makeCastExactToBoolean(RelDataType toType, RexNode exp)
+    {
+        return makeCall(
+            toType, SqlStdOperatorTable.notEqualsOperator,
+            exp, makeZeroLiteral(exp.getType()));
+    }
+
+    private RexNode makeCastBooleanToExact(RelDataType toType, RexNode exp)
+    {
+        final RexNode casted = makeCall(
+            SqlStdOperatorTable.caseOperator,
+            exp,
+            makeExactLiteral(new BigDecimal(1), toType),
+            makeZeroLiteral(toType));
+        if (!exp.getType().isNullable()) {
+            return casted;
+        }
+        return makeCall(
+            toType, SqlStdOperatorTable.caseOperator,
+            makeCall(SqlStdOperatorTable.isNotNullOperator, exp),
+            casted,
+            makeNullLiteral(toType.getSqlTypeName()));
     }
 
     private RexNode makeCastIntervalToExact(RelDataType toType, RexNode exp)

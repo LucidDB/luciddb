@@ -608,6 +608,18 @@ public class SqlStdOperatorTable
             SqlMinMaxAggFunction.MINMAX_COMPARABLE);
 
     /**
+     * <code>ANY</code> aggregate function.
+     */
+    public static final SqlAggFunction anyOperator =
+        new SqlAnyEveryAggFunction(null, true);
+
+    /**
+     * <code>ANY</code> aggregate function.
+     */
+    public static final SqlAggFunction everyOperator =
+        new SqlAnyEveryAggFunction(null, false);
+
+    /**
      * <code>LAST_VALUE</code> aggregate function.
      */
     public static final SqlAggFunction lastValueOperator =

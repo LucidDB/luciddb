@@ -1720,6 +1720,68 @@ public abstract class SqlOperatorTests
                 Boolean.FALSE, invalidArgForPower, code2201f));
     }
 
+    public void testAnyFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.anyOperator, VM_EXPAND);
+        getTester().checkFails(
+            "any(^*^)",
+            "Unknown identifier '\\*'",
+            false);
+        getTester().checkType("any(true)", "BOOLEAN");
+        getTester().checkType("any(DISTINCT true)", "BOOLEAN");
+        getTester().checkFails(
+            "^any()^",
+            "Invalid number of arguments to function 'ANY'. Was expecting 1 arguments",
+            false);
+        getTester().checkFails(
+            "^any(true, false)^",
+            "Invalid number of arguments to function 'ANY'. Was expecting 1 arguments",
+            false);
+        final String [] values =
+            { "TRUE", "CAST(null AS BOOLEAN)", "FALSE", "FALSE" };
+        getTester().checkAgg(
+            "any(x)",
+            values,
+            "true",
+            0d);
+        getTester().checkAgg(
+            "any(DISTINCT x)",
+            values,
+            "true",
+            0d);
+    }
+
+    public void testEveryFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.everyOperator, VM_EXPAND);
+        getTester().checkFails(
+            "every(^*^)",
+            "Unknown identifier '\\*'",
+            false);
+        getTester().checkType("every(true)", "BOOLEAN");
+        getTester().checkType("every(DISTINCT true)", "BOOLEAN");
+        getTester().checkFails(
+            "^every()^",
+            "Invalid number of arguments to function 'EVERY'. Was expecting 1 arguments",
+            false);
+        getTester().checkFails(
+            "^every(true, false)^",
+            "Invalid number of arguments to function 'EVERY'. Was expecting 1 arguments",
+            false);
+        final String [] values =
+            { "TRUE", "CAST(null AS BOOLEAN)", "FALSE", "FALSE" };
+        getTester().checkAgg(
+            "every(x)",
+            values,
+            "false",
+            0d);
+        getTester().checkAgg(
+            "every(DISTINCT x)",
+            values,
+            "false",
+            0d);
+    }
+
     public void testConcatOperator()
     {
         getTester().setFor(SqlStdOperatorTable.concatOperator);
