@@ -146,6 +146,7 @@ public class FarragoCalcSystemTest
         exclude.add(SqlStdOperatorTable.histogramLastValueFunction);
         exclude.add(SqlStdOperatorTable.isDifferentFromOperator);
         exclude.add(SqlStdOperatorTable.divideIntegerOperator);
+        exclude.add(SqlStdOperatorTable.extractFunc);
 
         // Eventually need to include these when cast is working
         exclude.add(SqlStdOperatorTable.overlapsOperator);
