@@ -135,9 +135,12 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/datetimeAddSubtract.sql"/>
       </test>
 
+      <!-- temporary disable pending resolution LDB-247 -->
+      <!-- 
       <test name="julianDateTests">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/julianDateTests.sql"/>
       </test>
+       -->
 
       <test name="padWeekNumber" requiresRun="cr_source">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/pad_week_number.sql"/>
