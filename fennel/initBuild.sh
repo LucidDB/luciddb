@@ -121,6 +121,7 @@ if ! $skip_tests ; then
     . fennelenv.sh `pwd`
 
 if $cygwin ; then
+    rm -f FlexLexer.h # file causes preamble checks to fail.
     nmake check
 else    
     make check
