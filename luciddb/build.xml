@@ -1297,7 +1297,7 @@ ${farrago.test.jvmargs}
     </condition>
 
     <condition property="farrago.dist.file"
-      value="${farrago.dist.dir}/${farrago.release.spec}.zip"
+      value="${farrago.dist.dir}/farrago.zip"
       else="${farrago.dist.dir}/${farrago.release.spec}.tar.bz2">
       <os family="windows"/>
     </condition>
