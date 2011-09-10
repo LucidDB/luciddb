@@ -1,4 +1,4 @@
-LucidDB Binary Release 0.9.3
+LucidDB Binary Release 0.9.4
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -9,23 +9,19 @@ http://www.luciddb.org
 INSTALLATION
 
 This page explains how to install and run LucidDB:
-
 http://docs.eigenbase.org/LucidDbGettingStarted
 
-Source releases are also available:
+This page explains how to install and run AdminUI:
+https://studio.dynamobi.com/wiki/display/DOC/Installing+the+AdminUI
 
+Source releases of LucidDB are available:
 http://docs.eigenbase.org/LucidDbBuildFromSourceDistribution
 
 ----------------------------------------------------------------------
 GETTING IN TOUCH
 
-The mailing list for the user community is
-
-luciddb-users@lists.sf.net
-
-Subscribe at
-
-http://sourceforge.net/mail/?group_id=157599
+User forums are available at:
+http://www.luciddb.org/forums
 
 There is also a ##luciddb IRC channel on freenode.net.
 
@@ -40,26 +36,25 @@ release in a fresh location; do not attempt to unpack over an existing
 installation!
 
 For manual upgrade from an older version, use this procedure:
-
 http://docs.eigenbase.org/LucidDbUpgrade
 
-Please report issues at Eigenbase JIRA:
-
+Please report LucidDB issues at Eigenbase JIRA:
 http://issues.eigenbase.org
 
-Note that in version 0.9.2, the default client/server JDBC protocol
-was changed from RMI to HTTP.  This change affects upgraded servers,
-as well as any installation procedures developed against older
-versions.  For more information, please see this wiki page:
+Please report AdminUI/Web Services issues at DynamoBI JIRA:
+http://studio.dynamobi.com
 
-http://pub.eigenbase.org/wiki/FarragoHttpClient
+Note that in version 0.9.4 the JDBC Driver has been changed significantly
+requiring reinstallation of the LucidDBClient.jar into systems that access
+previously accessed 0.9.3 LucidDB.
 
 ------------------------------------------------------------
 LEGAL
 
-Copyright (C) 1999-2010 The Eigenbase Project and others
+Copyright (C) 1999-2011 The Eigenbase Project and others
+Copyright (C) 1999-2011 DynamoBI Corporation
 
-LucidDB and the LucidDB logo are trademarks of LucidEra, Inc.
+LucidDB and the LucidDB logo are trademarks of DynamoBI Corporation
 
 This distribution of LucidDB is licensed under the GNU General
 Public License; see file COPYING for details.  License terms for
@@ -69,8 +64,106 @@ text files in the lib directory.
 To obtain the source code from which this distribution was built,
 please visit http://www.eigenbase.org/download.html.
 
+To obtain the source code for extension projects (AdminUI) please 
+visit http://studio.dynamobi.com
+
 ----------------------------------------------------------------------
 CHANGE HISTORY
+
+Changes since 0.9.3 include
+
+[FRG-384] - Validate and return a specific error message if trying to create an idx to foreign table
+[FRG-391] - GRANT by sa to itself results in an internal error
+[FRG-409] - DDL statements should not allow the creation of zero length identifiers
+[FRG-410] - Poor error message when attempt to grant to nonexistent user
+[FRG-420] - Fix the three broken tests marked TODO in farrago/build.xml
+[FRG-422] - sqllineClient displays full stack trace on error
+[FRG-430] - Allow casting dynamic params in inner-operators like case, add a test
+[FRG-402] - distBuild.sh assumes an existing ant on PATH
+[FRG-403] - final elimination of RmiJdbc
+[FRG-404] - Extended character literals
+[FRG-426] - Update jline to 1.0
+[FRG-405] - Create system routines for DDL outputs for objects
+[FRG-408] - Create browse_foreign_tables and browse_foreign_columns
+[FRG-414] - create a udr to expose SqlAdvisor methods
+[FRG-416] - Support "thisjar:" for foreign data wrapper library-spec
+[FRG-431] - Upgraded vJDBC libraries, and update to JDBC4
+[FNL-93] - Upgrade Fennel to use STLPort 5.2.1
+[FNL-94] - Upgrade Fennel to use Boost 1.43
+[EXT-4] - better error message for create_table_as
+[EXT-13] - add one-param and two-param UDFs for scripting
+[EXT-14] - Improve error messages on scripting errors
+[EXT-3] - Receive contribution of timestamp UDRs from JL
+[EXT-7] - Add generic Scripting Routines to support Jython, JS, etc.
+[LDB-161] - Oracle JDBC driver is pulled from lucidera depot side.
+[LDB-169] - RAND function should store Random object back in context
+[LDB-172] - Script generates wrong data for TPC-H
+[LDB-201] - Rewrite count(*) to count(smallest idxed column) if idx only scans enabled
+[LDB-212] - Add MaxPermSize to server startup scripts
+[LDB-235] - Improve LucidDB install.sh to mod the java for OSX to include the -d32
+[LDB-197] - New UDP for conditional execution of SQL statement based on ZERO rows in input cursor
+[LDB-209] - New UDF to get current session ID
+[LDB-214] - Applib Extension: CREATE_TABLE_FROM_SOURCE_TABLE (DDB-25)
+[LDB-215] - Applib Extension: CREATE_TABLE_AS (DDB-26)
+[LDB-216] - Applib Extension: REMOTE_ROWS (DDB-3)
+[LDB-217] - Applib Extension: READ_ROWS_FROM_FILE UDX (DDB-8)
+[LDB-218] - Applib Extension: WRITE_ROWS_TO_FILE UDX (DDB-9)
+[LDB-219] - Applib Extension: CLEAR_PENTAHO_MONDRIAN_CACHE UDP (DDB-10)
+[LDB-158] - eliminate RmiJdbc from LucidDB dist
+[FW-8] - Defer the storage node query execution until Firewater query is completely opened
+[FW-11] - Optimize DISTINCT(PART_COLUMN) down onto slaves
+[DDB-1] - Create Farrago Streaming Loader
+[DDB-3] - Implement REMOTE_ROWS UDX
+[DDB-8] - Implement READ_ROWS_FROM_FILE UDX
+[DDB-9] - Implement WRITE_ROWS_TO_FILE UDX
+[DDB-10] - Implement and test CLEAR_PENTAHO_MONDRIAN_CACHE UDP
+[DDB-21] - Add DynamoDB driver/configuration to PDI
+[DDB-25] - Create Table from Source Table UDP
+[DDB-26] - Create Table As UDP
+[DDB-22] - Update LucidDB driver in PDI, and test two Farrago based drivers in PDI together
+[DDB-32] - Implement CUSTOM tab in PDI Streaming Loader
+[DDB-33] - Add "Automatically Create Table" checkbox to LucidDB streaming loader
+[DDB-41] - Create pentaho pdi kettle plugin
+[DDB-30] - RemoteRowsUDX Test case is failing intermittently
+[DDB-48] - SQL button in PDI loader does not actually present DDL changes necessary
+[DDB-56] - CouchDB SQL/MED adapter
+
+First release of AdminUI:
+[DADMINUI-32] - UI Rejiggering - Tree Objects and Add New
+[DADMINUI-33] - Enable permissions for users
+[DADMINUI-8] - Table / Column editors
+[DADMINUI-1] - Testing SVN commit messages
+[DADMINUI-3] - Select a UI technology
+[DADMINUI-11] - Reconnecting as a new user doesn't actually change user for SQL queries
+[DADMINUI-12] - Initial login should trigger a refresh
+[DADMINUI-13] - FlexSQLAdmin is not properly quoting identifiers
+[DADMINUI-17] - Flex app expects unique table names across all schema
+[DADMINUI-19] - Shortcut keys don't work on OSX
+[DADMINUI-20] - Need to actually log into spring when the flex call is made.
+[DADMINUI-4] - Flex SQLAdmin working with LucidDB
+[DADMINUI-6] - Enable login for Admin UI
+[DADMINUI-9] - Implement EXPLAIN PLAN screens in FlexSQLAdmin
+[DADMINUI-10] - Add Schema Support to FlexSQLAdmin
+[DADMINUI-15] - Any Flex changes to support CALL / other generic SQL calls
+[DADMINUI-16] - Present full text EXPLAIN PLAN with Explain Plan visual
+[DADMINUI-18] - script as.. commands should open new tab
+[DADMINUI-23] - View editor in AdminUI
+[DADMINUI-37] - On "edit table" screens, use RID as the identifier for UPDATE/DELETEs
+[DADMINUI-40] - Script Select As "View" produces bad SQL
+[DADMINUI-42] - Isolate and resolve issue with hanging app server
+[DADMINUI-53] - Can't scroll to get the entire error message in
+[DADMINUI-34] - Create a perfmon style chart on top of DBA_PERFORMANCE counter web services
+[DWS-9] - Resolve recent integration that is now including ns2: prefixes in REST services
+[DWS-12] - Factor out jdbc.properties and add defaults for localhost
+[DWS-2] - Establish Enunciate build framework, and deploy to Jetty
+[DWS-3] - Establish first DynamoDB web service
+[DWS-7] - Write server side EXPLAIN PLAN web services
+[DWS-14] - Add GPL license headers to web services project
+[DWS-4] - SQL Listing, and Execution WS
+[DWS-5] - Configure a basic, LucidDB catalog based method for authenticating users
+[DWS-8] - Adjust server side FlexSQLAdmin services in support of DADMINUI-10
+[DWS-10] - Allow CALL and any other generic SQL to be executed
+[DWS-17] - Issues with the web server--hanging, locking, security popup
 
 Changes since 0.9.2 include
 
