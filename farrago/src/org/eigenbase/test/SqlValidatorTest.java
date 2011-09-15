@@ -3886,10 +3886,10 @@ public class SqlValidatorTest
             "DECIMAL(15, 9)");
         checkExpType(
             "cast(1 as DECIMAL(4, 10)) / cast(null as DECIMAL(6, 19))",
-            "DECIMAL(19, 6)");
+            "DECIMAL(19, 10)");
         checkExpType(
             "cast(1 as DECIMAL(19, 2)) / cast(1 as DECIMAL(19, 2))",
-            "DECIMAL(19, 0) NOT NULL");
+            "DECIMAL(19, 2) NOT NULL");
     }
 
     public void testFloorCeil()

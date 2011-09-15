@@ -501,10 +501,14 @@ public abstract class RelDataTypeFactoryImpl
                     Math.min(
                         scale,
                         SqlTypeName.MAX_NUMERIC_PRECISION - dout);
+                scale = Math.max(scale, s1);
                 scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
 
                 int precision = dout + scale;
-                assert (precision <= SqlTypeName.MAX_NUMERIC_PRECISION);
+                precision =
+                    Math.min(
+                        precision,
+                        SqlTypeName.MAX_NUMERIC_PRECISION);
                 assert (precision > 0);
 
                 RelDataType ret;
