@@ -473,6 +473,9 @@ public abstract class RelDataTypeFactoryImpl
      * </ul>
      *
      * p and s are capped at their maximum values
+     * precedence is first giving at least the scale of
+     * the first argument (s >= s1) followed by enough
+     * whole digits to represent the result without overflow
      *
      * @sql.2003 Part 2 Section 6.26
      */
