@@ -216,10 +216,15 @@ EOF
 cd $OPEN_DIR/farrago
 ./initBuild.sh --with-fennel --with-optimization --without-debug
 ./distBuild.sh --skip-init-build
+# non-cygwin-
 # farrago builds default with change-release in addition to normal specs.
+if [ $cygwin = "true" ]; then
+  BIN_NAME=farrago.zip
+else
+  BIN_NAME=$BINARY_RELEASE.$P4_CHANGE.$ARCHIVE_SUFFIX
+fi
 P4_CHANGE=`p4 counter change`
-cp ../farrago/dist/$BINARY_RELEASE.$P4_CHANGE.$ARCHIVE_SUFFIX \
-    $DIST_DIR/$BINARY_RELEASE.$P4_CHANGE.$ARCHIVE_SUFFIX
+cp ../farrago/dist/$BIN_NAME $DIST_DIR/$BINARY_RELEASE.$P4_CHANGE.$ARCHIVE_SUFFIX
 
 cd $OPEN_DIR/luciddb
 ./initBuild.sh --without-farrago-build --with-optimization --without-debug
