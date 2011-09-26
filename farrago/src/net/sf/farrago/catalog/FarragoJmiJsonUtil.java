@@ -127,13 +127,12 @@ public class FarragoJmiJsonUtil
     @Override
     protected void fixAttributes(JsonMetadataBean bean, RefPackage target)
     {
-        tracer.warning("Well, at least we got here!");
         FarragoPackage farragoPackage = (FarragoPackage) target;
         final String beanType = bean.getType();
-        tracer.info("Bean is a " + beanType);
+        tracer.fine("Bean is a " + beanType);
         if (beanType.equals("Routine")) {
             // create a body
-            tracer.info("Inflating body attribute for " + bean.getName());
+            tracer.fine("Inflating body attribute for " + bean.getName());
             Map<String, Object> bodyMap =
                 (Map<String, Object>) bean.getAttributes().get("body");
             CwmProcedureExpression body =
@@ -144,7 +143,7 @@ public class FarragoJmiJsonUtil
             bean.getAttributes().put("body", body);
         }
         if (beanType.equals("LocalView")) {
-            tracer.info("Inflating query expression for " + bean.getName());
+            tracer.fine("Inflating query expression for " + bean.getName());
             Map<String, Object> bodyMap =
                 (Map<String, Object>) bean.getAttributes().get(
                     "queryExpression");
@@ -156,7 +155,7 @@ public class FarragoJmiJsonUtil
             bean.getAttributes().put("queryExpression", body);
         }
         if (beanType.equals("Parameter") || beanType.equals("StoredColumn")) {
-            tracer.info("Inflating initial value for " + bean.getName());
+            tracer.fine("Inflating initial value for " + bean.getName());
             Map<String, Object> defaultMap =
                 (Map<String, Object>) bean.getAttributes().get(
                     "initialValue");
@@ -294,7 +293,7 @@ public class FarragoJmiJsonUtil
                         beanKey.substring(0, beanKey.lastIndexOf('.') + 1)
                         + fso.getName()
                         + "." + bean.getType();
-                    tracer.warning("Marking unresolved "
+                    tracer.fine("Marking unresolved "
                         + storedObject.toString() + " for " + beanKey);
                     addUnresolvedReference(
                         "StoredElement",
