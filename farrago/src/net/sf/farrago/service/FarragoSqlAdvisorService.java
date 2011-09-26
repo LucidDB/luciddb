@@ -44,11 +44,8 @@ import org.eigenbase.util.*;
  * @author chard
  * @version $Id$
  */
-public class FarragoSqlAdvisorService
+public class FarragoSqlAdvisorService extends FarragoService
 {
-
-    protected DataSource dataSource;
-    protected Logger tracer;
 
     private static final String keywordQuery =
         "SELECT * FROM TABLE(SYS_BOOT.MGMT.GET_KEYWORDS())";
@@ -61,8 +58,15 @@ public class FarragoSqlAdvisorService
      */
     public FarragoSqlAdvisorService(DataSource dataSource, Logger tracer)
     {
-        this.dataSource = dataSource;
-        this.tracer = tracer;
+        this(dataSource, tracer, false);
+    }
+
+    public FarragoSqlAdvisorService(
+        DataSource dataSource,
+        Logger tracer,
+        boolean reusingConnection)
+    {
+        super(dataSource, tracer, reusingConnection);
     }
 
     private SqlBuilder createSqlBuilder()
@@ -201,8 +205,8 @@ public class FarragoSqlAdvisorService
         Statement stmt = null;
         ResultSet rs = null;
         try {
-            c = dataSource.getConnection();
-            stmt = c.createStatement();
+            c = getConnection();
+            stmt = getStatement(c);
             if (!Util.isNullOrEmpty(defaultSchema)) {
                 stmt.executeUpdate(generateSetSchema(defaultSchema));
             }
@@ -218,10 +222,8 @@ public class FarragoSqlAdvisorService
             }
             rs.close();
             rs = null;
-            stmt.close();
-            stmt = null;
-            c.close();
-            c = null;
+            releaseStatement(stmt);
+            releaseConnection(c);
         } catch (SQLException e) {
             tracer.severe(
                 "Error validating SQL statement '" + sql + "': "
@@ -235,20 +237,8 @@ public class FarragoSqlAdvisorService
                 }
                 rs = null;
             }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                }
-                stmt = null;
-            }
-            if (c != null) {
-                try {
-                    c.close();
-                } catch (SQLException e) {
-                }
-                c = null;
-            }
+            releaseStatement(stmt);
+            releaseConnection(c);
         }
         return (result.isEmpty()) ? null : result;
     }
@@ -272,8 +262,8 @@ public class FarragoSqlAdvisorService
         ResultSet rs = null;
         String result = "";
         try {
-            c = dataSource.getConnection();
-            stmt = c.createStatement();
+            c = getConnection();
+            stmt = getStatement(c);
             if (!Util.isNullOrEmpty(defaultSchema)) {
                 stmt.execute(generateSetSchema(defaultSchema));
             }
@@ -282,10 +272,8 @@ public class FarragoSqlAdvisorService
             result = rs.getString(1);
             rs.close();
             rs = null;
-            stmt.close();
-            stmt = null;
-            c.close();
-            c = null;
+            releaseStatement(stmt);
+            releaseConnection(c);
         } catch (SQLException e) {
             tracer.warning("Error qualifying SQL name. \nException was" + e);
             tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
@@ -295,12 +283,8 @@ public class FarragoSqlAdvisorService
                     rs.close();
                 }
                 rs = null;
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (c != null) {
-                    c.close();
-                }
+                releaseStatement(stmt);
+                releaseConnection(c);
             } catch (SQLException e) {
             } finally {
                 stmt = null;
@@ -317,17 +301,15 @@ public class FarragoSqlAdvisorService
         ResultSet rs = null;
         boolean result = false;
         try {
-            c = dataSource.getConnection();
-            stmt = c.createStatement();
+            c = getConnection();
+            stmt = getStatement(c);
             rs = stmt.executeQuery(generateIsValidQuery(sql));
             rs.next();
             result = rs.getBoolean(1);
             rs.close();
             rs = null;
-            stmt.close();
-            stmt = null;
-            c.close();
-            c = null;
+            releaseStatement(stmt);
+            releaseConnection(c);
         } catch (SQLException e) {
             tracer.warning("Error checking SQL statement. \nException was" + e);
             tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
@@ -337,12 +319,8 @@ public class FarragoSqlAdvisorService
                     rs.close();
                 }
                 rs = null;
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (c != null) {
-                    c.close();
-                }
+                releaseStatement(stmt);
+                releaseConnection(c);
             } catch (SQLException e) {
             } finally {
                 stmt = null;
@@ -365,18 +343,16 @@ public class FarragoSqlAdvisorService
         ResultSet rs = null;
         List<String> result = new ArrayList<String>();
         try {
-            c = dataSource.getConnection();
-            stmt = c.createStatement();
+            c = getConnection();
+            stmt = getStatement(c);
             rs = stmt.executeQuery(keywordQuery);
             while (rs.next()) {
                 result.add(rs.getString(1));
             }
             rs.close();
             rs = null;
-            stmt.close();
-            stmt = null;
-            c.close();
-            c = null;
+            releaseStatement(stmt);
+            releaseConnection(c);
         } catch (SQLException e) {
             tracer.warning("Error getting SQL keywords. \nException was" + e);
             tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
@@ -386,12 +362,8 @@ public class FarragoSqlAdvisorService
                     rs.close();
                 }
                 rs = null;
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (c != null) {
-                    c.close();
-                }
+                releaseStatement(stmt);
+                releaseConnection(c);
             } catch (SQLException e) {
             } finally {
                 stmt = null;
@@ -424,8 +396,8 @@ public class FarragoSqlAdvisorService
         Statement stmt = null;
         ResultSet rs = null;
         try {
-            c = dataSource.getConnection();
-            stmt = c.createStatement();
+            c = getConnection();
+            stmt = getStatement(c);
             // if we have a default schema, issue SET SCHEMA
             if (!Util.isNullOrEmpty(defaultSchema)) {
                 stmt.executeUpdate(generateSetSchema(defaultSchema));
@@ -443,10 +415,8 @@ public class FarragoSqlAdvisorService
             }
             rs.close();
             rs = null;
-            stmt.close();
-            stmt = null;
-            c.close();
-            c = null;
+            releaseStatement(stmt);
+            releaseConnection(c);
         } catch (SQLException se) {
             tracer.severe(
                 "Error completing SQL statement '" + sql + "': "
@@ -458,12 +428,8 @@ public class FarragoSqlAdvisorService
                     rs.close();
                 }
                 rs = null;
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (c != null) {
-                    c.close();
-                }
+                releaseStatement(stmt);
+                releaseConnection(c);
             } catch (SQLException e) {
             } finally {
                 stmt = null;
@@ -487,16 +453,14 @@ public class FarragoSqlAdvisorService
         Statement stmt = null;
         ResultSet rs = null;
         try {
-            c = dataSource.getConnection();
-            stmt = c.createStatement();
+            c = getConnection();
+            stmt = getStatement(c);
             rs = stmt.executeQuery(generateFormatQuery(sql, formatOptions));
             result = StringChunker.readChunks(rs, 2);
             rs.close();
             rs = null;
-            stmt.close();
-            stmt = null;
-            c.close();
-            c = null;
+            releaseStatement(stmt);
+            releaseConnection(c);
         } catch (SQLException e) {
             tracer.severe(
                 "Error formatting SQL statement '" + sql + "': "
@@ -508,12 +472,8 @@ public class FarragoSqlAdvisorService
                     rs.close();
                 }
                 rs = null;
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (c != null) {
-                    c.close();
-                }
+                releaseStatement(stmt);
+                releaseConnection(c);
             } catch (SQLException e) {
             } finally {
                 stmt = null;

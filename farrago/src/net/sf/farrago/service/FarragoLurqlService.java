@@ -38,10 +38,8 @@ import org.eigenbase.util.*;
  * LURQL queries without needing any of the underlying server classes.
  * @author chard
  */
-public class FarragoLurqlService
+public class FarragoLurqlService extends FarragoService
 {
-    protected DataSource dataSource;
-    protected Logger tracer;
     private JmiJsonUtil jmiJsonUtil = null;
 
     /**
@@ -62,10 +60,26 @@ public class FarragoLurqlService
     public FarragoLurqlService(
         DataSource dataSource,
         Logger tracer,
+        boolean reusingConnection)
+    {
+        this(dataSource, tracer, reusingConnection, null);
+    }
+
+    public FarragoLurqlService(
+        DataSource dataSource,
+        Logger tracer,
         JmiJsonUtil jmiJsonUtil)
     {
-        this.dataSource = dataSource;
-        this.tracer = tracer;
+        this(dataSource, tracer, false, jmiJsonUtil);
+    }
+
+    public FarragoLurqlService(
+        DataSource dataSource,
+        Logger tracer,
+        boolean reusingConnection,
+        JmiJsonUtil jmiJsonUtil)
+    {
+        super(dataSource, tracer, reusingConnection);
         this.jmiJsonUtil = jmiJsonUtil;
     }
 
@@ -106,18 +120,16 @@ public class FarragoLurqlService
         ResultSet rs = null;
         Collection<RefBaseObject> result = null;
         try {
-            c = dataSource.getConnection();
-            stmt = c.createStatement();
+            c = getConnection();
+            stmt = getStatement(c);
             rs = stmt.executeQuery(wrappedLurqlQuery);
             String interchangeString = StringChunker.readChunks(rs, 2);
             tracer.fine("Interchange data is:\n" + interchangeString);
             result = parseInterchange(target, interchangeString, format);
             rs.close();
             rs = null;
-            stmt.close();
-            stmt = null;
-            c.close();
-            c = null;
+            releaseStatement(stmt);
+            releaseConnection(c);
         } catch (SQLException e) {
             tracer.warning("Error executing query '" + wrappedLurqlQuery + "'");
             tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
@@ -125,14 +137,10 @@ public class FarragoLurqlService
             try {
                 if (rs != null) {
                     rs.close();
+                    rs = null;
                 }
-                rs = null;
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (c != null) {
-                    c.close();
-                }
+                releaseStatement(stmt);
+                releaseConnection(c);
             } catch (SQLException se) {
             } finally {
                 stmt = null;
@@ -174,8 +182,8 @@ public class FarragoLurqlService
         ResultSet rs = null;
         Collection<RefBaseObject> result = null;
         try {
-            c = dataSource.getConnection();
-            stmt = c.createStatement();
+            c = getConnection();
+            stmt = getStatement(c);
             rs = stmt.executeQuery(wrappedQuery);
             String xmiString = StringChunker.readChunks(rs, 2);
             tracer.finer("Interchange data is:\n" + xmiString);
@@ -183,10 +191,8 @@ public class FarragoLurqlService
             tracer.fine("Remotely imported " + result.size() + " objects");
             rs.close();
             rs = null;
-            stmt.close();
-            stmt = null;
-            c.close();
-            c = null;
+            releaseStatement(stmt);
+            releaseConnection(c);
         } catch (Throwable se) {
             tracer.warning("Error executing LURQL query '" + lurqlQuery + "'");
             tracer.warning("Stack trace:\n" + Util.getStackTrace(se));
@@ -194,14 +200,10 @@ public class FarragoLurqlService
             try {
                 if (rs != null) {
                     rs.close();
+                    rs = null;
                 }
-                rs = null;
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (c != null) {
-                    c.close();
-                }
+                releaseStatement(stmt);
+                releaseConnection(c);
             } catch (SQLException se) {
             } finally {
                 stmt = null;

@@ -36,11 +36,9 @@ import org.eigenbase.util.Util;
  * @author Julian Hyde
  * @version $Id$
  */
-public class FarragoMedService
+public class FarragoMedService extends FarragoService
 {
-    private final DataSource dataSource;
     private final Locale locale;
-    private final Logger tracer;
 
     /**
      * Creates the service.
@@ -54,9 +52,17 @@ public class FarragoMedService
         Locale locale,
         Logger tracer)
     {
-        this.dataSource = dataSource;
+        this(dataSource, locale, tracer, false);
+    }
+
+    public FarragoMedService(
+        DataSource dataSource,
+        Locale locale,
+        Logger tracer,
+        boolean reusingConnection)
+    {
+        super(dataSource, tracer, reusingConnection);
         this.locale = locale;
-        this.tracer = tracer;
     }
 
     private SqlBuilder createSqlBuilder()
@@ -240,15 +246,15 @@ public class FarragoMedService
         tracer.fine("Entered getProperties with query of: " + methodName);
         Connection connection = null;
         try {
-            connection = dataSource.getConnection();
-            Statement statement = connection.createStatement();
+            connection = getConnection();
+            Statement statement = getStatement(connection);
             ResultSet resultSet = statement.executeQuery(sql);
             List<DriverPropertyInfo> driverPropertyInfo =
                 new ArrayList<DriverPropertyInfo>();
             assert resultSet.getMetaData().getColumnCount() == 6;
             toDriverProperties(resultSet, driverPropertyInfo);
-            statement.close();
-            connection.close();
+            releaseStatement(statement);
+            releaseConnection(connection);
             return driverPropertyInfo;
         } catch (SQLException exception) {
             tracer.fine(
@@ -257,13 +263,7 @@ public class FarragoMedService
             tracer.fine("Stack trace:\n" + Util.getStackTrace(exception));
             throw exception;
         } finally {
-            try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException exception) {
-                // Tried to close, now we give up
-            }
+            releaseConnection(connection);
         }
     }
 
