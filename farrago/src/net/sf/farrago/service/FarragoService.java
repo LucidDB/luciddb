@@ -75,9 +75,12 @@ public abstract class FarragoService
 
     /**
      * Gets a connection from the service's data source. If the service reuses
-     * connections, the connection is cached.
-     * @return
-     * @throws SQLException
+     * connections, the connection is cached. Connections obtained from this
+     * method should not be closed directly, but instead released by calling
+     * {@link #releaseConnection(Connection)}. That allows either pooled or
+     * unpooled connections to operate correctly.
+     * @return Connection to server
+     * @throws SQLException if connection fails
      */
     protected Connection getConnection() throws SQLException
     {
@@ -87,6 +90,16 @@ public abstract class FarragoService
         return cachedConnection;
     }
 
+    /**
+     * Gets a statement on the indicated connection. Reuses an existing, cached
+     * statement if one is available. Otherwise, creates a new statement.
+     * Statements obtained from this method should not be closed directly, but
+     * instead released by calling {@link #releaseStatement(Statement)}.
+     * @param connection Connection to the server
+     * @return Statement from local cache if available; otherwise, newl-created
+     * statement
+     * @throws SQLException if statement creation fails
+     */
     protected Statement getStatement(Connection connection)
     throws SQLException
     {
@@ -97,6 +110,13 @@ public abstract class FarragoService
         return cachedStatement;
     }
 
+    /**
+     * Releases the indicated connection. If the service is reusing connections,
+     * this is a NOOP, otherwise it closes the connection. You chould call this
+     * method instead of closing the connection as you normally would. This is
+     * the complement to {@link #getConnection()}.
+     * @param connection Connection to the server
+     */
     protected void releaseConnection(Connection connection)
     {
         if (reusingConnection || (connection == null)) {
@@ -110,6 +130,13 @@ public abstract class FarragoService
         }
     }
 
+    /**
+     * Releases the indicated statement. If the service is reusing connections
+     * (and statements), this is a NOOP; otherwise it closes the statement. You
+     * should call this method instead of closing the statement as you would
+     * normally. This is the complement to {@link #getStatement(Connection)}.
+     * @param statement Statement to release
+     */
     protected void releaseStatement(Statement statement)
     {
         if (reusingConnection || (statement == null)) {
