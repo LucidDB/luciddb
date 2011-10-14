@@ -394,6 +394,7 @@
     <pattern name="session.deps">
       <include pattern="namespace.util.deps" />
       <include pattern="fennel.deps" />
+      <include pattern="ddl.gen"/>
       <include pattern="session" />
     </pattern>
 
@@ -846,6 +847,7 @@
       <include pattern="db.deps" />
       <include pattern="fennel.calc.deps" />
       <include pattern="fennel.rel.deps" />
+      <include pattern="ddl.gen.deps"/>
       <include pattern="defimpl" />
     </pattern>
 
