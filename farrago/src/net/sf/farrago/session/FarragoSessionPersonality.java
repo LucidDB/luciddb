@@ -27,6 +27,7 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.ddl.*;
+import net.sf.farrago.ddl.gen.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.util.*;
@@ -410,6 +411,18 @@ public interface FarragoSessionPersonality
      * @return JmiJsonUtility subclass appropriate to the personality
      */
     public JmiJsonUtil newJmiJsonUtil();
+
+    /**
+     * Returns a DdlGenerator object appropriate to the personality's dialect
+     * and model.
+     *
+     * @param sqlDialect SqlDialect for the generated DDL
+     * @param modelView JmiModelView, can be null for single-object generation
+     * @return DdlGenerator instance appropriate to the personality
+     */
+    public DdlGenerator newDdlGenerator(
+        SqlDialect sqlDialect,
+        JmiModelView modelView);
 }
 
 // End FarragoSessionPersonality.java

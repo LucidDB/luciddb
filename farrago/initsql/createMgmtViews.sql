@@ -1545,4 +1545,20 @@ returns table(
 language java parameter style system defined java no sql
 external name 'class net.sf.farrago.syslib.FarragoLurqlUDR.getJSON';
 
+CREATE or replace FUNCTION get_lurql_names(
+  lurql_query varchar(65535))
+returns table(object_name varchar(32767))
+language java parameter style system defined java no sql
+external name 'class net.sf.farrago.syslib.FarragoLurqlUDR.getObjectNames';
+
+CREATE or replace FUNCTION get_object_ddl(
+  catalog_name varchar(1024),
+  schema_name varchar(1024),
+  object_name varchar(1024))
+returns table(
+  chunk_index integer,
+  ddl varchar(32767))
+language java parameter style system defined java no sql
+external name 'class net.sf.farrago.syslib.FarragoLurqlUDR.getObjectDdl';
+
 -- End createMgmtViews.sql

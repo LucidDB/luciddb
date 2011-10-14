@@ -556,6 +556,7 @@ public class FarragoServiceTest extends FarragoTestCase
      */
     public void testLurqlService()
     {
+        // Test object retrieval
         Collection<RefBaseObject> objects =
             getLurqlService().executeLurql(
                 "select *\n"
@@ -569,6 +570,24 @@ public class FarragoServiceTest extends FarragoTestCase
             stringVal += formatRefObj(obj);
         }
         assertEquals("LocalTable:DEPTS\n", stringVal);
+
+        // test retrieving just list of object names
+        List<String> tableNames = Arrays.asList("DEPTS", "EMPS", "TEMPS");
+        List<String> listVal = getLurqlService().getNameList(
+            "select t from class Schema where name='SALES' then (\n"
+            + "  follow destination class Table as t\n"
+            + ");");
+        Collections.sort(listVal);
+        assertEquals(tableNames, listVal);
+
+        // test DDL generation
+        String viewDDL =
+            "SET SCHEMA '\"SALES\"';\n"
+            + "CREATE OR REPLACE VIEW \"EMPSVIEW\" AS\n"
+            + "select empno, name from emps";
+        String ddlVal =
+            getLurqlService().getObjectDdl("LOCALDB", "SALES", "EMPSVIEW");
+        assertEquals(viewDDL, ddlVal);
     }
 }
 

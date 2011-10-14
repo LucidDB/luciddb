@@ -35,6 +35,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.ddl.*;
+import net.sf.farrago.ddl.gen.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fennel.calc.*;
@@ -859,6 +860,13 @@ public class FarragoDefaultSessionPersonality
     public JmiJsonUtil newJmiJsonUtil()
     {
         return FarragoJmiJsonUtil.getInstance();
+    }
+
+    public DdlGenerator newDdlGenerator(
+        SqlDialect sqlDialect,
+        JmiModelView modelView)
+    {
+        return new FarragoDdlGenerator(sqlDialect, modelView);
     }
 
 }

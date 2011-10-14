@@ -41,8 +41,9 @@ import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
 /**
- * @author chard
+ * Farrago-specific implementation of JmiJsonUtil.
  *
+ * @author chard
  */
 public class FarragoJmiJsonUtil
     extends JmiJsonUtil
@@ -170,14 +171,43 @@ public class FarragoJmiJsonUtil
         }
     }
 
+    /**
+     * Constructs a fully-qualified name for the given object and returns it as
+     * a String. This basically duplicates
+     * {@link FarragoCatalogUtil#getQualifiedName(CwmModelElement)}, but
+     * without the overhead of SqlIdentifier and all it brings with it.
+     *
+     * @param element CwmModelElement we want a qualified name for
+     * @return String containing the fully-qualified name of the object
+     */
+    public static String getQualifiedName(CwmModelElement element){
+        List<String> names = new ArrayList<String>(3);
+        names.add(element.getName());
+        for (
+            CwmNamespace ns = element.getNamespace();
+            ns != null;
+            ns = ns.getNamespace())
+        {
+            names.add(ns.getName());
+        }
+        if (names.size() == 1) {    // shortcut for unqualified names
+            return names.get(0);
+        }
+        Collections.reverse(names);
+        StringBuilder qname = new StringBuilder(names.get(0));
+        for (int i = 1; i < names.size(); i++) {
+            qname.append(".").append(names.get(i));
+        }
+        return qname.toString();
+    }
+
     // @see org.eigenbase.jmi.JmiJsonUtil#getObjectKey(javax.jmi.reflect.RefObject)
     @Override
     public String getObjectKey(RefObject object)
     {
         String baseKey = "";
         if (object instanceof CwmModelElement) {
-            baseKey = FarragoCatalogUtil.getQualifiedName(
-                (CwmModelElement) object).toString();
+            baseKey = getQualifiedName((CwmModelElement) object);
         } else if (object instanceof StructuralFeature) {
             StructuralFeature sf = (StructuralFeature) object;
             baseKey = object.refGetValue(sf).toString();
@@ -186,8 +216,7 @@ public class FarragoJmiJsonUtil
             FemElementWithStorageOptions se = fso.getStoredElement();
             if ((se != null) && (se instanceof CwmModelElement)) {
                 CwmModelElement cme = (CwmModelElement) se;
-                baseKey = FarragoCatalogUtil.getQualifiedName(cme)
-                    + "." + fso.getName();
+                baseKey = getQualifiedName(cme) + "." + fso.getName();
             }
             tracer.warning("Generating key for StorageOption with no element");
             baseKey = fso.getName();

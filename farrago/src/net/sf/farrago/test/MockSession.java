@@ -48,6 +48,7 @@ import net.sf.farrago.db.FarragoDbSessionPrivilegeChecker;
 import net.sf.farrago.plugin.FarragoPluginClassLoader;
 import net.sf.farrago.query.*;
 import net.sf.farrago.ddl.DdlHandler;
+import net.sf.farrago.ddl.gen.*;
 import net.sf.farrago.type.FarragoTypeFactoryImpl;
 import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.sql2003.FemAbstractColumnSet;
@@ -639,6 +640,13 @@ public class MockSession
         }
 
         public JmiJsonUtil newJmiJsonUtil()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public DdlGenerator newDdlGenerator(
+            SqlDialect sqlDialect,
+            JmiModelView modelView)
         {
             throw new UnsupportedOperationException();
         }

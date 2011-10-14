@@ -38,7 +38,7 @@ import org.eigenbase.util.*;
 
 /**
  * Base utility class for converting between JMI reference objects and their
- * JSON representation and back. This is loosely meant to corespond to the
+ * JSON representation and back. This is loosely meant to correspond to the
  * class {@link JmiObjUtil}, which performs those functions using XMI as its
  * interchange format.<p>
  *
@@ -127,7 +127,7 @@ public abstract class JmiJsonUtil
      * CwmExpression subclasses.
      *
      * @param bean JsonMetadataBean representing an object mapped from JSON
-     * @param target RefPackage (probably te farrago package) that will contain
+     * @param target RefPackage (probably the farrago package) that will contain
      * the rebuilt JMI reference object
      */
     protected abstract void fixAttributes(
@@ -144,7 +144,7 @@ public abstract class JmiJsonUtil
      */
     public String getObjectKey(RefObject object)
     {
-        tracer.severe("Somehow, we got here. ZZZZZ");
+        tracer.severe("We should never get here.");
         String result =
             object.refGetValue("name").toString()
             .concat(".")
@@ -408,12 +408,23 @@ public abstract class JmiJsonUtil
      * not in the cache, returns null.
      * @param key String containing the object key representing the desired
      * object
-     * @return RefObject coresponding to the object key, if that object has
+     * @return RefObject corresponding to the object key, if that object has
      * already loaded; otherwise, null
      */
     public RefObject getLoadedObject(String key)
     {
         return loadCache.get(key);
+    }
+
+    /**
+     * Removes the specified object from the cache. This ensures that future
+     * checks will not retrieve out-of-date items.
+     * @param key String containing the object key representing the desired
+     * object
+     */
+    public void removeLoadedObject(String key)
+    {
+        loadCache.remove(key);
     }
 
     /**

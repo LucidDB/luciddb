@@ -29,17 +29,22 @@ import java.util.logging.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.ddl.gen.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.jmi.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 import org.netbeans.api.mdr.*;
 import org.netbeans.api.xmi.*;
 
 /**
- * UDR which executes an arbitrary LURQL query and returns results as XMI for
- * remote use.
+ * UDR which executes an arbitrary LURQL query and returns results as XMI or
+ * JSON for remote use. Also provides some related features such as metamodel
+ * loading and shortcuts to query object names and DDL.
  *
  * @author chard
  */
@@ -74,8 +79,8 @@ public abstract class FarragoLurqlUDR
     }
 
     /**
-     * Executes a LURQL query and returns the resulting objcts as an XMI string.
-     * Because XMI is quite verbose, we assume the results are huge, and
+     * Executes a LURQL query and returns the resulting objects as an XMI
+     * string. Because XMI is quite verbose, we assume the results are huge, and
      * therefore return the XMI string in manageable chunks.
      * @param lurql String containing LURQL query
      * @param resultInserter PreparedStatement to receive the XMI output in
@@ -96,6 +101,15 @@ public abstract class FarragoLurqlUDR
         }
     }
 
+    /**
+     * Executes a LURQL query and returns the resulting objects as JSON. Since
+     * the size of the resulting JSON may be quite large, the result is
+     * chunked using {@link StringChunker}.
+     *
+     * @param lurql String containing LURQL query
+     * @param resultInserter PreparedStatement to receive the JSON output in
+     * string chunks
+     */
     public static void getJSON(String lurql, PreparedStatement resultInserter)
     {
         try {
@@ -149,6 +163,76 @@ public abstract class FarragoLurqlUDR
             StringChunker.writeChunks(chunks, resultInserter);
         } catch (Exception e) {
             tracer.warning("Problem getting Metamodel XMI: " + e.getMessage());
+            tracer.warning("Stack trace: " + Util.getStackTrace(e));
+        }
+    }
+
+    /**
+     * Retrieves a set of objects based on a LURQL query, but returns only the
+     * name of the matching objects. This provides a lightweight mechanism for
+     * clients to use to determine whether a set of objects changes.
+     *
+     * @param lurqlQuery String containing LURQL query
+     * @param resultInserter PreparedStatement to receive the list of names
+     * @throws SQLException if anything goes wrong
+     */
+    public static void getObjectNames(
+        String lurqlQuery,
+        PreparedStatement resultInserter) throws SQLException
+    {
+        final Collection<RefObject> results = getObjects(lurqlQuery);
+        for (RefObject refObject : results) {
+            if (refObject instanceof CwmModelElement) {
+                resultInserter.setString(
+                    1,
+                    ((CwmModelElement) refObject).getName());
+                resultInserter.executeUpdate();
+            }
+        }
+    }
+
+    /**
+     * Generates and returns (in chunks) the DDL for the specified object.
+     *
+     * @param catalogName String containing the name of the catalog
+     * @param schemaName String containing the name of the schema
+     * @param name String containing the name of the object
+     * @param resultInserter PreparedStatement to receive the DL chunks
+     */
+    public static void getObjectDdl(
+        String catalogName,
+        String schemaName,
+        String name,
+        PreparedStatement resultInserter)
+    {
+        FarragoRepos farragoRepos = FarragoUdrRuntime.getRepos();
+        CwmModelElement element;
+        Collection<CwmModelElement> catalog =
+            farragoRepos.getCatalog(catalogName).getOwnedElement();
+        if (Util.isNullOrEmpty(schemaName)) {
+            element = FarragoCatalogUtil.getModelElementByName(catalog, name);
+        } else {
+            CwmSchema schema =
+                (CwmSchema) FarragoCatalogUtil.getModelElementByName(
+                    catalog,
+                    schemaName);
+            element =
+                (name == null) ? schema
+                    : FarragoCatalogUtil.getModelElementByName(
+                        schema.getOwnedElement(),
+                        name);
+        }
+        final DdlGenerator ddlGen =
+            FarragoUdrRuntime.getSession().getPersonality().newDdlGenerator(
+                SqlDialect.EIGENBASE,
+                FarragoUdrRuntime.getRepos().getModelView());
+        final GeneratedDdlStmt stmt = new GeneratedDdlStmt();
+        ddlGen.generateCreate(element, stmt);
+        final String[] chunks = StringChunker.slice(stmt.toString());
+        try {
+            StringChunker.writeChunks(chunks, resultInserter);
+        } catch (SQLException e) {
+            tracer.warning("Problem getting object DDL: " + e.getMessage());
             tracer.warning("Stack trace: " + Util.getStackTrace(e));
         }
     }

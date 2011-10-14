@@ -110,26 +110,33 @@ public class FarragoLurqlService extends FarragoService
         return result;
     }
 
-    protected Collection<RefBaseObject> getRemoteObjects(
-        String wrappedLurqlQuery,
-        RefPackage target,
-        InterchangeFormat format)
+    /**
+     * Get a list of repository object names, representing the names of the
+     * objects that result from the specified LURQL query. This is meant for
+     * quick verification of object lists without the overhead of actually
+     * transmitting the objects from the server to the client.
+     *
+     * @param wrappedLurqlQuery String containing the LURQL query wrapped in a
+     * SQL UDR call
+     * @return List of object names (if any) that matched the LURQL query
+     */
+    protected List<String> getRemoteNames(String wrappedLurqlQuery)
     {
-        Connection c = null;
-        Statement stmt = null;
+        List<String> result = new LinkedList<String>();
+        Connection connection = null;
+        Statement statement = null;
         ResultSet rs = null;
-        Collection<RefBaseObject> result = null;
         try {
-            c = getConnection();
-            stmt = getStatement(c);
-            rs = stmt.executeQuery(wrappedLurqlQuery);
-            String interchangeString = StringChunker.readChunks(rs, 2);
-            tracer.fine("Interchange data is:\n" + interchangeString);
-            result = parseInterchange(target, interchangeString, format);
+            connection = getConnection();
+            statement = getStatement(connection);
+            rs = statement.executeQuery(wrappedLurqlQuery);
+            while (rs.next()) {
+                result.add(rs.getString(1));
+            }
             rs.close();
             rs = null;
-            releaseStatement(stmt);
-            releaseConnection(c);
+            releaseStatement(statement);
+            releaseConnection(connection);
         } catch (SQLException e) {
             tracer.warning("Error executing query '" + wrappedLurqlQuery + "'");
             tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
@@ -139,12 +146,53 @@ public class FarragoLurqlService extends FarragoService
                     rs.close();
                     rs = null;
                 }
-                releaseStatement(stmt);
-                releaseConnection(c);
+                releaseStatement(statement);
+                releaseConnection(connection);
             } catch (SQLException se) {
             } finally {
-                stmt = null;
-                c = null;
+                statement = null;
+                connection = null;
+            }
+        }
+        return result;
+    }
+
+    protected Collection<RefBaseObject> getRemoteObjects(
+        String wrappedLurqlQuery,
+        RefPackage target,
+        InterchangeFormat format)
+    {
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet rs = null;
+        Collection<RefBaseObject> result = null;
+        try {
+            connection = getConnection();
+            statement = getStatement(connection);
+            rs = statement.executeQuery(wrappedLurqlQuery);
+            String interchangeString = StringChunker.readChunks(rs, 2);
+            tracer.finer("Interchange data is:\n" + interchangeString);
+            result = parseInterchange(target, interchangeString, format);
+            tracer.fine("Remotely imported " + result.size() + " objects");
+            rs.close();
+            rs = null;
+            releaseStatement(statement);
+            releaseConnection(connection);
+        } catch (SQLException e) {
+            tracer.warning("Error executing query '" + wrappedLurqlQuery + "'");
+            tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                    rs = null;
+                }
+                releaseStatement(statement);
+                releaseConnection(connection);
+            } catch (SQLException se) {
+            } finally {
+                statement = null;
+                connection = null;
             }
         }
         return result;
@@ -177,37 +225,76 @@ public class FarragoLurqlService extends FarragoService
             format = InterchangeFormat.XMI;
         }
         String wrappedQuery = constructQuery(lurqlQuery, format);
-        Connection c = null;
-        Statement stmt = null;
+        return getRemoteObjects(wrappedQuery, target, format);
+    }
+
+    /**
+     * Returns just the names of the objects that match the specified LURQL
+     * query. This is meant to be a lightweight alternative to transferring the
+     * set of objects and iterating it on the client for cases when you just
+     * want the names of the objects.
+     *
+     * @param lurqlQuery String containing LURQL query
+     * @return List of String objects containing only the names of the objects
+     * matching the LURQL query
+     */
+    public List<String> getNameList(String lurqlQuery)
+    {
+        String wrappedQuery = wrapNameQuery(lurqlQuery);
+        return getRemoteNames(wrappedQuery);
+    }
+
+    /**
+     * Return the SQL declaration (DDL) for the specified object. This can be
+     * used by clients to tell whether the object definition has changed.
+     *
+     * @param catalogName String containing the name of the catalog containing
+     * the object (e.g., &quot;LOCALDB&quot;)
+     * @param schemaName String containing the name of the schema containing
+     * the object
+     * @param objectName String containing the name of the object
+     * @return String containing DDL representing the object or null if the
+     * object does not exist
+     */
+    public String getObjectDdl(
+        String catalogName,
+        String schemaName,
+        String objectName)
+    {
+        String result = null;
+        final SqlBuilder sqlBuilder = new SqlBuilder(SqlDialect.EIGENBASE);
+        sqlBuilder.append("SELECT * FROM TABLE(SYS_BOOT.MGMT.GET_OBJECT_DDL(");
+        sqlBuilder.literal(catalogName).append(",")
+            .literal(schemaName).append(",")
+            .literal(objectName).append("))");
+        final String query = sqlBuilder.getSql();
+        Connection connection = null;
+        Statement statement = null;
         ResultSet rs = null;
-        Collection<RefBaseObject> result = null;
         try {
-            c = getConnection();
-            stmt = getStatement(c);
-            rs = stmt.executeQuery(wrappedQuery);
-            String xmiString = StringChunker.readChunks(rs, 2);
-            tracer.finer("Interchange data is:\n" + xmiString);
-            result = parseInterchange(target, xmiString, format);
-            tracer.fine("Remotely imported " + result.size() + " objects");
+            connection = getConnection();
+            statement = getStatement(connection);
+            rs = statement.executeQuery(query);
+            result = StringChunker.readChunks(rs, 2);
             rs.close();
             rs = null;
-            releaseStatement(stmt);
-            releaseConnection(c);
-        } catch (Throwable se) {
-            tracer.warning("Error executing LURQL query '" + lurqlQuery + "'");
-            tracer.warning("Stack trace:\n" + Util.getStackTrace(se));
+            releaseStatement(statement);
+            releaseConnection(connection);
+        } catch (SQLException e) {
+            tracer.warning("Error executing query '" + query + "'");
+            tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
         } finally {
             try {
                 if (rs != null) {
                     rs.close();
                     rs = null;
                 }
-                releaseStatement(stmt);
-                releaseConnection(c);
+                releaseStatement(statement);
+                releaseConnection(connection);
             } catch (SQLException se) {
             } finally {
-                stmt = null;
-                c = null;
+                statement = null;
+                connection = null;
             }
         }
         return result;
@@ -232,6 +319,19 @@ public class FarragoLurqlService extends FarragoService
         return sqlBuilder.getSql();
     }
 
+    private String wrapNameQuery(String lurqlQuery)
+    {
+        final SqlBuilder sqlBuilder = new SqlBuilder(SqlDialect.EIGENBASE);
+        sqlBuilder.append("SELECT * FROM TABLE(SYS_BOOT.MGMT.GET_LURQL_NAMES(");
+        sqlBuilder.literal(lurqlQuery.replace('\n', ' ')).append("))");
+        return sqlBuilder.getSql();
+    }
+
+    /**
+     * Loads the Farrago metamodel into he specified package.
+     * @param extent RefPackage to load the metamodel into (most likely the
+     * farrago package)
+     */
     public void getMetamodel(RefPackage extent)
     {
         final SqlBuilder query = new SqlBuilder(SqlDialect.EIGENBASE);
@@ -244,8 +344,6 @@ public class FarragoLurqlService extends FarragoService
     /**
      * Enumeration for the formats supported for exchanging object descriptions
      * from the server to a client.
-     * @author chard
-     *
      */
     public enum InterchangeFormat {
         XMI, JSON
