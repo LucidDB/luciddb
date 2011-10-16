@@ -549,6 +549,11 @@ public class FarragoServiceTest extends FarragoTestCase
             + "\n";
     }
 
+    protected List<String> getTableNames()
+    {
+        return Arrays.asList("DEPTS", "EMPS", "TEMPS");
+    }
+
     /**
      * Tests LURQL query service. Note this does not need to test LURQL itself
      * comprehensively; that happens in {@link LurqlQueryTest}. We just need to
@@ -572,7 +577,7 @@ public class FarragoServiceTest extends FarragoTestCase
         assertEquals("LocalTable:DEPTS\n", stringVal);
 
         // test retrieving just list of object names
-        List<String> tableNames = Arrays.asList("DEPTS", "EMPS", "TEMPS");
+        List<String> tableNames = getTableNames();
         List<String> listVal = getLurqlService().getNameList(
             "select t from class Schema where name='SALES' then (\n"
             + "  follow destination class Table as t\n"
