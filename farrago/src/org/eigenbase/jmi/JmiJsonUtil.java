@@ -537,6 +537,21 @@ public abstract class JmiJsonUtil
         }
     }
 
+    /**
+     * Determines what class of LURQL object to select for in order to find
+     * CWM objects of a given type. For example, if the element passed is a
+     * FemLocalView, the LURQL type is View. This is useful for reloading
+     * objects.<p>
+     * This routine only works for CWM catalogs and the objects they directly
+     * contain (schemas, data servers, and data wrappers) and top-level objects
+     * within schemas (tables, views, routines, and foreign tables). Any other
+     * type of element will return null.
+     *
+     * @param element RefObject of the type to search for
+     * @return String containing the name of the LURQL type
+     */
+    public abstract String getLurqlClass(RefObject element);
+
 }
 
 // End JmiJsonUtil.java

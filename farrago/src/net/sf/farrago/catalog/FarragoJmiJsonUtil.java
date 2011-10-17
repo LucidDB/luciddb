@@ -527,6 +527,30 @@ public class FarragoJmiJsonUtil
         }
     }
 
+    @Override
+    public String getLurqlClass(RefObject element)
+    {
+        String result = null;
+        if (element instanceof CwmCatalog) {
+            result = "Catalog";
+        } else if (element instanceof CwmSchema) {
+            result = "Schema";
+        } else if (element instanceof FemDataServer) {
+            result = "DataServer";
+        } else if (element instanceof FemDataWrapper) {
+            result = "DataWrapper";
+        } else if (element instanceof FemLocalTable) {
+            result = "Table";
+        } else if (element instanceof FemForeignTable) {
+            result = "ForeignTable";
+        } else if (element instanceof FemLocalView) {
+            result = "View";
+        } else if (element instanceof FemRoutine) {
+            result = "Routine";
+        }
+        return result;
+    }
+
 }
 
 // End FarragoJmiJsonUtil.java
