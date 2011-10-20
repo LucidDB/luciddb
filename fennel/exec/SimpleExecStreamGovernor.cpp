@@ -274,7 +274,9 @@ void SimpleExecStreamGovernor::requestResources(ExecStreamGraph &graph)
 
     FENNEL_TRACE(
         TRACE_FINE,
-        resourcesAvailable.nCachePages
+        "assigned " << pQuantity->nCachePages
+        << " cache pages for graph " << &graph
+        << resourcesAvailable.nCachePages
         << " cache pages remaining for assignment");
 }
 
@@ -363,7 +365,8 @@ void SimpleExecStreamGovernor::returnResources(ExecStreamGraph &graph)
     resourcesAvailable.nCachePages += pQuantity->nCachePages;
     FENNEL_TRACE(
         TRACE_FINE,
-        "Returned " << pQuantity->nCachePages << " cache pages. "
+        "Graph " << &graph << " returned "
+        << pQuantity->nCachePages << " cache pages. "
         << resourcesAvailable.nCachePages
         << " cache pages now available for assignment");
 

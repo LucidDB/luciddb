@@ -40,11 +40,15 @@ MockProducerExecStream::MockProducerExecStream()
     echoTuples = 0;
 }
 
+SharedMockProducerExecStreamGenerator MockProducerExecStream::getGenerator()
+{
+    return pGenerator;
+}
+
 void MockProducerExecStream::prepare(MockProducerExecStreamParams const &params)
 {
     SingleOutputExecStream::prepare(params);
     pGenerator = params.pGenerator;
-    pBatchGenerator = params.pBatchGenerator;
     for (uint i = 0; i < params.outputTupleDesc.size(); i++) {
         assert(!params.outputTupleDesc[i].isNullable);
         StandardTypeDescriptorOrdinal ordinal =
@@ -78,55 +82,68 @@ void MockProducerExecStream::open(bool restart)
     }
 }
 
+ExecStreamResult MockProducerExecStream::innerExecute(
+    ExecStreamQuantum const &quantum)
+{
+    TuplePrinter tuplePrinter;
+    uint nTuples = 0;
+    boost::scoped_array<int64_t> values(new int64_t[outputData.size()]);
+    for (int col = 0; col < outputData.size(); ++col) {
+        outputData[col].pData = reinterpret_cast<PConstBuffer>(
+            &(values.get()[col]));
+    }
+
+    while (nRowsProduced < nRowsMax) {
+        if (pGenerator->endsBatch(nRowsProduced)) {
+            return onEndOfBatch(nRowsProduced);
+        }
+        if (pOutAccessor->getProductionAvailable() < cbTuple) {
+            return EXECRC_BUF_OVERFLOW;
+        }
+
+        for (int col = 0; col < outputData.size(); ++col) {
+            values.get()[col] =
+                pGenerator->generateValue(nRowsProduced, col);
+        }
+        bool rc = pOutAccessor->produceTuple(outputData);
+        assert(rc);
+
+        if (echoTuples) {
+            tuplePrinter.print(
+                *echoTuples,
+                pOutAccessor->getTupleDesc(), outputData);
+        }
+        if (saveTuples) {
+            std::ostringstream oss;
+            tuplePrinter.print(
+                oss, pOutAccessor->getTupleDesc(), outputData);
+            savedTuples.push_back(oss.str());
+        }
+        ++nRowsProduced;
+        if (++nTuples >= quantum.nTuplesMax) {
+            return EXECRC_QUANTUM_EXPIRED;
+        }
+    }
+    pOutAccessor->markEOS();
+    return EXECRC_EOS;
+}
+
+ExecStreamResult MockProducerExecStream::onEndOfBatch(uint)
+{
+    return EXECRC_QUANTUM_EXPIRED;
+}
+
 ExecStreamResult MockProducerExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     if (pGenerator) {
-        TuplePrinter tuplePrinter;
-        uint nTuples = 0;
-        boost::scoped_array<int64_t> values(new int64_t[outputData.size()]);
-        for (int col = 0; col < outputData.size(); ++col) {
-            outputData[col].pData = reinterpret_cast<PConstBuffer>(
-                &(values.get()[col]));
-        }
-        while (nRowsProduced < nRowsMax) {
-            if (pOutAccessor->getProductionAvailable() < cbTuple) {
-                return EXECRC_BUF_OVERFLOW;
-            }
-
-            if (pBatchGenerator) {
-                int64_t newBatch = pBatchGenerator->next();
-                if (newBatch == 0) {
-                    return EXECRC_QUANTUM_EXPIRED;
-                }
-            }
-
-            for (int col = 0; col < outputData.size(); ++col) {
-                values.get()[col] =
-                    pGenerator->generateValue(nRowsProduced, col);
-            }
-
-            bool rc = pOutAccessor->produceTuple(outputData);
-            assert(rc);
-            ++nTuples;
-            ++nRowsProduced;
-            if (echoTuples) {
-                tuplePrinter.print(
-                    *echoTuples,
-                    pOutAccessor->getTupleDesc(), outputData);
-            }
-            if (saveTuples) {
-                std::ostringstream oss;
-                tuplePrinter.print(
-                    oss, pOutAccessor->getTupleDesc(), outputData);
-                savedTuples.push_back(oss.str());
-            }
-            if (nTuples >= quantum.nTuplesMax) {
-                return EXECRC_QUANTUM_EXPIRED;
-            }
-        }
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
+        uint64_t oldRowCount = nRowsProduced;
+        ExecStreamResult rc = innerExecute(quantum);
+        FENNEL_TRACE(
+            TRACE_FINE,
+            "wrote " << (nRowsProduced - oldRowCount)
+            << " rows, total rows written is " << nRowsProduced);
+        return rc;
     }
 
     // NOTE: implementation below is kept lean and mean
@@ -145,6 +162,9 @@ ExecStreamResult MockProducerExecStream::execute(
         memset(pBuffer, 0, cbBatch);
         pOutAccessor->produceData(pBuffer + cbBatch);
         pOutAccessor->requestConsumption();
+        FENNEL_TRACE(
+            TRACE_FINE, "wrote " << nRows
+            << " rows, total rows written is " << nRowsProduced);
     }
     if (nRowsProduced == nRowsMax) {
         pOutAccessor->markEOS();
@@ -154,16 +174,53 @@ ExecStreamResult MockProducerExecStream::execute(
     }
 }
 
+uint64_t MockProducerExecStream::getGeneratedRowCount()
+{
+    return nRowsProduced;
+}
+
 uint64_t MockProducerExecStream::getProducedRowCount()
 {
     uint waitingRowCount = pOutAccessor->getConsumptionTuplesAvailable();
     return nRowsProduced - waitingRowCount;
 }
 
+MockProducerExecStreamGenerator::MockProducerExecStreamGenerator()
+{
+}
+
 MockProducerExecStreamGenerator::~MockProducerExecStreamGenerator()
 {
 }
 
-FENNEL_END_CPPFILE("$Id$");
+void MockProducerExecStreamGenerator::setEndsBatchPredicate(
+    SharedRowPredicate f)
+{
+    endsBatchPredicate = f;
+}
 
+bool MockProducerExecStreamGenerator::endsBatch(uint iRow)
+{
+    if (endsBatchPredicate) {
+        return (*endsBatchPredicate)(iRow);
+    } else {
+        return false;
+    }
+}
+
+MockProducerExecStreamGenerator::RowPredicate::RowPredicate(bool val)
+    : defaultValue(val)
+{
+}
+
+MockProducerExecStreamGenerator::RowPredicate::~RowPredicate()
+{
+}
+
+bool MockProducerExecStreamGenerator::RowPredicate::operator()(uint)
+{
+    return defaultValue;
+}
+
+FENNEL_END_CPPFILE("$Id$");
 // End MockProducerExecStream.cpp

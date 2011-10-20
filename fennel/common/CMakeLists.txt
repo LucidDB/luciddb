@@ -21,6 +21,7 @@ ByteStream.cpp
 ClosableObject.cpp
 ConfigMap.cpp
 DataVisitor.cpp
+DebugUtil.cpp
 FennelExcn.cpp
 FennelResource.cpp
 FileSystem.cpp

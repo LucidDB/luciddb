@@ -104,6 +104,13 @@ protected:
     bool traceFile;
 
     /**
+     * Test timeout: max time (seconds) to allow a test case to run.
+     * 0 means no timeout.
+     * Set from command line, so applies to all tests in the suite.
+     */
+    int testTimeout;
+
+    /**
      * Run all test cases, including the extra tests.
      * (static, since set by readParams())
      */
@@ -133,7 +140,7 @@ protected:
     public:
         void addTest(std::string name, boost::unit_test::test_unit *tu);
         boost::unit_test::test_unit* findTest(std::string name) const;
-        void addAllToTestSuite(TestSuite *) const;
+        void addAllToTestSuite(TestBase *) const;
     };
 
     TestCaseGroup defaultTests;
@@ -146,6 +153,7 @@ public:
     static ParamName paramTraceLevel;
     static ParamName paramStatsFileName;
     static ParamName paramTraceStdout;
+    static ParamName paramTestTimeout;
     static ParamName paramDegreeOfParallelism;
 
     /**
@@ -159,6 +167,7 @@ public:
 
     // helpers for FENNEL_UNIT_TEST_SUITE etc. below
     static void readParams(int argc, char **argv);
+    void addTestToSuite(boost::unit_test::test_unit*);
     TestSuite *releaseTestSuite();
     void beforeTestCase(std::string testCaseName);
     void afterTestCase(std::string testCaseName);

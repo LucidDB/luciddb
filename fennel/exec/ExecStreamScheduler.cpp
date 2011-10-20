@@ -38,9 +38,8 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 ExecStreamScheduler::ExecStreamScheduler(
     SharedTraceTarget pTraceTargetInit,
     std::string nameInit)
-    : TraceSource(pTraceTargetInit, nameInit)
+    : ExecStreamExecutor(pTraceTargetInit, nameInit)
 {
-    tracingFine = isTracingLevel(TRACE_FINE);
 }
 
 ExecStreamScheduler::~ExecStreamScheduler()
@@ -104,91 +103,9 @@ void ExecStreamScheduler::removeGraph(SharedExecStreamGraph pGraph)
     pGraph->pScheduler = NULL;
 }
 
-// Summary of per-stream trace levels:
-// TRACE_FINE: result of execution
-// TRACE_FINER: buffer states before and after, output after execution.
-// TRACE_FINEST: both input and output before and after each execution
-
-void ExecStreamScheduler::tracePreExecution(
-    ExecStream &stream,
-    ExecStreamQuantum const &quantum)
+void ExecStreamScheduler::restartStream(ExecStream &s)
 {
-    FENNEL_TRACE(
-        TRACE_FINE,
-        "executing " << stream.getStreamId() << ' ' << stream.getName());
-    if (!isMAXU(quantum.nTuplesMax)) {
-        FENNEL_TRACE(
-            TRACE_FINE,
-            "nTuplesMax = " << quantum.nTuplesMax);
-    }
-
-    traceStreamBuffers(stream, TRACE_FINEST, TRACE_FINEST);
-}
-
-void ExecStreamScheduler::tracePostExecution(
-    ExecStream &stream,
-    ExecStreamResult rc)
-{
-    FENNEL_TRACE(
-        TRACE_FINE,
-        "executed " << stream.getStreamId() << ' ' << stream.getName()
-        << " with result " << ExecStreamResult_names[rc]);
-
-    traceStreamBuffers(stream, TRACE_FINEST, TRACE_FINER);
-}
-
-void ExecStreamScheduler::traceStreamBuffers(
-    ExecStream &stream,
-    TraceLevel inputTupleTraceLevel,
-    TraceLevel outputTupleTraceLevel)
-{
-    ExecStreamGraphImpl &graphImpl =
-        dynamic_cast<ExecStreamGraphImpl&>(stream.getGraph());
-    ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
-
-    ExecStreamGraphImpl::InEdgeIterPair inEdges =
-        boost::in_edges(stream.getStreamId(), graphRep);
-    for (uint i = 0; inEdges.first != inEdges.second;
-         ++(inEdges.first),  ++i)
-    {
-        ExecStreamGraphImpl::Edge edge = *(inEdges.first);
-        ExecStreamBufAccessor &bufAccessor =
-            graphImpl.getBufAccessorFromEdge(edge);
-        FENNEL_TRACE(
-            TRACE_FINER,
-            "input buffer " << i << ":  "
-            << ExecStreamBufState_names[bufAccessor.getState()]
-            << (bufAccessor.hasPendingEOS() ? ", EOS pending" : "")
-            << ",  consumption available = "
-            << bufAccessor.getConsumptionAvailable());
-        if (stream.isTracingLevel(inputTupleTraceLevel)) {
-            traceStreamBufferContents(
-                stream, bufAccessor, inputTupleTraceLevel);
-        }
-    }
-
-    ExecStreamGraphImpl::OutEdgeIterPair outEdges =
-        boost::out_edges(stream.getStreamId(), graphRep);
-    for (uint i = 0; outEdges.first != outEdges.second;
-         ++(outEdges.first),  ++i)
-    {
-        ExecStreamGraphImpl::Edge edge = *(outEdges.first);
-        ExecStreamBufAccessor &bufAccessor =
-            graphImpl.getBufAccessorFromEdge(edge);
-        FENNEL_TRACE(
-            TRACE_FINER,
-            "output buffer " << i << ":  "
-            << ExecStreamBufState_names[bufAccessor.getState()]
-            << (bufAccessor.hasPendingEOS() ? ", EOS pending" : "")
-            << ",  consumption available = "
-            << bufAccessor.getConsumptionAvailable()
-            << ",  production available = "
-            << bufAccessor.getProductionAvailable());
-        if (stream.isTracingLevel(outputTupleTraceLevel)) {
-            traceStreamBufferContents(
-                stream, bufAccessor, outputTupleTraceLevel);
-        }
-    }
+    s.open(true);                       // by default, just re-open the target
 }
 
 // An abstract functor applied to a const row in a const stream buffer.

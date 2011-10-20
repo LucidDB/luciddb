@@ -27,6 +27,7 @@
 #include "fennel/common/FennelResource.h"
 #include "fennel/common/ConfigMap.h"
 #include "fennel/common/Backtrace.h"
+#include "fennel/common/DebugUtil.h"
 #include "fennel/tuple/StoredTypeDescriptor.h"
 
 #ifdef __MSVC__
@@ -95,14 +96,6 @@ std::ofstream JniUtil::handleCountTraceStream;
 
 JavaThreadTracker JniUtil::threadTracker;
 
-
-#ifndef __MSVC__
-static void debugger_signalHandler(int signum)
-{
-    // do nothing
-}
-#endif
-
 JniUtilParams::JniUtilParams()
 {
     jniHandleTraceFile = "";
@@ -116,43 +109,11 @@ void JniUtilParams::readConfig(ConfigMap const &configMap)
 void JniUtil::initDebug(char const *envVarName)
 {
     char *pDebug = getenv(envVarName);
-    if (pDebug && (atoi(pDebug) >= 1)) {
-        char pidstr[32];
-        snprintf(pidstr, 32, "%d", getpid());
-        std::cout << "Waiting for debugger; pid=" << pidstr << std::endl;
-        std::cout.flush();
-#ifdef __MSVC__
-        // A "cont" in gdb will wake this sleep up immediately, which
-        // is disturbing but useful.
-        _sleep(600000);
-#else
-        // On older versions of Linux, a "cont" in gdb will wake this
-        // sleep up immediately, which is disturbing but useful.
-        // On newer versions, the continue command resumes
-        // the sleep().  So, if $envVarName > 1, wait for SIGHUP.
-        // Use the "signal 1" command to wake the pause up.
-        if (atoi(pDebug) == 1) {
-            sleep(60000);
-        } else {
-            struct sigaction act;
-            struct sigaction oldact;
-
-            act.sa_handler = debugger_signalHandler;
-            sigemptyset(&act.sa_mask);
-            act.sa_flags = 0;
-
-            if (!sigaction(SIGHUP, &act, &oldact)) {
-                // Signal handler installed properly.  Wait for signal.
-                pause();
-
-                // Restore the old signal handler.
-                sigaction(SIGHUP, &oldact, NULL);
-            } else {
-                // Fall back on sleeping.
-                sleep(60000);
-            }
+    if (pDebug) {
+        int version = atoi(pDebug);
+        if (version > 0) {
+            DebugUtil::waitForDebugger(version > 1);
         }
-#endif
     }
 }
 

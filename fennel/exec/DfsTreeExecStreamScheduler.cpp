@@ -175,6 +175,7 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
             break;
         case EXECRC_QUANTUM_EXPIRED:
             break;
+        case EXECRC_NIL:
         default:
             permAssert(false);
         }

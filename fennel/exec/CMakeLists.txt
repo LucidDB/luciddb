@@ -22,6 +22,7 @@ ExecStream.cpp
 ExecStreamGovernor.cpp
 ExecStreamGraph.cpp
 ExecStreamGraphEmbryo.cpp
+ExecStreamExecutor.cpp
 ExecStreamScheduler.cpp
 MergeExecStream.cpp
 MockConsumerExecStream.cpp

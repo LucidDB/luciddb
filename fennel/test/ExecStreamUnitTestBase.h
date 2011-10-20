@@ -26,6 +26,7 @@
 
 #include "fennel/test/ExecStreamTestBase.h"
 #include "fennel/exec/MockProducerExecStream.h"
+#include "fennel/exec/MockConsumerExecStream.h"
 #include "fennel/test/ExecStreamGenerator.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -40,56 +41,73 @@ FENNEL_BEGIN_NAMESPACE
  * @version $Id$
  */
 class FENNEL_TEST_EXPORT ExecStreamUnitTestBase
-    : public ExecStreamTestBase
+    : public virtual ExecStreamTestBase
 {
+public:
+;
 protected:
     SharedExecStreamGraph pGraph;
     SharedExecStreamGraphEmbryo pGraphEmbryo;
 
+private:
+    /**
+     * Completes the construction of the stream graph: appends a final sink
+     * buffer, and prepares the graph.
+     * @param final the last node in the incomplete graph.
+     * @return the last node in the completed graph.
+     */
+    ExecStream& completeGraph(ExecStream& final);
+
+protected:
 
     /**
-     * Defines and prepares a graph consisting of one source stream.
+     * Defines and constructs a graph consisting of one source stream. Despite
+     * the name, does not prepare the graph, so that subclasses can more easily
+     * extend the graph.
      *
      * @param sourceStreamEmbryo embryonic source stream which produces tuples
      *
-     * @return output buffer stream
+     * @return final node in stream graph
      */
     SharedExecStream prepareSourceGraph(
         ExecStreamEmbryo &sourceStreamEmbryo);
 
     /**
-     * Defines and prepares a graph consisting of one source stream
-     * and one transform stream.
+     * Defines and constructs a graph consisting of one source stream and one
+     * transform stream. Does not prepare the graph, so that subclasses can more
+     * easily extend the graph.
      *
      * @param sourceStreamEmbryo embryonic source stream which produces tuples
      *
      * @param transformStreamEmbryo embryonic transform stream which processes
      * tuples produced by sourceStreamEmbryo
      *
-     * @return output buffer stream
+     * @return final node in stream graph
      */
     SharedExecStream prepareTransformGraph(
         ExecStreamEmbryo &sourceStreamEmbryo,
         ExecStreamEmbryo &transformStreamEmbryo);
 
     /**
-     * Defines and prepares a graph consisting of one source stream
-     * and one or multiple transform streams.
+     * Defines and constructs a graph consisting of one source stream and one or
+     * multiple transform streams. Does not prepare the graph, so that
+     * subclasses can more easily extend the graph.
      *
      * @param sourceStreamEmbryo embryonic source stream which produces tuples
      *
      * @param transforms embryonic transform streams which process
      * tuples produced by sourceStreamEmbryo or a child stream
      *
-     * @return output buffer stream
+     * @return final node in stream graph
      */
     SharedExecStream prepareTransformGraph(
         ExecStreamEmbryo &sourceStreamEmbryo,
         std::vector<ExecStreamEmbryo> &transforms);
 
     /**
-     * Defines and prepares a graph consisting of two source streams
-     * and one confluence stream.
+     * Defines and constructs a graph consisting of two source streams and one
+     * confluence stream. Does not prepare the graph, so that subclasses can
+     * more easily extend the graph.
      *
      * @param sourceStreamEmbryo1 embryonic source stream which produces tuples
      *
@@ -98,16 +116,18 @@ protected:
      * @param confluenceStreamEmbryo embryonic confluence stream which processes
      * tuples produced by the sourceStreamEmbryos
      *
-     * @return output buffer stream
+     * @return final node in stream graph
      */
     SharedExecStream prepareConfluenceGraph(
         ExecStreamEmbryo &sourceStreamEmbryo1,
         ExecStreamEmbryo &sourceStreamEmbryo2,
         ExecStreamEmbryo &confluenceStreamEmbryo);
 
+
     /**
-     * Defines and prepares a graph consisting of two source streams,
-     * one confluence stream, and one transform stream.
+     * Defines and constructs a graph consisting of two source streams, one
+     * confluence stream, and one transform stream. Does not prepare the graph,
+     * so that subclasses can more easily extend the graph.
      *
      * @param sourceStreamEmbryo1 embryonic source stream which produces tuples
      *
@@ -119,7 +139,7 @@ protected:
      * @param transformStreamEmbryo embryonic transform streams which process
      * tuples produced by a child stream
      *
-     * @return output buffer stream
+     * @return final node in stream graph
      */
     SharedExecStream prepareConfluenceTransformGraph(
         ExecStreamEmbryo &sourceStreamEmbryo1,
@@ -128,8 +148,9 @@ protected:
         ExecStreamEmbryo &transformStreamEmbryo);
 
     /**
-     * Defines and prepares a graph consisting of a list of source streams
-     * and one confluence stream.
+     * Defines and constructs a graph consisting of a list of source streams and
+     * one confluence stream. Does not prepare the graph, so that subclasses can
+     * more easily extend the graph.
      *
      * @param sourceStreamEmbryos list of embryonic source streams that
      * produce tuples
@@ -137,15 +158,17 @@ protected:
      * @param confluenceStreamEmbryo embryonic confluence stream which processes
      * tuples produced by the sourceStreamEmbryos
      *
-     * @return output buffer stream
+     * @return final node in stream graph
      */
     SharedExecStream prepareConfluenceGraph(
         std::vector<ExecStreamEmbryo> &sourceStreamEmbryos,
         ExecStreamEmbryo &confluenceStreamEmbryo);
 
     /**
-     * Defines and prepares a graph consisting of one or more source streams
-     * and one confluence stream.  Each source stream can be a list of streams.
+     * Defines and constructs a graph consisting of one or more source streams
+     * and one confluence stream. Each source stream can be a list of streams.
+     * Does not prepare the graph, so that subclasses can more easily extend the
+     * graph.
      *
      * @param sourceStreamEmbryosList list of embryonic source streams which
      * produce tuples
@@ -153,16 +176,33 @@ protected:
      * @param confluenceStreamEmbryo embryonic confluence stream which processes
      * tuples produced by the source streams
      *
-     * @return output buffer stream
+     * @return final node in stream graph
      */
     SharedExecStream prepareConfluenceGraph(
         std::vector<std::vector<ExecStreamEmbryo> > &sourceStreamEmbryosList,
         ExecStreamEmbryo &confluenceStreamEmbryo);
 
     /**
-     * Defines and prepares a graph consisting of a source, a splitter, and one
-     * or more parallel transform streams which flow together into a
-     * confluence stream.
+     * Defines and constructs a graph consisting of one or more sources, a
+     * confluence, and a list of transforms. Each source stream can be a list of
+     * streams. Does not prepare the graph, so that subclasses can more easily
+     * extend the graph.
+     *
+     * @param sources list of embryonic source streams which  produce tuples
+     * @param confluence embryonic confluence stream
+     * @param transforms list of embryonic transformer streams
+     * @return final node in stream graph
+     */
+    SharedExecStream prepareConfluenceTransformGraph(
+        std::vector<std::vector<ExecStreamEmbryo> > &sources,
+        ExecStreamEmbryo &confluence,
+        std::vector<ExecStreamEmbryo> &transforms);
+
+    /**
+     * Defines and constructs a graph consisting of a source, a splitter, and
+     * one or more parallel transform streams which flow together into a
+     * confluence stream. Does not prepare the graph, so that subclasses can
+     * more easily extend the graph.
      *
      * @param srcStreamEmbryo embryonic source stream which produces tuples
      *
@@ -175,26 +215,23 @@ protected:
      * @param destStreamEmbryo embryonic confluence stream which processes
      * tuples produced by the interStreamEmbryos
      *
-     * @param createSink if true (the default), creates a final output sink
-     * in the stream graph
-     *
      * @param saveSrc if true (the default), save the source in the stream
      * graph; if false, the save has already been done
      *
-     * @return output buffer stream or null stream if createSink is false
+     * @return final node in stream graph
      */
     SharedExecStream prepareDAG(
         ExecStreamEmbryo &srcStreamEmbryo,
         ExecStreamEmbryo &splitterStreamEmbryo,
         std::vector<ExecStreamEmbryo> &interStreamEmbryos,
         ExecStreamEmbryo &destStreamEmbryo,
-        bool createSink = true,
         bool saveSrc = true);
 
     /**
-     * Defines and prepares a graph consisting of a source, a splitter, and one
-     * or more parallel transform streams which flow together into a
-     * confluence stream.
+     * Defines and constructs a graph consisting of a source, a splitter, and
+     * one or more parallel transform streams which flow together into a
+     * confluence stream. Does not prepare the graph, so that subclasses can
+     * more easily extend the graph.
      *
      * @param srcStreamEmbryo embryonic source stream which produces tuples
      *
@@ -207,35 +244,46 @@ protected:
      * @param destStreamEmbryo embryonic confluence stream which processes
      * tuples produced by the interStreamEmbryos
      *
-     * @param createSink if true (the default), creates a final output sink
-     * in the stream graph
-     *
      * @param saveSrc if true (the default), save the source in the stream
      * graph; if false, the save has already been done
      *
-     * @return output buffer stream or null stream if createSink is false
+     * @return final node in stream graph
      */
     SharedExecStream prepareDAG(
         ExecStreamEmbryo &srcStreamEmbryo,
         ExecStreamEmbryo &splitterStreamEmbryo,
         std::vector<std::vector<ExecStreamEmbryo> > &interStreamEmbryosList,
         ExecStreamEmbryo &destStreamEmbryo,
-        bool createSink = true,
         bool saveSrc = true);
 
+
     /**
-     * Executes the prepared stream graph and verifies that its output
-     * matches that produced by a value generator.
+     * Completes the construction of the stream graph, executes it, and verifies
+     * that its output matches that produced by a value generator.
      *
      * @param stream output stream from which to read
-     *
      * @param nRowsExpected number of rows expected
-     *
-     * @param verifier generator for expected values
-     *
+     * @param checker functor that checks each output row
      * @param stopEarly if true, stop once nRowsExpected have been
      * fetched, even if more rows are available; this can be used
      * for simulating the cleanup effect of an error in the middle of execution
+     */
+    virtual void verifyOutput(
+        ExecStream &stream,
+        uint nRowsExpected,
+        MockConsumerExecStreamTupleChecker& checker,
+        bool stopEarly = false);
+
+
+    /**
+     * Completes the construction of the stream graph, executes it, and verifies
+     * that its output matches that produced by a value generator.
+     *
+     * @param stream output stream from which to read
+     * @param nRowsExpected number of rows expected
+     * @param verifier generator for expected values
+     * @param stopEarly if true, stop once nRowsExpected have been
+     * fetched, even if more rows are available
      */
     void verifyOutput(
         ExecStream &stream,
@@ -244,8 +292,21 @@ protected:
         bool stopEarly = false);
 
     /**
-     * Executes the prepared stream graph and verifies that all output tuples
-     * matche an expected and given one
+     * Completes the construction of the stream graph, executes it, and verifies
+     * that its output matches that produced by a string generator.
+     *
+     * @param stream output stream from which to read
+     * @param nRowsExpected number of rows expected
+     * @param expected the expected rows (as strings).
+     */
+    void verifyStringOutput(
+        ExecStream &stream,
+        uint nRowsExpected,
+        const std::vector<std::string>& expected);
+
+    /**
+     * Completes the construction of the stream graph, executes it, and verifies
+     * that all output tuples matche an expected and given one
      *
      * @param stream output stream from which to read
      *
@@ -259,8 +320,8 @@ protected:
         uint nRowsExpected);
 
     /**
-     * Executes the prepared stream graph and verifies the resultant tuples
-     * against a set of tuples supplied in an input buffer.
+     * Completes the construction of the stream graph, executes it, and verifies
+     * the resultant tuples against a set of tuples supplied in an input buffer.
      *
      * @param stream output stream from which to read
      *
@@ -270,7 +331,7 @@ protected:
      *
      * @param expectedBuffer buffer containing expected tuples
      */
-    void verifyBufferedOutput(
+    virtual void verifyBufferedOutput(
         ExecStream &stream,
         TupleDescriptor outputTupleDesc,
         uint nRowsExpected,

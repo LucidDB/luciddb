@@ -69,12 +69,30 @@ void foo::k(int n)
     std::cerr << bt;
 }
 
+class goo : public AutoBacktrace::Extra {
+    // implement AutoBacktrace::Extra
+    virtual void printBacktrace(std::ostream& os);
+    virtual void finishBacktrace();
+};
+
+void goo::finishBacktrace()
+{
+    std::cerr << "goo has finished" << std::endl;
+}
+
+void goo::printBacktrace(std::ostream& os)
+{
+    os << "Hi, my name is goo" << std::endl;
+}
+
+
 FENNEL_END_CPPFILE("$Id");
 
 // testBacktrace tests Backtrace()
 // testBacktrace a tests AutoBacktrace of assert()
 // testBacktrace e tests AutoBacktrace of an uncaught exception
-// testBacktrace s tests AutoBacktrace of a SIGSEGV
+// testBacktrace s tests AutoBacktrace of a SIGSEVG
+// testBacktrace x tests AutoBacktrace of assert(), with an Extra
 int main(int argc, char **argv)
 {
     if (argc == 1) {
@@ -91,6 +109,17 @@ int main(int argc, char **argv)
         case 'p':
             permAssert(false);
             std::cerr << "not reached\n";
+            break;
+        case 'x':
+        {
+            fennel::goo o;
+            fennel::AutoBacktrace::removeExtra(&o);
+            fennel::AutoBacktrace::addExtra(&o);
+            fennel::AutoBacktrace::removeExtra(&o);
+            fennel::AutoBacktrace::addExtra(&o);
+            assert(false);
+            std::cerr << "not reached\n";
+        }
             break;
         case 'e':
             std::cerr

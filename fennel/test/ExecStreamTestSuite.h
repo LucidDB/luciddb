@@ -37,7 +37,7 @@ using namespace fennel;
  * implementation.
  */
 class FENNEL_TEST_EXPORT ExecStreamTestSuite
-    : public ExecStreamUnitTestBase
+    : virtual public ExecStreamUnitTestBase
 {
 protected:
     void testCartesianJoinExecStream(uint nRowsLeft, uint nRowsRight);

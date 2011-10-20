@@ -44,41 +44,6 @@
 
 using namespace fennel;
 
-/**
- * StringExecStreamGenerator defines an interface for generating
- * a data stream of strings.
- */
-class StringExecStreamGenerator
-{
-public:
-    virtual ~StringExecStreamGenerator() {}
-
-    /**
-     * Generates one data value.
-     *
-     * @param iRow 0-based row number to generate
-     */
-    virtual const std::string &generateValue(uint iRow) = 0;
-};
-
-class StringExecStreamGeneratorImpl : public StringExecStreamGenerator
-{
-    std::vector<std::string> values;
-
-public:
-    void insert(const std::string &value)
-    {
-        values.push_back(value);
-    }
-
-    // Implement StringExecStreamGenerator
-    const std::string &generateValue(uint iRow)
-    {
-        BOOST_CHECK(iRow < values.size());
-        return values[iRow];
-    }
-};
-
 class FlatFileExecStreamTest : public ExecStreamUnitTestBase
 {
     void checkRead(
@@ -101,11 +66,6 @@ class FlatFileExecStreamTest : public ExecStreamUnitTestBase
         FlatFileColumnParseResult::DelimiterType type,
         uint size,
         uint offset);
-
-    void verifyOutput(
-        ExecStream &stream,
-        uint nRowsExpected,
-        StringExecStreamGenerator &generator);
 
 public:
     explicit FlatFileExecStreamTest()
@@ -274,64 +234,11 @@ void FlatFileExecStreamTest::testStream()
     flatfileStreamEmbryo.getStream()->setName("FlatFileExecStream");
 
     SharedExecStream pOutputStream = prepareSourceGraph(flatfileStreamEmbryo);
-    StringExecStreamGeneratorImpl verifier;
-    verifier.insert("[ 'No one', 'travels' ]");
-    verifier.insert("[ 'Along this way', 'but I,' ]");
-    verifier.insert("[ 'This', 'autumn evening.' ]");
-
-    verifyOutput(
-        *pOutputStream,
-        3,
-        verifier);
-}
-
-void FlatFileExecStreamTest::verifyOutput(
-    ExecStream &stream,
-    uint nRowsExpected,
-    StringExecStreamGenerator &generator)
-{
-    // TODO:  assertions about output tuple, or better yet, use proper tuple
-    // access
-
-    pResourceGovernor->requestResources(*pGraph);
-    pGraph->open();
-    pScheduler->start();
-    uint nRows = 0;
-    for (;;) {
-        ExecStreamBufAccessor &bufAccessor =
-            pScheduler->readStream(stream);
-        if (bufAccessor.getState() == EXECBUF_EOS) {
-            break;
-        }
-        BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-        const uint nCol =
-            bufAccessor.getConsumptionTupleAccessor().size();
-        BOOST_REQUIRE(nCol == bufAccessor.getTupleDesc().size());
-        BOOST_REQUIRE(nCol >= 1);
-        TupleData inputTuple;
-        inputTuple.compute(bufAccessor.getTupleDesc());
-        std::ostringstream oss;
-        TuplePrinter tuplePrinter;
-        for (;;) {
-            if (!bufAccessor.demandData()) {
-                break;
-            }
-            BOOST_REQUIRE(nRows < nRowsExpected);
-            bufAccessor.unmarshalTuple(inputTuple);
-            tuplePrinter.print(oss, bufAccessor.getTupleDesc(), inputTuple);
-            std::string actualValue = oss.str();
-            oss.str("");
-            const std::string &expectedValue = generator.generateValue(nRows);
-            if (actualValue.compare(expectedValue)) {
-                std::cout << "(Row) = (" << nRows << ")" << std::endl;
-                BOOST_CHECK_EQUAL(expectedValue, actualValue);
-                return;
-            }
-            bufAccessor.consumeTuple();
-            ++nRows;
-        }
-    }
-    BOOST_CHECK_EQUAL(nRowsExpected, nRows);
+    std::vector<std::string> expected;
+    expected.push_back("[ 'No one', 'travels' ]");
+    expected.push_back("[ 'Along this way', 'but I,' ]");
+    expected.push_back("[ 'This', 'autumn evening.' ]");
+    verifyStringOutput(*pOutputStream, 3, expected);
 }
 
 FENNEL_UNIT_TEST_SUITE(FlatFileExecStreamTest);

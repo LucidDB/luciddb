@@ -25,6 +25,7 @@
 #include "fennel/exec/ConfluenceExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraph.h"
+#include "fennel/exec/ExecStreamScheduler.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -47,10 +48,12 @@ void ConfluenceExecStream::open(bool restart)
 {
     SingleOutputExecStream::open(restart);
     if (restart) {
+        ExecStreamScheduler *sched = pGraph->getScheduler();
         // restart inputs
         for (uint i = 0; i < inAccessors.size(); ++i) {
             inAccessors[i]->clear();
-            pGraph->getStreamInput(getStreamId(), i)->open(true);
+            ExecStreamScheduler::restartStream(
+                sched, pGraph->getStreamInput(getStreamId(), i));
         }
     }
 }

@@ -230,6 +230,9 @@ public:
      * fetch data.  A precondition is that input streams
      * must already be opened.  A stream can be closed and reopened.
      *
+     * A stream should not call this on another stream object: call
+     * ExecStreamScheduler::restartStream().
+     *
      * @param restart if true, the stream must be already open, and should
      * reset itself to start from the beginning of its result set
      */

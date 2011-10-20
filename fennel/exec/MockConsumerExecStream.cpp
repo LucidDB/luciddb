@@ -28,6 +28,10 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+MockConsumerExecStreamTupleChecker::~MockConsumerExecStreamTupleChecker()
+{
+}
+
 ExecStreamResult MockConsumerExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
@@ -49,36 +53,89 @@ ExecStreamResult MockConsumerExecStream::execute(
     }
     assert(inAccessor.isConsumptionPossible());
 
+    uint64_t oldRowCount = rowCount;
+    uint64_t oldIncorrectRowCount = incorrectRowCount;
+    ExecStreamResult rc = innerExecute(quantum);
+    FENNEL_TRACE(
+        TRACE_FINE, "read " << (rowCount - oldRowCount)
+        << " rows, rowCount is " << rowCount);
+    if (checkData) {
+        long n = incorrectRowCount - oldIncorrectRowCount;
+        FENNEL_TRACE(TRACE_FINE, "TupleChecker rejected " << n << " rows");
+    }
+    if (maxConsecutiveUnderflows > 0) {
+        if (rc == EXECRC_BUF_UNDERFLOW) {
+            if (++consecutiveUnderflowCt > maxConsecutiveUnderflows) {
+                FENNEL_TRACE(
+                    TRACE_CONFIG, "over consecutive underflow max "
+                    << maxConsecutiveUnderflows);
+                rc = EXECRC_EOS;
+            }
+        } else {
+            consecutiveUnderflowCt = 0;
+        }
+    }
+    return rc;
+}
+
+ExecStreamResult MockConsumerExecStream::innerExecute(
+    ExecStreamQuantum const& quantum)
+{
+    ExecStreamBufAccessor &inAccessor = *pInAccessor;
+    const TupleDescriptor& inputDesc = inAccessor.getTupleDesc();
+
     // Read rows from the input buffer until we exceed the quantum or read all
-    // of the rows. Convert each row to a string, and append to the rows
-    // vector.
+    // of the rows.
     for (uint iRow = 0; iRow < quantum.nTuplesMax; ++iRow) {
+        if (dieOnNthRow > 0) {
+            if (rowCount + 1 > dieOnNthRow) {
+                throw FennelExcn("fake fatal");
+            }
+        }
         if (!inAccessor.demandData()) {
             // Convert buf return code into stream return code.
             switch (inAccessor.getState()) {
             case EXECBUF_UNDERFLOW:
                 return EXECRC_BUF_UNDERFLOW;
             case EXECBUF_EOS:
+                recvEOS = true;
                 return EXECRC_EOS;
             default:
                 permAssert(false);
             }
         }
         inAccessor.unmarshalTuple(inputTuple);
-        rowCount++;
+        if (checkData) {
+            if (!checkData->check(rowCount, inputDesc, inputTuple)) {
+                incorrectRowCount++;
+            }
+        }
         if (echoData) {
-            tuplePrinter.print(
-                *echoData, inAccessor.getTupleDesc(), inputTuple);
+            tuplePrinter.print(*echoData, inputDesc, inputTuple);
         }
         if (saveData) {
+            // Convert each row to a string, and append to the rows vector.
             std::ostringstream oss;
-            tuplePrinter.print(oss, inAccessor.getTupleDesc(), inputTuple);
+            tuplePrinter.print(oss, inputDesc, inputTuple);
             const string &s = oss.str();
             rowStrings.push_back(s);
         }
         inAccessor.consumeTuple();
+        rowCount++;
     }
     return EXECRC_QUANTUM_EXPIRED;
+}
+
+MockConsumerExecStream::~MockConsumerExecStream()
+{
+}
+
+MockConsumerExecStream::MockConsumerExecStream()
+{
+    saveData = recvEOS = false;
+    echoData = 0;
+    checkData = 0;
+    dieOnNthRow = rowCount = incorrectRowCount = 0;
 }
 
 void MockConsumerExecStream::prepare(
@@ -87,13 +144,17 @@ void MockConsumerExecStream::prepare(
     SingleInputExecStream::prepare(params);
     saveData = params.saveData;
     echoData = params.echoData;
+    checkData = params.checkData;
+    maxConsecutiveUnderflows = params.maxConsecutiveUnderflows;
+    dieOnNthRow = params.dieOnNthRow;
     recvEOS = false;
 }
 
 void MockConsumerExecStream::open(bool restart)
 {
     SingleInputExecStream::open(restart);
-    rowCount = 0;
+    rowCount = incorrectRowCount = 0;
+    consecutiveUnderflowCt = 0;
     rowStrings.clear();
     inputTuple.compute(pInAccessor->getTupleDesc());
     recvEOS = false;

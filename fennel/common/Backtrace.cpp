@@ -26,6 +26,7 @@
 #include "fennel/common/TraceTarget.h"
 
 #include <sstream>
+#include <algorithm>
 
 #ifdef FENNEL_BACKTRACE_SUPPORTED
 #include <cxxabi.h>
@@ -192,6 +193,7 @@ void Backtrace::writeDemangled(std::ostream &out, char const *pMangled)
 
 std::ostream* AutoBacktrace::pstream = &std::cerr;
 SharedTraceTarget AutoBacktrace::ptrace;
+std::vector<AutoBacktrace::Extra*> AutoBacktrace::extras;
 
 #ifdef FENNEL_BACKTRACE_SUPPORTED
 struct sigaction AutoBacktrace::nextAction[BACKTRACE_SIG_MAX];
@@ -206,6 +208,7 @@ void AutoBacktrace::signal_handler(int signum)
         oss
             << "*** CAUGHT SIGNAL " << signum << "; BACKTRACE:" << std::endl;
         oss << bt;
+        printExtras(oss);
         std::string msg = oss.str();
         if (pstream) {
             *pstream << msg;
@@ -215,7 +218,10 @@ void AutoBacktrace::signal_handler(int signum)
         *pstream
             << "*** CAUGHT SIGNAL " << signum << "; BACKTRACE:" << std::endl;
         *pstream << bt;
+        printExtras(*pstream);
     }
+
+    finishExtras();
 
     // invoke next handler: never coming back, so reset the signal handler
     sigaction(signum, &(nextAction[signum]), NULL);
@@ -275,6 +281,32 @@ void AutoBacktrace::installSignal(int signum)
 #endif
 }
 
+void AutoBacktrace::addExtra(Extra *e)
+{
+    extras.push_back(e);
+}
+
+void AutoBacktrace::removeExtra(Extra *e)
+{
+    std::vector<Extra*>::iterator newEnd =
+        std::remove(extras.begin(), extras.end(), e);
+    extras.resize(newEnd - extras.begin());
+}
+
+void AutoBacktrace::printExtras(std::ostream& os)
+{
+    for (int i = 0; i < extras.size(); ++i) {
+        os << std::endl;
+        extras[i]->printBacktrace(os);
+    }
+}
+
+void AutoBacktrace::finishExtras()
+{
+    for (int i = 0; i < extras.size(); ++i) {
+        extras[i]->finishBacktrace();
+    }
+}
+
 FENNEL_END_CPPFILE("$Id");
 // End Backtrace.cpp
-

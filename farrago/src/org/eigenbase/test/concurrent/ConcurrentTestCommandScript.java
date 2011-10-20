@@ -466,12 +466,14 @@ public class ConcurrentTestCommandScript
         }
     }
 
-    // timeout < 0 means no timeout
-    private void storeResults(Integer threadId, ResultSet rset, long timeout)
+    // Fetch and store the rows from a ResultSet,
+    // timeout in msecs, negative value means no timeout.
+    // returns true after EOS, false after timeout.
+    private boolean storeResults(Integer threadId, ResultSet rset, long timeout)
         throws SQLException
     {
         ResultsReader r = threadResultsReaders.get(threadId);
-        r.read(rset, timeout);
+        return r.read(rset, timeout);
     }
 
     /** Identifies the start of a comment line; same rules as sqlline */
@@ -1601,33 +1603,29 @@ public class ConcurrentTestCommandScript
     private static abstract class CommandWithTimeout
         extends AbstractCommand
     {
-        private long timeout;
+        final protected long timeout;           // timeout in msecs
 
         private CommandWithTimeout(long timeout)
         {
             this.timeout = timeout;
         }
 
-        // returns the timeout as set (-1 means no timeout)
-        protected long setTimeout(Statement stmt)
-            throws SQLException
+        // applies the timeout to the Statement
+        protected void applyTimeout(Statement stmt) throws SQLException
         {
-            assert (timeout >= 0);
             if (timeout > 0) {
                 // FIX: call setQueryTimeoutMillis() when available.
                 assert (timeout >= 1000) : "timeout too short";
                 int t = (int) (timeout / 1000);
                 stmt.setQueryTimeout(t);
-                return t;
             }
-            return -1;
         }
     }
 
     private static abstract class CommandWithTimeoutAndRowLimit
         extends CommandWithTimeout
     {
-        private int rowLimit;
+        final protected int rowLimit;
 
         private CommandWithTimeoutAndRowLimit(long timeout)
         {
@@ -1640,10 +1638,9 @@ public class ConcurrentTestCommandScript
             this.rowLimit = rowLimit;
         }
 
-        protected void setRowLimit(Statement stmt)
+        protected void applyRowLimit(Statement stmt)
             throws SQLException
         {
-            assert (rowLimit >= 0);
             if (rowLimit > 0) {
                 stmt.setMaxRows(rowLimit);
             }
@@ -1700,9 +1697,8 @@ public class ConcurrentTestCommandScript
 
             PreparedStatement stmt =
                 executor.getConnection().prepareStatement(properSql);
-            long timeout = setTimeout(stmt);
-            setRowLimit(stmt);
-
+            applyTimeout(stmt);
+            applyRowLimit(stmt);
             try {
                 storeResults(
                     executor.getThreadId(),
@@ -1767,7 +1763,7 @@ public class ConcurrentTestCommandScript
 
             PreparedStatement stmt =
                 executor.getConnection().prepareStatement(properSql);
-            long timeout = setTimeout(stmt);
+            applyTimeout(stmt);
             boolean timeoutSet = (timeout >= 0);
 
             try {
@@ -1846,9 +1842,9 @@ public class ConcurrentTestCommandScript
     }
 
     /**
-     * FetchAndPrintCommand executes a previously prepared statement stored
-     * inthe ConcurrentTestCommandExecutor and then outputs the returned
-     * rows.
+     * FetchAndPrintCommand fetches and prints rows from the current ResultSet.
+     * If there is no ResultSet (yet) it execute the current statement, stored
+     * in the ConcurrentTestCommandExecutor.
      */
     private class FetchAndPrintCommand
         extends CommandWithTimeout
@@ -1863,12 +1859,16 @@ public class ConcurrentTestCommandScript
         {
             PreparedStatement stmt =
                 (PreparedStatement) executor.getStatement();
-            long timeout = setTimeout(stmt);
-
-            storeResults(
-                executor.getThreadId(),
-                stmt.executeQuery(),
-                timeout);
+            applyTimeout(stmt);
+            ResultSet rset = executor.getResultSet();
+            if (rset == null) {
+                rset = stmt.executeQuery();
+                executor.setResultSet(rset);
+            }
+            boolean atEOS = storeResults(executor.getThreadId(), rset, timeout);
+            if (atEOS) {
+                executor.clearResultSet();
+            }
         }
     }
 
@@ -1933,7 +1933,11 @@ public class ConcurrentTestCommandScript
             printSeparator();
         }
 
-        void read(ResultSet rset, long timeout) throws SQLException
+        // Consume a ResultSet, with an optional fetch timeout (msecs; negative
+        // means no timeout).
+        // On EOS, close ResultSet, and return true.
+        // On timeout, leave ResultSet open, and return false.
+        boolean read(ResultSet rset, long timeout) throws SQLException
         {
             boolean withTimeout = (timeout >= 0);
             boolean timedOut = false;
@@ -1979,13 +1983,12 @@ public class ConcurrentTestCommandScript
                 Util.swallow(e, null);
             } catch (SQLException e) {
                 endTime = System.currentTimeMillis();
-                timedOut = true;
-
                 // 2007-10-23 hersker: hack to ignore timeout exceptions
                 // from other Farrago projects without being able to
                 // import/reference the actual exceptions
                 final String eClassName = e.getClass().getName();
                 if (eClassName.endsWith("TimeoutException")) {
+                    timedOut = true;
                     if (!withTimeout) {
                         throw e;
                     }
@@ -2001,7 +2004,9 @@ public class ConcurrentTestCommandScript
                 if (endTime == 0) {
                     endTime = System.currentTimeMillis();
                 }
-                rset.close();
+                if (!timedOut) {
+                    rset.close();
+                }
                 if (nth > 0) {
                     printSeparator();
                     out.println();
@@ -2023,6 +2028,7 @@ public class ConcurrentTestCommandScript
                         "fetched %d rows in %d msecs %s%n",
                         rowCount, dt, timedOut ? "(timeout)" : "(end)");
                 }
+                return !timedOut;
             }
         }
 

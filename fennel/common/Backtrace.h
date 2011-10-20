@@ -24,6 +24,7 @@
 #ifndef Fennel_Backtrace_Included
 #define Fennel_Backtrace_Included
 
+#include <vector>
 #include <ostream>
 #include <stdlib.h>
 
@@ -124,25 +125,9 @@ inline std::ostream& operator << (std::ostream& os, const Backtrace& bt)
  */
 class FENNEL_COMMON_EXPORT AutoBacktrace
 {
-    static std::ostream* pstream;
-    static SharedTraceTarget ptrace;
-    static void signal_handler(int signum);
-#ifdef FENNEL_BACKTRACE_SUPPORTED
-#define BACKTRACE_SIG_MAX 32
-    static struct sigaction nextAction[BACKTRACE_SIG_MAX];
-#endif
-
-    // hide constructor
-    AutoBacktrace()
-    {
-    }
-
-    static void installSignal(int signum);
 public:
     /**
      * Installs backtrace on error; default output is to stderr.
-     *
-     *<p>
      *
      * NOTE jvs 25-Dec-2005:  for more flexibility, we could
      * allow the caller to specify a sigset_t.
@@ -176,10 +161,42 @@ public:
      */
     static void setTraceTarget(
         SharedTraceTarget pTraceTarget = SharedTraceTarget());
+
+    /**
+     * A callback to extend automatic backtrace
+     * On error, the callback prints extra info to the trace message.
+     * The callback can also perform some action after the complete trace
+     * message has been written.
+     */
+    struct Extra {
+        Extra() {}
+        virtual ~Extra() {}
+        virtual void printBacktrace(std::ostream&) {}
+        virtual void finishBacktrace() {}
+    };
+
+    /** adds an extra backtrace callback */
+    static void  addExtra(Extra *x);
+    /** removes an extra backtrace callback */
+    static void removeExtra(Extra *x);
+
+private:
+    static std::ostream* pstream;
+    static SharedTraceTarget ptrace;
+    static void signal_handler(int signum);
+#ifdef FENNEL_BACKTRACE_SUPPORTED
+#define BACKTRACE_SIG_MAX 32
+    static struct sigaction nextAction[BACKTRACE_SIG_MAX];
+#endif
+    static std::vector<Extra*> extras;
+
+    // hide constructor
+    AutoBacktrace() {}
+    static void installSignal(int signum);
+    static void printExtras(std::ostream&);
+    static void finishExtras();
 };
 
 FENNEL_END_NAMESPACE
-
 #endif
-
 // End Backtrace.h

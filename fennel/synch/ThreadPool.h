@@ -26,6 +26,7 @@
 
 #include <deque>
 #include <vector>
+#include <algorithm>
 #include "fennel/synch/SynchMonitoredObject.h"
 #include "fennel/synch/Thread.h"
 
@@ -35,7 +36,7 @@ class PooledThread;
 class ThreadTracker;
 
 /**
- * ThreadPoolBase defines the non-templated portion of ThreadPool.
+ * ThreadPoolBase defines the non-templated part of AbstractThreadPool.
  */
 class FENNEL_SYNCH_EXPORT ThreadPoolBase : protected SynchMonitoredObject
 {
@@ -44,6 +45,7 @@ class FENNEL_SYNCH_EXPORT ThreadPoolBase : protected SynchMonitoredObject
 
 protected:
     enum State {
+        STATE_INITIAL,
         STATE_STARTED,
         STATE_STOPPING,
         STATE_STOPPED
@@ -56,8 +58,16 @@ protected:
 
     explicit ThreadPoolBase();
     virtual ~ThreadPoolBase();
-    virtual bool isQueueEmpty() = 0;
+    Thread* getPooledThread(uint index);
+    virtual bool isQueueEmpty() const = 0;
+    virtual void clearQueue() = 0;
     virtual void runOneTask(StrictMutexGuard &) = 0;
+
+    /**
+     * wait while queue is empty (or not empty)
+     * @param val true means wait while empty, false means wait until empty
+     */
+    virtual void waitWhileQueueEmpty(bool val);
 
 public:
     /**
@@ -65,14 +75,19 @@ public:
      *
      * @param nThreads number of threads to start
      */
-    void start(uint nThreads);
+    virtual void start(uint nThreads);
 
     /**
-     * Shuts down the pool, waiting for any pending tasks to complete.
-     * The start/stop calls should never be invoked from more than one thread
-     * simultaneously.
+     * Stops the pool.
+     *
+     * @param soft true for soft stop, false for a hard stop.
+     *
+     * A hard stop is almost immediate: no thread will start a new task. A soft
+     * stop wait for any pending tasks to complete. After a hard stop, there may
+     * still be unexecuted tasks in the queue. The start/stop calls should never
+     * be invoked from more than one thread simultaneously.
      */
-    void stop();
+    virtual void stop(bool soft = true);
 
     /**
      * Sets a tracker to use for created threads.
@@ -83,61 +98,118 @@ public:
 };
 
 /**
- * ThreadPool is a very simple thread-pooling implementation.  It's a template
- * to avoid requiring task queue entries to be dynamically allocated.
- *
- *<p>
- *
- * The Task template parameter must behave as a concrete data type, and
- * must have a method execute().
+ * AbstractThreadPool is a templated extension of ThreadPoolBase. It's a
+ * template to avoid requiring task queue entries to be dynamically allocated.
+ * It is abstract: an implementing subclass provides the crucial method
+ * doTask().
  */
 template <class Task>
-class ThreadPool : public ThreadPoolBase
+class AbstractThreadPool : public ThreadPoolBase
 {
     std::deque<Task> queue;
 
-    virtual bool isQueueEmpty()
-    {
-        return queue.empty();
-    }
-
+protected:
+    virtual void doTask(Task& k) = 0;
     virtual void runOneTask(StrictMutexGuard &guard)
     {
         Task task = queue.front();
         queue.pop_front();
         guard.unlock();
-        task.execute();
+        doTask(task);
         guard.lock();
     }
 
-public:
+    virtual size_t queueSize() const {
+        return queue.size();
+    }
+
+    virtual bool isQueueEmpty() const {
+        return queue.empty();
+    }
+
+    virtual void clearQueue() {
+        queue.clear();
+    }
+
     /**
      * Constructor.
      */
-    explicit ThreadPool()
-    {
+    explicit AbstractThreadPool() {
         pThreadTracker = NULL;
     }
 
     /**
      * Destructor:  stop must already have been called.
      */
-    virtual ~ThreadPool()
-    {
+    virtual ~AbstractThreadPool() {
     }
 
     /**
-     * Submits a task to the pool.  It will be executed as soon as a thread is
-     * available.
-     *
-     * @param task the task to execute, expressed as a function object
+     * Applies a functor to all Tasks in the queue
      */
-    void submitTask(Task &task)
-    {
+    template <class Functor>
+    void mapQueue(Functor& f) {
         StrictMutexGuard guard(mutex);
-        assert(state == STATE_STARTED);
-        queue.push_back(task);
-        condition.notify_one();
+        std::for_each(queue.begin(), queue.end(), f);
+    }
+
+public:
+
+    /**
+     * Adds a task to the tail of the queue. It will be executed in turn, as
+     * soon as a thread is available.
+     *
+     * @param task the task to execute
+     * @return true when the task is accepted, false when rejected.
+     */
+    bool submitTask(Task &task) {
+        StrictMutexGuard guard(mutex);
+        if (state == STATE_STARTED || state == STATE_INITIAL) {
+            queue.push_back(task);
+            condition.notify_one();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Adds a task to the head of the queue. It will be executed next, as soon
+     * as a thread is available.
+     *
+     * @param task the task to execute
+     * @return true when the task is accepted, false when rejected.
+     */
+    bool submitTaskAtHead(Task &task) {
+        StrictMutexGuard guard(mutex);
+        if (state == STATE_STARTED || state == STATE_INITIAL) {
+            queue.push_front(task);
+            condition.notify_one();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+};
+
+
+/**
+ * ThreadPool is a very simple thread-pooling implementation.
+ * The template parameter Task must behave as a concrete data type, and
+ * must have a method execute().
+ */
+template <class Task>
+class ThreadPool : public AbstractThreadPool<Task>
+{
+protected:
+    virtual void doTask(Task& k) {
+        k.execute();
+    }
+public:
+    explicit ThreadPool() {
+    }
+    virtual ~ThreadPool() {
     }
 };
 

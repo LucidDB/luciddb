@@ -27,10 +27,10 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * Trace severity levels.  Except for TRACE_PERFCOUNTER_*, the values correspond
- * to java.util.logging.Level.  TRACE_PERFCOUNTER_* are Fennel-specific
- * values used to communicate performance-counter information from
- * a StatsSource to a JavaTraceTarget (which doubles as a StatsTarget).
+ * Trace severity levels. Most values correspond to java.util.logging.Level.
+ * TRACE_SUPERFINE is an extension. TRACE_PERFCOUNTER_* are Fennel-specific
+ * values used to communicate performance-counter information from a StatsSource
+ * to a JavaTraceTarget (which doubles as a StatsTarget).
  */
 enum TraceLevel {
     TRACE_PERFCOUNTER_BEGIN_SNAPSHOT = 20002,
@@ -43,7 +43,8 @@ enum TraceLevel {
     TRACE_CONFIG = 700,
     TRACE_FINE = 500,
     TRACE_FINER = 400,
-    TRACE_FINEST = 300
+    TRACE_FINEST = 300,
+    TRACE_SUPERFINE = 200
 };
 
 /**

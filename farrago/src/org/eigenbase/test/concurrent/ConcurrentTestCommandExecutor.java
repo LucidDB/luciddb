@@ -73,6 +73,11 @@ class ConcurrentTestCommandExecutor extends Thread
     private Statement statement;
 
     /**
+     * Current JDBC ResultSet. May be null.
+     */
+    private ResultSet resultSet;
+
+    /**
      * First exception thrown by the thread.
      */
     private Throwable error;
@@ -251,6 +256,34 @@ class ConcurrentTestCommandExecutor extends Thread
     public void clearStatement()
     {
         statement = null;
+    }
+
+    /**
+     * Obtains the thread's current JDBC ResultSet. May return null.
+     */
+    public ResultSet getResultSet()
+    {
+        return resultSet;
+    }
+
+    /**
+     * Sets the thread's current JDBC ResultSet. To clear the JDBC resultSet use
+     * {@link #clearResultSet()}.
+     */
+    public void setResultSet(ResultSet rs)
+    {
+        // assert that we don't already have a resultSet
+        assert (resultSet == null);
+        resultSet = rs;
+    }
+
+    /**
+     * Clears the thread's current JDBC ResultSet. To set the JDBC ResultSet use
+     * {@link #setResultSet(ResultSet)}.
+     */
+    public void clearResultSet()
+    {
+        resultSet = null;
     }
 
     /**

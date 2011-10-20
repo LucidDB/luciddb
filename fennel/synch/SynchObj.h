@@ -26,15 +26,19 @@
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/condition.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
-typedef boost::recursive_mutex RecursiveMutex;
 typedef boost::mutex StrictMutex;
-typedef boost::recursive_mutex::scoped_lock RecursiveMutexGuard;
+typedef boost::recursive_mutex RecursiveMutex;
+typedef boost::shared_mutex SharedMutex;
 typedef boost::mutex::scoped_lock StrictMutexGuard;
+typedef boost::recursive_mutex::scoped_lock RecursiveMutexGuard;
+typedef boost::shared_lock<boost::shared_mutex> SharedMutexGuard;
+typedef boost::unique_lock<boost::shared_mutex> ExclusiveMutexGuard;
 typedef boost::condition_variable LocalCondition;
 
 extern void FENNEL_SYNCH_EXPORT convertTimeout(uint iMillis, boost::xtime &);

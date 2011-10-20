@@ -132,11 +132,11 @@ Calculator::assemble(const char *program)
     assert(mIsUsingAssembler);
 
     FENNEL_TRACE(
-        TRACE_FINEST,
+        TRACE_SUPERFINE,
         "Calculator instructions:" << endl
         << InstructionFactory::signatures());
     FENNEL_TRACE(
-        TRACE_FINEST,
+        TRACE_SUPERFINE,
         "Calculator extended instructions:" << endl
         << InstructionFactory::extendedSignatures());
     FENNEL_TRACE(
@@ -309,7 +309,7 @@ Calculator::exec()
 #ifdef DEBUG
     ostringstream oss;
     TuplePrinter p;
-    if (isTracingLevel(TRACE_FINEST)) {
+    if (isTracingLevel(TRACE_SUPERFINE)) {
         oss << "Pre-Exec" << endl << "Output Register: " << endl;
         p.print(
             oss, getOutputRegisterDescriptor(),
@@ -323,7 +323,7 @@ Calculator::exec()
             oss, getStatusRegisterDescriptor(),
             mRegisterSetBinding[RegisterReference::EStatus]->asTupleData());
         oss << endl;
-        trace(TRACE_FINEST, oss.str());
+        trace(TRACE_SUPERFINE, oss.str());
     }
 #endif
 
@@ -334,22 +334,22 @@ Calculator::exec()
     while (pc >= 0 && pc < endOfProgram) {
         try {
 #ifdef DEBUG
-            int oldpc = pc;
-            string out;
-            if (isTracingLevel(TRACE_FINEST)) {
+            int oldpc;
+            if (isTracingLevel(TRACE_SUPERFINE)) {
+                oldpc = pc;
+                string out;
                 mCode[oldpc]->describe(out, true);
-                FENNEL_TRACE(
-                    TRACE_FINEST, "BF [" << oldpc << "] " <<  out.c_str());
+                FENNEL_TRACE(TRACE_SUPERFINE, "BF [" << oldpc << "] " <<  out);
             }
 #endif
 
             mCode[pc]->exec(pc);
 
 #ifdef DEBUG
-            if (isTracingLevel(TRACE_FINEST)) {
+            if (isTracingLevel(TRACE_SUPERFINE)) {
+                string out;
                 mCode[oldpc]->describe(out, true);
-                FENNEL_TRACE(
-                    TRACE_FINEST, "AF [" << oldpc << "] " <<  out.c_str());
+                FENNEL_TRACE(TRACE_SUPERFINE, "AF [" << oldpc << "] " <<  out);
             }
 #endif
         } catch (CalcMessage m) {
@@ -361,7 +361,7 @@ Calculator::exec()
         }
     }
 #ifdef DEBUG
-    if (isTracingLevel(TRACE_FINEST)) {
+    if (isTracingLevel(TRACE_SUPERFINE)) {
         oss.clear();
         oss << "Post-Exec" << endl << "Output Register: " << endl;
         p.print(
@@ -376,7 +376,7 @@ Calculator::exec()
             oss, getStatusRegisterDescriptor(),
             mRegisterSetBinding[RegisterReference::EStatus]->asTupleData());
         oss << endl << "Warnings: |" << warnings() << "|"<< endl;
-        trace(TRACE_FINEST, oss.str());
+        trace(TRACE_SUPERFINE, oss.str());
     }
 #endif
 }

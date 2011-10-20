@@ -42,15 +42,11 @@ template <class T>
 class ColumnGenerator
 {
 public:
-    virtual ~ColumnGenerator()
-    {
-    }
-
+    virtual ~ColumnGenerator() {}
     virtual T next() = 0;
 };
 
 typedef ColumnGenerator<int64_t> Int64ColumnGenerator;
-
 typedef boost::shared_ptr<Int64ColumnGenerator> SharedInt64ColumnGenerator;
 
 /**
@@ -60,7 +56,19 @@ typedef boost::shared_ptr<Int64ColumnGenerator> SharedInt64ColumnGenerator;
 class FENNEL_EXEC_EXPORT MockProducerExecStreamGenerator
 {
 public:
+    MockProducerExecStreamGenerator();
     virtual ~MockProducerExecStreamGenerator();
+
+    /**
+     * Called before generating each row. Decides when to end the current batch
+     * and start a new one. By default, evaluates the functor
+     * endsBatchPredicate, but a subclass can override that.
+     *
+     * @return false to add another row to current batch, true to end the batch.
+     * @param nrows number of rows written so far; thus, 0 before the first row,
+     * 1 after it, etc.
+     */
+    virtual bool endsBatch(uint nrows);
 
     /**
      * Generates one data value.
@@ -69,10 +77,25 @@ public:
      * @param iCol 0-based col number to generate
      */
     virtual int64_t generateValue(uint iRow, uint iCol) = 0;
-};
 
-typedef boost::shared_ptr<MockProducerExecStreamGenerator>
-    SharedMockProducerExecStreamGenerator;
+    /** a functor that maps row number to bool:
+     * base class returns a fixed default.
+     */
+    class RowPredicate {
+        bool defaultValue;
+    public:
+        RowPredicate(bool = false);
+        virtual ~RowPredicate();
+        virtual bool operator()(uint iRow);
+    };
+    typedef boost::shared_ptr<RowPredicate> SharedRowPredicate;
+
+    /** Sets the functor used by endsBatch */
+    void setEndsBatchPredicate(SharedRowPredicate);
+
+private:
+    SharedRowPredicate endsBatchPredicate; // null means always return false
+};
 
 typedef boost::shared_ptr<MockProducerExecStreamGenerator>
     SharedMockProducerExecStreamGenerator;
@@ -89,9 +112,8 @@ struct FENNEL_EXEC_EXPORT MockProducerExecStreamParams
     uint64_t nRows;
 
     /**
-     * Generator for row values.  If non-singular, the tuple descriptor
-     * for this stream must be a single int64_t.  If singular, all output
-     * is constant 0.
+     * Generator for row values. All output columns are int64_t.
+     * If this is null, all output columsns are 0.
      */
     SharedMockProducerExecStreamGenerator pGenerator;
 
@@ -107,14 +129,6 @@ struct FENNEL_EXEC_EXPORT MockProducerExecStreamParams
      * is provided.
      */
     std::ostream* echoTuples;
-
-    /**
-     * Generator which determines batch size. If the generator returns a
-     * non-zero value, a new batch is started. If the generator is NULL, the
-     * effect is the same as a generator which always returns zero: batches are
-     * created as large as possible.
-     */
-    SharedInt64ColumnGenerator pBatchGenerator;
 
     MockProducerExecStreamParams()
         : nRows(0), saveTuples(false), echoTuples(0) {}
@@ -134,10 +148,23 @@ class FENNEL_EXEC_EXPORT MockProducerExecStream
     uint64_t nRowsProduced;
     TupleData outputData;
     SharedMockProducerExecStreamGenerator pGenerator;
-    SharedInt64ColumnGenerator pBatchGenerator;
     bool saveTuples;
     std::ostream* echoTuples;
     std::vector<std::string> savedTuples;
+
+protected:
+    virtual ExecStreamResult innerExecute(ExecStreamQuantum const&);
+
+    /**
+     * called after writing last row of a batch
+     * @param nrows counts all rows written
+     */
+    virtual ExecStreamResult onEndOfBatch(uint nrows);
+
+    SharedMockProducerExecStreamGenerator getGenerator();
+    // returns the number of rows generated and written to output buffer
+    // cf getProducedRowCoutnt()
+    uint64_t getGeneratedRowCount();
 
 public:
     MockProducerExecStream();

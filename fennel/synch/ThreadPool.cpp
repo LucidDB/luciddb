@@ -49,19 +49,23 @@ public:
 
 ThreadPoolBase::ThreadPoolBase()
 {
-    state = STATE_STOPPED;
+    state = STATE_INITIAL;
 }
 
 ThreadPoolBase::~ThreadPoolBase()
 {
-    assert(state == STATE_STOPPED);
+    assert(state == STATE_STOPPED || state == STATE_INITIAL);
+}
+
+Thread* ThreadPoolBase::getPooledThread(uint index)
+{
+    return (index < threads.size()) ?  threads[index] : 0;
 }
 
 void ThreadPoolBase::start(uint nThreads)
 {
     StrictMutexGuard guard(mutex);
-    assert(state == STATE_STOPPED);
-    assert(nThreads > 0);
+    assert(state == STATE_STOPPED || state == STATE_INITIAL);
     state = STATE_STARTED;
     for (uint i = 0; i < nThreads; ++i) {
         PooledThread *pThread = new PooledThread(*this);
@@ -70,32 +74,47 @@ void ThreadPoolBase::start(uint nThreads)
     }
 }
 
-void ThreadPoolBase::stop()
+void ThreadPoolBase::stop(bool soft)
 {
     StrictMutexGuard guard(mutex);
     assert(state != STATE_STOPPING);
-    if (state == STATE_STOPPED) {
+    if (state == STATE_STOPPED || state == STATE_INITIAL) {
         return;
     }
-    state = STATE_STOPPING;
 
-    while (!isQueueEmpty()) {
-        stoppingCondition.wait(guard);
+    if (soft) {
+        state = STATE_STOPPING;
+        while (!isQueueEmpty()) {
+            stoppingCondition.wait(guard);
+        }
     }
 
     state = STATE_STOPPED;
     condition.notify_all();
-    guard.unlock();
 
-    for (uint i = 0; i < threads.size(); ++i) {
-        threads[i]->join();
+    if (threads.size() > 0) {
+        guard.unlock();
+        for (uint i = 0; i < threads.size(); ++i) {
+            threads[i]->join();
+        }
+        guard.lock();
+        for (uint i = 0; i < threads.size(); ++i) {
+            deleteAndNullify(threads[i]);
+        }
+        threads.clear();
     }
+}
 
-    guard.lock();
-    for (uint i = 0; i < threads.size(); ++i) {
-        deleteAndNullify(threads[i]);
+void ThreadPoolBase::waitWhileQueueEmpty(bool val)
+{
+    StrictMutexGuard guard(mutex);
+    while (isQueueEmpty() == val) {
+        if (val) {
+            condition.wait(guard);
+        } else {
+            stoppingCondition.wait(guard);
+        }
     }
-    threads.clear();
 }
 
 void ThreadPoolBase::runPooledThread()
@@ -118,7 +137,7 @@ void ThreadPoolBase::runPooledThread()
         }
     } catch (...) {
         if (pThreadTracker) {
-            pThreadTracker->onThreadEnd();
+            pThreadTracker->onThreadException();
         }
         throw;
     }

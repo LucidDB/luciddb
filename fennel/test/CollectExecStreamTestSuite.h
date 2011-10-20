@@ -32,7 +32,7 @@ using namespace fennel;
  * Test Suite for the collect/uncollect xo's
  * @author Wael Chatila
  */
-class CollectExecStreamTestSuite : public ExecStreamUnitTestBase
+class CollectExecStreamTestSuite : virtual public ExecStreamUnitTestBase
 {
     TupleAttributeDescriptor descAttrInt64;
     TupleDescriptor descInt64;

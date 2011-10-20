@@ -984,10 +984,12 @@ public class ConcurrentTestCommandGenerator
         {
             PreparedStatement stmt =
                 (PreparedStatement) executor.getStatement();
-
             boolean timeoutSet = setTimeout(stmt);
-
-            ResultSet rset = stmt.executeQuery();
+            ResultSet rset = executor.getResultSet();
+            if (rset == null) {
+                rset = stmt.executeQuery();
+                executor.setResultSet(rset);
+            }
 
             List<List<Object>> rows = new ArrayList<List<Object>>();
             try {
@@ -1014,6 +1016,7 @@ public class ConcurrentTestCommandGenerator
                 Util.swallow(e, null);
             } finally {
                 rset.close();
+                executor.clearResultSet();
             }
 
             result = rows;

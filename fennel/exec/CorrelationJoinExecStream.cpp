@@ -124,7 +124,9 @@ ExecStreamResult CorrelationJoinExecStream::execute(
             }
 
             // restart right input stream
-            pGraph->getStreamInput(getStreamId(), 1)->open(true);
+            ExecStreamScheduler::restartStream(
+                pGraph->getScheduler(),
+                pGraph->getStreamInput(getStreamId(), 1));
 
             // make runnable
             if (++leftRowCount == 1) {

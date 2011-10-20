@@ -23,6 +23,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraphImpl.h"
+#include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/lbm/LbmMinusExecStream.h"
 
 FENNEL_BEGIN_CPPFILE("$Id:");
@@ -276,8 +277,11 @@ void LbmMinusExecStream::restartSubtrahends()
 {
     minSubtrahendRid = LcsRid(0);
     advancePending = false;
+    ExecStreamScheduler *sched = pGraph->getScheduler();
     for (uint i = 1; i < nInputs; i++) {
-        pGraph->getStreamInput(getStreamId(), i)->open(true);
+        ExecStreamScheduler::restartStream(
+            sched,
+            pGraph->getStreamInput(getStreamId(), i));
         segmentReaders[i].init(
             inAccessors[i],
             bitmapSegTuples[i],

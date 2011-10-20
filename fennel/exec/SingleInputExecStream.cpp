@@ -25,6 +25,7 @@
 #include "fennel/exec/SingleInputExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraph.h"
+#include "fennel/exec/ExecStreamScheduler.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -55,7 +56,9 @@ void SingleInputExecStream::open(bool restart)
     if (restart) {
         // restart input
         pInAccessor->clear();
-        pGraph->getStreamInput(getStreamId(), 0)->open(true);
+        ExecStreamScheduler::restartStream(
+            pGraph->getScheduler(),
+            pGraph->getStreamInput(getStreamId(), 0));
     }
 }
 

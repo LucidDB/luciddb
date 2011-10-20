@@ -35,7 +35,7 @@ using namespace fennel;
  * Derived classes can add tests and/or use a different scheduler
  * implementation.
  */
-class CalcExecStreamTestSuite : public ExecStreamUnitTestBase
+class CalcExecStreamTestSuite : virtual public ExecStreamUnitTestBase
 {
     TupleAttributeDescriptor uint64Desc;
 

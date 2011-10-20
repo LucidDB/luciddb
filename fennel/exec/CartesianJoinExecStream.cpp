@@ -25,6 +25,7 @@
 #include "fennel/exec/CartesianJoinExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraph.h"
+#include "fennel/exec/ExecStreamScheduler.h"
 
 #include <ostream>
 
@@ -164,7 +165,8 @@ ExecStreamResult CartesianJoinExecStream::execute(
 
                     pLeftBufAccessor->consumeTuple();
                     // restart right input stream
-                    pRightInput->open(true);
+                    ExecStreamScheduler::restartStream(
+                        pGraph->getScheduler(), pRightInput);
                     FENNEL_TRACE_THREAD(
                         TRACE_FINE,
                         "re-opened right input " << pRightBufAccessor);

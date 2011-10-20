@@ -40,6 +40,7 @@ ParamName TestBase::paramDictionaryFileName = "testDictionaryFileName";
 ParamName TestBase::paramTraceLevel = "testTraceLevel";
 ParamName TestBase::paramStatsFileName = "testStatsFileName";
 ParamName TestBase::paramTraceStdout = "testTraceStdout";
+ParamName TestBase::paramTestTimeout = "testTimeout";
 ParamName TestBase::paramDegreeOfParallelism = "degreeOfParallelism";
 
 TestBase::TestBase()
@@ -56,6 +57,7 @@ TestBase::TestBase()
     std::string traceStdoutParam =
         configMap.getStringParam(paramTraceStdout, "");
     traceStdout = ((traceStdoutParam.length() == 0) ? false : true);
+    testTimeout = configMap.getIntParam(paramTestTimeout, 0);
 
     std::string defaultTraceFileName;
     const char *fennelHome = getenv("FENNEL_HOME");
@@ -162,7 +164,7 @@ TestSuite *TestBase::releaseTestSuite()
     // release self-reference now that all test cases have been registered
     pTestObj.reset();
 
-    TestSuite* pTestSuite = BOOST_TEST_SUITE(testName.c_str());
+    pTestSuite = BOOST_TEST_SUITE(testName.c_str());
 
     if (runSingle.size()) {
         test_unit *p =  defaultTests.findTest(runSingle);
@@ -173,11 +175,11 @@ TestSuite *TestBase::releaseTestSuite()
             std::cerr << "test " << runSingle << " not found\n";
             exit(2);
         }
-        pTestSuite->add(p);
+        addTestToSuite(p);
     } else {
-        defaultTests.addAllToTestSuite(pTestSuite);
+        defaultTests.addAllToTestSuite(this);
         if (runAll) {
-            extraTests.addAllToTestSuite(pTestSuite);
+            extraTests.addAllToTestSuite(this);
         }
     }
     return pTestSuite;
@@ -201,15 +203,24 @@ TestBase::TestCaseGroup::findTest(std::string name) const
     return 0;
 }
 
-void TestBase::TestCaseGroup::addAllToTestSuite(TestSuite *suite) const
+void TestBase::TestCaseGroup::addAllToTestSuite(TestBase *base) const
 {
     for (std::vector<Item>::const_iterator p = items.begin();
          p != items.end(); ++p)
     {
-        suite->add(p->tu);
+        base->addTestToSuite(p->tu);
     }
 }
 
+void TestBase::addTestToSuite(test_unit *t)
+{
+    if (testTimeout > 0) {
+        const int expected_fails = 0;
+        pTestSuite->add(t, expected_fails, testTimeout);
+    } else {
+        pTestSuite->add(t);
+    }
+}
 
 void TestBase::beforeTestCase(std::string testCaseName)
 {

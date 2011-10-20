@@ -29,7 +29,7 @@
 #include <boost/test/test_tools.hpp>
 using namespace fennel;
 
-class CorrelationJoinExecStreamTestSuite : public ExecStreamUnitTestBase
+class CorrelationJoinExecStreamTestSuite : virtual public ExecStreamUnitTestBase
 {
     TupleAttributeDescriptor descAttrInt64;
     TupleDescriptor descInt64;

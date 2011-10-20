@@ -1,9 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2008 The Eigenbase Project
-// Copyright (C) 2008 SQLstream, Inc.
-// Copyright (C) 2008 Dynamo BI Corporation
+// Copyright (C) 2011 The Eigenbase Project
+// Copyright (C) 2011 SQLstream, Inc.
+// Copyright (C) 2011 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,37 +21,18 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "fennel/common/CommonPreamble.h"
-#include "fennel/common/FennelExcn.h"
-#include "fennel/synch/ThreadTracker.h"
+#ifndef Fennel_DebugUtil_Included
+#define Fennel_DebugUtil_Included
 
-FENNEL_BEGIN_CPPFILE("$Id$");
+FENNEL_BEGIN_NAMESPACE
 
-ThreadTracker::~ThreadTracker()
-{
-}
+// a class to hold some debugging routines
+struct DebugUtil {
+    /// Pauses the program so the debugger can attach; flag HUP means resume on
+    /// SIGHUP, not SIGCONT.
+    static void waitForDebugger(bool hup);
+};
 
-void ThreadTracker::onThreadStart()
-{
-    // do nothing by default
-}
-
-void ThreadTracker::onThreadEnd()
-{
-    // do nothing by default
-}
-
-void ThreadTracker::onThreadException()
-{
-    // by default, same as a normal exit
-    onThreadEnd();
-}
-
-FennelExcn *ThreadTracker::cloneExcn(std::exception &ex)
-{
-    return new FennelExcn(ex.what());
-}
-
-FENNEL_END_CPPFILE("$Id$");
-
-// End ThreadTracker.cpp
+FENNEL_END_NAMESPACE
+#endif
+// End DebugUtil.h

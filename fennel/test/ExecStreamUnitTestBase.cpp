@@ -38,10 +38,26 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+using std::vector;
+using std::string;
+using std::endl;
+using std::cout;
+
+ExecStream& ExecStreamUnitTestBase::completeGraph(ExecStream& final)
+{
+    // add a terminal sink, with an output edge for readStream():
+    SharedExecStream pAdaptedStream =
+        pGraphEmbryo->addAdapterFor(final.getName(), 0, BUFPROV_PRODUCER);
+    pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
+
+    pGraphEmbryo->prepareGraph(shared_from_this(), "");
+    return *pAdaptedStream;
+}
+
 SharedExecStream ExecStreamUnitTestBase::prepareSourceGraph(
     ExecStreamEmbryo &sourceStreamEmbryo)
 {
-    std::vector<ExecStreamEmbryo> transforms;
+    vector<ExecStreamEmbryo> transforms;
     return prepareTransformGraph(sourceStreamEmbryo, transforms);
 }
 
@@ -49,17 +65,17 @@ SharedExecStream ExecStreamUnitTestBase::prepareTransformGraph(
     ExecStreamEmbryo &sourceStreamEmbryo,
     ExecStreamEmbryo &transformStreamEmbryo)
 {
-    std::vector<ExecStreamEmbryo> transforms;
+    vector<ExecStreamEmbryo> transforms;
     transforms.push_back(transformStreamEmbryo);
     return prepareTransformGraph(sourceStreamEmbryo, transforms);
 }
 
 SharedExecStream ExecStreamUnitTestBase::prepareTransformGraph(
     ExecStreamEmbryo &sourceStreamEmbryo,
-    std::vector<ExecStreamEmbryo> &transforms)
+    vector<ExecStreamEmbryo> &transforms)
 {
     pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryo);
-    std::vector<ExecStreamEmbryo>::iterator it;
+    vector<ExecStreamEmbryo>::iterator it;
 
     // save all transforms
     for (it = transforms.begin(); it != transforms.end(); ++it) {
@@ -74,16 +90,17 @@ SharedExecStream ExecStreamUnitTestBase::prepareTransformGraph(
             (*it).getStream()->getName());
         previousStream = *it;
     }
+    return previousStream.getStream();
+}
 
-    SharedExecStream pAdaptedStream =
-        pGraphEmbryo->addAdapterFor(
-            previousStream.getStream()->getName(),
-            0,
-            BUFPROV_PRODUCER);
-    pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
-
-    pGraphEmbryo->prepareGraph(shared_from_this(), "");
-    return pAdaptedStream;
+// converts a list like '(1 2 3) to a list of lists like '((1) (2) (3)):
+template<class T> vector<vector<T> > explodeList(const vector<T>& in)
+{
+    vector<vector<T> > out;
+    for (int i = 0; i < in.size(); ++i) {
+        out.push_back(vector<T>(1, in[i]));
+    }
+    return out;
 }
 
 SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
@@ -91,199 +108,134 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
     ExecStreamEmbryo &sourceStreamEmbryo2,
     ExecStreamEmbryo &confluenceStreamEmbryo)
 {
-    std::vector<ExecStreamEmbryo> sourceStreamEmbryos;
+    vector<ExecStreamEmbryo> sourceStreamEmbryos;
     sourceStreamEmbryos.push_back(sourceStreamEmbryo1);
     sourceStreamEmbryos.push_back(sourceStreamEmbryo2);
     return prepareConfluenceGraph(sourceStreamEmbryos, confluenceStreamEmbryo);
 }
 
 SharedExecStream ExecStreamUnitTestBase::prepareConfluenceTransformGraph(
-    ExecStreamEmbryo &sourceStreamEmbryo1,
-    ExecStreamEmbryo &sourceStreamEmbryo2,
-    ExecStreamEmbryo &confluenceStreamEmbryo,
-    ExecStreamEmbryo &transformStreamEmbryo)
+    ExecStreamEmbryo &source1,
+    ExecStreamEmbryo &source2,
+    ExecStreamEmbryo &confluence,
+    ExecStreamEmbryo &transform)
 {
-    std::vector<ExecStreamEmbryo> sourceStreamEmbryos;
-    sourceStreamEmbryos.push_back(sourceStreamEmbryo1);
-    sourceStreamEmbryos.push_back(sourceStreamEmbryo2);
+    vector<ExecStreamEmbryo> sources;
+    sources.push_back(source1);
+    sources.push_back(source2);
+    vector<ExecStreamEmbryo> transforms;
+    transforms.push_back(transform);
+    vector<vector<ExecStreamEmbryo> > inputs = explodeList(sources);
+    return prepareConfluenceTransformGraph(inputs, confluence, transforms);
+}
 
-    std::vector<ExecStreamEmbryo>::iterator it;
+SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
+    vector<ExecStreamEmbryo> &sources,
+    ExecStreamEmbryo &confluence)
+{
+    vector<vector<ExecStreamEmbryo> > exploded = explodeList(sources);
+    return prepareConfluenceGraph(exploded, confluence);
+}
 
-    for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
-        ++it)
-    {
-        pGraphEmbryo->saveStreamEmbryo(*it);
-    }
-    pGraphEmbryo->saveStreamEmbryo(confluenceStreamEmbryo);
 
-    for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
-        ++it)
-    {
+SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
+    vector<vector<ExecStreamEmbryo> > &sources,
+    ExecStreamEmbryo &confluence)
+{
+    vector<ExecStreamEmbryo> transforms;
+    return prepareConfluenceTransformGraph(sources, confluence, transforms);
+}
+
+SharedExecStream ExecStreamUnitTestBase::prepareConfluenceTransformGraph(
+    vector<vector<ExecStreamEmbryo> > &inputs,
+    ExecStreamEmbryo &confluence,
+    vector<ExecStreamEmbryo> &transforms)
+{
+    pGraphEmbryo->saveStreamEmbryo(confluence);
+
+    for (int i = 0; i < inputs.size(); i++) {
+        for (int j = 0; j < inputs[i].size(); j++) {
+            pGraphEmbryo->saveStreamEmbryo(inputs[i][j]);
+        }
+        // connect the nodes of each inputs list in a cascade:
+        for (int j = 1; j < inputs[i].size(); j++) {
+            pGraphEmbryo->addDataflow(
+                inputs[i][j - 1].getStream()->getName(),
+                inputs[i][j].getStream()->getName());
+        }
         pGraphEmbryo->addDataflow(
-            (*it).getStream()->getName(),
-            confluenceStreamEmbryo.getStream()->getName());
+            inputs[i].back().getStream()->getName(),
+            confluence.getStream()->getName());
     }
 
-    std::vector<ExecStreamEmbryo> transforms;
-    transforms.push_back(transformStreamEmbryo);
-    ExecStreamEmbryo& previousStream = confluenceStreamEmbryo;
-
-    // save all transforms
+    // add the transforms
+    vector<ExecStreamEmbryo>::iterator it;
     for (it = transforms.begin(); it != transforms.end(); ++it) {
         pGraphEmbryo->saveStreamEmbryo(*it);
     }
-
+    ExecStreamEmbryo& previousStream = confluence;
     for (it = transforms.begin(); it != transforms.end(); ++it) {
         pGraphEmbryo->addDataflow(
             previousStream.getStream()->getName(),
             (*it).getStream()->getName());
         previousStream = *it;
     }
-
-
-    SharedExecStream pAdaptedStream =
-        pGraphEmbryo->addAdapterFor(
-            previousStream.getStream()->getName(),
-            0,
-            BUFPROV_PRODUCER);
-    pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
-
-    pGraphEmbryo->prepareGraph(shared_from_this(), "");
-    return pAdaptedStream;
-}
-
-SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
-    std::vector<ExecStreamEmbryo> &sourceStreamEmbryos,
-    ExecStreamEmbryo &confluenceStreamEmbryo)
-{
-    std::vector<std::vector<ExecStreamEmbryo> > sourceStreamEmbryosList;
-    std::vector<ExecStreamEmbryo>::iterator it;
-    std::vector<ExecStreamEmbryo> sourceStreamList;
-    for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
-        it++)
-    {
-        sourceStreamList.clear();
-        sourceStreamList.push_back(*it);
-        sourceStreamEmbryosList.push_back(sourceStreamList);
-    }
-
-    return
-        prepareConfluenceGraph(sourceStreamEmbryosList, confluenceStreamEmbryo);
-}
-
-SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
-    std::vector<std::vector<ExecStreamEmbryo> > &sourceStreamEmbryosList,
-    ExecStreamEmbryo &confluenceStreamEmbryo)
-{
-    pGraphEmbryo->saveStreamEmbryo(confluenceStreamEmbryo);
-
-    for (int i = 0; i < sourceStreamEmbryosList.size(); i++) {
-        for (int j = 0; j < sourceStreamEmbryosList[i].size(); j++) {
-            pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryosList[i][j]);
-        }
-
-        // connect streams in each sourceStreamEmbryos list in a cascade
-        for (int j = 1; j < sourceStreamEmbryosList[i].size(); j++) {
-            pGraphEmbryo->addDataflow(
-                sourceStreamEmbryosList[i][j - 1].getStream()->getName(),
-                sourceStreamEmbryosList[i][j].getStream()->getName());
-        }
-        pGraphEmbryo->addDataflow(
-            sourceStreamEmbryosList[i].back().getStream()->getName(),
-            confluenceStreamEmbryo.getStream()->getName());
-    }
-
-    SharedExecStream pAdaptedStream =
-        pGraphEmbryo->addAdapterFor(
-            confluenceStreamEmbryo.getStream()->getName(), 0,
-            BUFPROV_PRODUCER);
-    pGraph->addOutputDataflow(
-        pAdaptedStream->getStreamId());
-
-    pGraphEmbryo->prepareGraph(shared_from_this(), "");
-
-    return pAdaptedStream;
+    return previousStream.getStream();
 }
 
 SharedExecStream ExecStreamUnitTestBase::prepareDAG(
-    ExecStreamEmbryo &srcStreamEmbryo,
-    ExecStreamEmbryo &splitterStreamEmbryo,
-    std::vector<ExecStreamEmbryo> &interStreamEmbryos,
-    ExecStreamEmbryo &destStreamEmbryo,
-    bool createSink,
+    ExecStreamEmbryo &src,
+    ExecStreamEmbryo &splitter,
+    vector<ExecStreamEmbryo> &inters,
+    ExecStreamEmbryo &dest,
     bool saveSrc)
 {
-    std::vector<std::vector<ExecStreamEmbryo> > listOfList;
-
-    // Convert interStreamEmbryos to a vector of vectors.  E.g., if
-    // interStreamEmbryos contains (1, 2, 3), it will get converted to:
-    // ((1)) ((2)) ((3))
-    for (uint i = 0; i < interStreamEmbryos.size(); i++) {
-        std::vector<ExecStreamEmbryo> interStreamEmbryoList;
-
-        interStreamEmbryoList.push_back(interStreamEmbryos[i]);
-        listOfList.push_back(interStreamEmbryoList);
-    }
-    return prepareDAG(
-        srcStreamEmbryo, splitterStreamEmbryo, listOfList, destStreamEmbryo,
-        createSink, saveSrc);
+    vector<vector<ExecStreamEmbryo> > exploded = explodeList(inters);
+    return prepareDAG(src, splitter, exploded, dest, saveSrc);
 }
 
 SharedExecStream ExecStreamUnitTestBase::prepareDAG(
-    ExecStreamEmbryo &srcStreamEmbryo,
-    ExecStreamEmbryo &splitterStreamEmbryo,
-    std::vector<std::vector<ExecStreamEmbryo> > &interStreamEmbryos,
-    ExecStreamEmbryo &destStreamEmbryo,
-    bool createSink,
+    ExecStreamEmbryo &src,
+    ExecStreamEmbryo &splitter,
+    vector<vector<ExecStreamEmbryo> > &inters,
+    ExecStreamEmbryo &dest,
     bool saveSrc)
 {
     if (saveSrc) {
-        pGraphEmbryo->saveStreamEmbryo(srcStreamEmbryo);
+        pGraphEmbryo->saveStreamEmbryo(src);
     }
-    pGraphEmbryo->saveStreamEmbryo(splitterStreamEmbryo);
+    pGraphEmbryo->saveStreamEmbryo(splitter);
 
     // save all intermediate stream embryos
-    for (int i = 0; i < interStreamEmbryos.size(); i++) {
-        for (int j = 0; j < interStreamEmbryos[i].size(); j++) {
-            pGraphEmbryo->saveStreamEmbryo(interStreamEmbryos[i][j]);
+    for (int i = 0; i < inters.size(); i++) {
+        for (int j = 0; j < inters[i].size(); j++) {
+            pGraphEmbryo->saveStreamEmbryo(inters[i][j]);
         }
-
-        // connect streams in each interStreamEmbryos list in a cascade
-        for (int j = 1; j < interStreamEmbryos[i].size(); j++) {
+        // connect the streams in each intermediate list in a cascade
+        for (int j = 1; j < inters[i].size(); j++) {
             pGraphEmbryo->addDataflow(
-                interStreamEmbryos[i][j - 1].getStream()->getName(),
-                interStreamEmbryos[i][j].getStream()->getName());
+                inters[i][j - 1].getStream()->getName(),
+                inters[i][j].getStream()->getName());
         }
     }
 
-    pGraphEmbryo->saveStreamEmbryo(destStreamEmbryo);
+    pGraphEmbryo->saveStreamEmbryo(dest);
 
+    // connect src to splitter
     pGraphEmbryo->addDataflow(
-        srcStreamEmbryo.getStream()->getName(),
-        splitterStreamEmbryo.getStream()->getName());
-
-    // connect all inter streams to src and dest
-    for (int i = 0; i < interStreamEmbryos.size(); i++) {
+        src.getStream()->getName(),
+        splitter.getStream()->getName());
+    // connect splitter and dest to all intermediate lists
+    for (int i = 0; i < inters.size(); i++) {
         pGraphEmbryo->addDataflow(
-            splitterStreamEmbryo.getStream()->getName(),
-            interStreamEmbryos[i][0].getStream()->getName());
+            splitter.getStream()->getName(),
+            inters[i][0].getStream()->getName());
         pGraphEmbryo->addDataflow(
-            interStreamEmbryos[i].back().getStream()->getName(),
-            destStreamEmbryo.getStream()->getName());
+            inters[i].back().getStream()->getName(),
+            dest.getStream()->getName());
     }
 
-    SharedExecStream pAdaptedStream;
-
-    if (createSink) {
-        pAdaptedStream = pGraphEmbryo->addAdapterFor(
-            destStreamEmbryo.getStream()->getName(), 0,
-            BUFPROV_PRODUCER);
-        pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
-
-        pGraphEmbryo->prepareGraph(shared_from_this(), "");
-    }
-
-    return pAdaptedStream;
+    return dest.getStream();
 }
 
 void ExecStreamUnitTestBase::testCaseSetUp()
@@ -322,48 +274,143 @@ void ExecStreamUnitTestBase::tearDownExecStreamTest()
     pGraphEmbryo.reset();
 }
 
+// this functor expects a fixed TupleData.
+class ConstantTupleChecker : public MockConsumerExecStreamTupleChecker {
+    const TupleData expected;
+public:
+    ConstantTupleChecker(const TupleData& expected) : expected(expected) {}
+    virtual bool check(int nrow, const TupleDescriptor&, const TupleData&);
+};
+
+// this functor has a generator
+class TupleCheckerWithGenerator : public MockConsumerExecStreamTupleChecker {
+    MockProducerExecStreamGenerator& gen;
+public:
+    TupleCheckerWithGenerator(MockProducerExecStreamGenerator& gen)
+        : gen(gen) {}
+    virtual bool check(int nrow, const TupleDescriptor&, const TupleData&);
+};
+
+// this functor has a buffer of expected data in marshalled format
+class TupleCheckerWithBuffer : public MockConsumerExecStreamTupleChecker {
+    const PBuffer bufStart;
+    PBuffer bufNext;
+    int nrow;
+public:
+    TupleCheckerWithBuffer(const PBuffer buf) : bufStart(buf) {
+        bufNext = bufStart;
+        nrow = 0;
+    }
+    virtual bool check(int nrow, const TupleDescriptor&, const TupleData&);
+};
+
+// this functor has a list of expected tuples, in string format, as from
+// TuplePrinter
+class TupleCheckerWithStrings : public MockConsumerExecStreamTupleChecker {
+    vector<string> expectedStrings;
+public:
+    TupleCheckerWithStrings(const vector<string>& expected)
+        : expectedStrings(expected) {}
+    virtual bool check(int nrow, const TupleDescriptor&, const TupleData&);
+};
+
+bool ConstantTupleChecker::check(
+    int nrow, const TupleDescriptor& desc, const TupleData& actual)
+{
+    bool val = (0 == desc.compareTuples(expected, actual));
+    BOOST_CHECK_MESSAGE(val, "wrong output at row " << nrow);
+    return val;
+}
+
+bool TupleCheckerWithStrings::check(
+    int nrow, const TupleDescriptor& desc, const TupleData& actual)
+{
+    std::ostringstream oss;
+    TuplePrinter tprint;
+    tprint.print(oss, desc, actual);
+    string actualString = oss.str();
+    BOOST_REQUIRE(nrow < expectedStrings.size());
+    bool val = (0 == actualString.compare(expectedStrings[nrow]));
+    BOOST_CHECK_MESSAGE(
+        val, "wrong output at row " << nrow
+        << "; expected: " << expectedStrings[nrow]
+        << " actual: " << actualString);
+    return val;
+}
+
+bool TupleCheckerWithGenerator::check(
+    int nrow, const TupleDescriptor& desc, const TupleData& actual)
+{
+    int nMismatches = 0;
+    int nCol = desc.size();
+    for (int col = 0; col < nCol; ++col) {
+        int64_t actualValue =
+            *reinterpret_cast<int64_t const *>(actual[col].pData);
+        int64_t expectedValue = gen.generateValue(nrow, col);
+        bool val = (expectedValue == actualValue);
+        BOOST_CHECK_MESSAGE(
+            val,
+            "wrong output at row " << nrow << ", column " << col);
+        if (!val) {
+            nMismatches++;
+        }
+    }
+    return (nMismatches == 0);
+}
+
+bool TupleCheckerWithBuffer::check(
+    int nrow, const TupleDescriptor& desc, const TupleData& actualTuple)
+{
+    BOOST_REQUIRE(nrow == this->nrow);
+    TupleData expectedTuple(desc);
+    TupleAccessor expectedOutputAccessor;
+    expectedOutputAccessor.compute(desc);
+    expectedOutputAccessor.setCurrentTupleBuf(this->bufNext);
+    expectedOutputAccessor.unmarshal(expectedTuple);
+    this->nrow++;
+    this->bufNext += expectedOutputAccessor.getCurrentByteCount();
+
+    bool val = (0 == desc.compareTuples(expectedTuple, actualTuple));
+    BOOST_CHECK_MESSAGE(val, "wrong output at row " << nrow);
+    return val;
+}
+
 void ExecStreamUnitTestBase::verifyOutput(
-    ExecStream &stream,
+    ExecStream &wasFinal,
     uint nRowsExpected,
-    MockProducerExecStreamGenerator &generator,
+    MockConsumerExecStreamTupleChecker &checker,
     bool stopEarly)
 {
-    // TODO:  assertions about output tuple
-
+    ExecStream& stream = completeGraph(wasFinal);
     pResourceGovernor->requestResources(*pGraph);
     pGraph->open();
     pScheduler->start();
+
+    ExecStreamId streamId = stream.getStreamId();
+    BOOST_REQUIRE(stream.getGraph().getOutputCount(streamId) == 1);
+    const TupleDescriptor& desc =
+        stream.getGraph().getStreamOutputAccessor(streamId, 0)->getTupleDesc();
+    TupleData actualTuple;
+    actualTuple.compute(desc);
+
     uint nRows = 0;
     for (;;) {
-        ExecStreamBufAccessor &bufAccessor =
-            pScheduler->readStream(stream);
+        ExecStreamBufAccessor &bufAccessor = pScheduler->readStream(stream);
         if (bufAccessor.getState() == EXECBUF_EOS) {
             break;
         }
         BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-        const uint nCol =
-            bufAccessor.getConsumptionTupleAccessor().size();
+        const uint nCol = bufAccessor.getConsumptionTupleAccessor().size();
         BOOST_REQUIRE(nCol == bufAccessor.getTupleDesc().size());
         BOOST_REQUIRE(nCol >= 1);
-        TupleData inputTuple;
-        inputTuple.compute(bufAccessor.getTupleDesc());
+
         for (;;) {
             if (!bufAccessor.demandData()) {
                 break;
             }
             BOOST_REQUIRE(nRows < nRowsExpected);
-            bufAccessor.unmarshalTuple(inputTuple);
-            for (int col = 0; col < nCol; ++col) {
-                int64_t actualValue =
-                    *reinterpret_cast<int64_t const *>(inputTuple[col].pData);
-                int64_t expectedValue = generator.generateValue(nRows, col);
-                if (actualValue != expectedValue) {
-                    std::cout << "(Row, Col) = (" << nRows << ", " << col <<")"
-                              << std::endl;
-                    BOOST_CHECK_EQUAL(expectedValue, actualValue);
-                    // return;
-                }
-            }
+            bufAccessor.unmarshalTuple(actualTuple);
+            checker.check(nRows, desc, actualTuple);
             bufAccessor.consumeTuple();
             ++nRows;
             if (stopEarly && nRows == nRowsExpected) {
@@ -374,51 +421,24 @@ void ExecStreamUnitTestBase::verifyOutput(
     BOOST_CHECK_EQUAL(nRowsExpected, nRows);
 }
 
+void ExecStreamUnitTestBase::verifyOutput(
+    ExecStream &stream,
+    uint nRowsExpected,
+    MockProducerExecStreamGenerator &generator,
+    bool stopEarly)
+{
+    TupleCheckerWithGenerator checker(generator);
+    verifyOutput(stream, nRowsExpected, checker, stopEarly);
+}
+
+
 void ExecStreamUnitTestBase::verifyConstantOutput(
     ExecStream &stream,
     const TupleData &expectedTuple,
     uint nRowsExpected)
 {
-    // TODO:  assertions about output tuple
-
-    pResourceGovernor->requestResources(*pGraph);
-    pGraph->open();
-    pScheduler->start();
-    uint nRows = 0;
-    for (;;) {
-        ExecStreamBufAccessor &bufAccessor =
-            pScheduler->readStream(stream);
-        if (bufAccessor.getState() == EXECBUF_EOS) {
-            break;
-        }
-        BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-
-        if (!bufAccessor.demandData()) {
-            break;
-        }
-        BOOST_REQUIRE(nRows < nRowsExpected);
-
-        TupleData actualTuple;
-        actualTuple.compute(bufAccessor.getTupleDesc());
-        bufAccessor.unmarshalTuple(actualTuple);
-
-        int c = bufAccessor.getTupleDesc().compareTuples(
-            expectedTuple, actualTuple);
-        bufAccessor.consumeTuple();
-        ++nRows;
-        if (c) {
-#if 1
-            TupleDescriptor statusDesc = bufAccessor.getTupleDesc();
-            TuplePrinter tuplePrinter;
-            tuplePrinter.print(std::cout, statusDesc, actualTuple);
-            tuplePrinter.print(std::cout, statusDesc, expectedTuple);
-            std::cout << std::endl;
-#endif
-            BOOST_CHECK_EQUAL(0, c);
-            break;
-        }
-    }
-    BOOST_CHECK_EQUAL(nRowsExpected, nRows);
+    ConstantTupleChecker checker(expectedTuple);
+    verifyOutput(stream, nRowsExpected, checker);
 }
 
 void ExecStreamUnitTestBase::verifyBufferedOutput(
@@ -427,52 +447,17 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
     uint nRowsExpected,
     PBuffer expectedBuffer)
 {
-    // TODO:  assertions about output tuple
+    TupleCheckerWithBuffer checker(expectedBuffer);
+    verifyOutput(stream, nRowsExpected, checker);
+}
 
-    TupleAccessor expectedOutputAccessor;
-    expectedOutputAccessor.compute(outputTupleDesc);
-    TupleData expectedTuple(outputTupleDesc);
-    uint bufOffset = 0;
-    pResourceGovernor->requestResources(*pGraph);
-    pGraph->open();
-    pScheduler->start();
-    uint nRows = 0;
-    for (;;) {
-        ExecStreamBufAccessor &bufAccessor =
-            pScheduler->readStream(stream);
-        if (bufAccessor.getState() == EXECBUF_EOS) {
-            break;
-        }
-        BOOST_REQUIRE(bufAccessor.getTupleDesc() == outputTupleDesc);
-        BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-        const uint nCol =
-            bufAccessor.getConsumptionTupleAccessor().size();
-        BOOST_REQUIRE(nCol == bufAccessor.getTupleDesc().size());
-        BOOST_REQUIRE(nCol >= 1);
-        TupleData inputTuple;
-        inputTuple.compute(bufAccessor.getTupleDesc());
-        for (;;) {
-            if (!bufAccessor.demandData()) {
-                break;
-            }
-            BOOST_REQUIRE(nRows < nRowsExpected);
-            bufAccessor.unmarshalTuple(inputTuple);
-            expectedOutputAccessor.setCurrentTupleBuf(
-                expectedBuffer + bufOffset);
-            expectedOutputAccessor.unmarshal(expectedTuple);
-            int c = outputTupleDesc.compareTuples(inputTuple, expectedTuple);
-            if (c) {
-                std::cout << "(Row) = (" << nRows << ")"
-                    << " -- Tuples don't match"<< std::endl;
-                BOOST_CHECK_EQUAL(0, c);
-                return;
-            }
-            bufAccessor.consumeTuple();
-            bufOffset += expectedOutputAccessor.getCurrentByteCount();
-            ++nRows;
-        }
-    }
-    BOOST_CHECK_EQUAL(nRowsExpected, nRows);
+void ExecStreamUnitTestBase::verifyStringOutput(
+    ExecStream &stream,
+    uint nRowsExpected,
+    const vector<string>& expected)
+{
+    TupleCheckerWithStrings checker(expected);
+    verifyOutput(stream, nRowsExpected, checker);
 }
 
 FENNEL_END_CPPFILE("$Id$");

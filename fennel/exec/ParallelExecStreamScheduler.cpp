@@ -359,6 +359,7 @@ void ParallelExecStreamScheduler::processCompletedTask(
     case EXECRC_QUANTUM_EXPIRED:
         addToQueue(current);
         break;
+    case EXECRC_NIL:
     default:
         permAssert(false);
     }

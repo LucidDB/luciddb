@@ -51,6 +51,11 @@ public:
     virtual void onThreadEnd();
 
     /**
+     * Called in thread context when thread's body has thrown an exception.
+     */
+    virtual void onThreadException();
+
+    /**
      * Clones an exception so that it can be rethrown in
      * a different thread context.
      *

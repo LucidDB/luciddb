@@ -649,10 +649,10 @@ void LbmSearchTest::loadTableAndIndex(
     clusterBarrierStreamEmbryo.init(new BarrierExecStream(), barrierParams);
     clusterBarrierStreamEmbryo.getStream()->setName("ClusterBarrierExecStream");
 
-    // create a DAG with the above, but without the final output sink
+    // create a DAG with the above
     prepareDAG(
         mockStreamEmbryo, splitterStreamEmbryo, lcsAppendEmbryos,
-        clusterBarrierStreamEmbryo, false);
+        clusterBarrierStreamEmbryo);
 
     // 5. setup splitter stream for create bitmaps
 
@@ -781,7 +781,7 @@ void LbmSearchTest::loadTableAndIndex(
     // above as the source
     SharedExecStream pOutputStream = prepareDAG(
         clusterBarrierStreamEmbryo, splitterStreamEmbryo,
-        createBitmapStreamList, barrierStreamEmbryo, true, false);
+        createBitmapStreamList, barrierStreamEmbryo, false);
 
     // set up a generator which can produce the expected output
     RampExecStreamGenerator expectedResultGenerator(mockParams.nRows);

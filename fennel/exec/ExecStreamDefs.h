@@ -74,6 +74,7 @@ enum ExecStreamBufProvision
 
 enum ExecStreamResult
 {
+    EXECRC_NIL,                         // dummy result (not executed)
     EXECRC_BUF_UNDERFLOW,
     EXECRC_BUF_OVERFLOW,
     EXECRC_EOS,
@@ -82,6 +83,7 @@ enum ExecStreamResult
 };
 
 static std::string ExecStreamResult_names[] = {
+    "EXECRC_NIL",
     "EXECRC_BUF_UNDERFLOW",
     "EXECRC_BUF_OVERFLOW",
     "EXECRC_EOS",
@@ -90,6 +92,7 @@ static std::string ExecStreamResult_names[] = {
 };
 
 static std::string ExecStreamResult_names_short[] = {
+    "NIL",
     "UND",
     "OVR",
     "EOS",

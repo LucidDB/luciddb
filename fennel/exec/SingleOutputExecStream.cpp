@@ -24,6 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/SingleOutputExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/exec/ExecStreamScheduler.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 

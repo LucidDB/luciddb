@@ -26,6 +26,7 @@
 
 #include "fennel/exec/SingleInputExecStream.h"
 #include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TuplePrinter.h"
 
 using std::vector;
@@ -35,24 +36,58 @@ using std::ostream;
 FENNEL_BEGIN_NAMESPACE
 
 /**
+ * MockConsumerExecStreamTupleChecker is an abstract object used to check rows
+ * of actual data against their expected values. It is a kind of inverse to
+ * MockProducerExecStreamGenerator. It is up to a subclass to define the
+ * expected values.
+ */
+struct FENNEL_EXEC_EXPORT MockConsumerExecStreamTupleChecker {
+    virtual ~MockConsumerExecStreamTupleChecker();
+    /** Checks an actual tuple against the its expected value.
+     * @return true when actual matches expected, otherwise false. But usually
+     *  called in a unit test for a side effect.
+     * @param n row sequence number, starting at 0, increasing til EOS.
+     * @param desc describes the tuple.
+     * @param actual the actual tuple.
+     */
+    virtual bool check(
+        int n, const TupleDescriptor& desc, const TupleData& actual) = 0;
+};
+
+/**
  * MockConsumerExecStreamParams defines parameters for MockConsumerExecStream.
  */
 struct FENNEL_EXEC_EXPORT MockConsumerExecStreamParams
     : public SingleInputExecStreamParams
 {
-    /** save data as a vector of strings */
+    /** flag: save data as a vector of strings */
     bool saveData;
-    /** when not null, echo data to this stream */
+    /** unless null, echo data to this stream */
     ostream* echoData;
+    /** unless null, call this to check each tuple received */
+    MockConsumerExecStreamTupleChecker* checkData;
 
-    MockConsumerExecStreamParams() : saveData(true), echoData(0)
+    /** a kind of fetch timeout: a limit to the number of consecutive
+     * EXECRC_BUF_UNDERFLOWs returned from execute(): if the limit is reached,
+     * it returns EXECRC_EOS. 0 means no limit */
+    int maxConsecutiveUnderflows;
+
+    /** to test error handling. throw a FennelExcn on reading the Nth row.
+     * 1 means the first row, 0 means never (the default).
+     */
+    int dieOnNthRow;
+
+    MockConsumerExecStreamParams()
+        : saveData(false), echoData(0), checkData(0),
+        maxConsecutiveUnderflows(0), dieOnNthRow(0)
     {
     }
 };
 
 /**
- * MockConsumerExecStream consumes data from a single input. It saves the data
- * as a vector of strings, or echoes the strings to an ostream, or both.
+ * MockConsumerExecStream consumes data from a single input.
+ * It can: verify each row of data by calling a functor; save the data as a
+ * vector of strings; echo the strings to an ostream.
  *
  * @author Julian Hyde
  * @version $Id$
@@ -62,23 +97,35 @@ class FENNEL_EXEC_EXPORT MockConsumerExecStream
 {
 protected:
     bool saveData;
+    int maxConsecutiveUnderflows;
+    int dieOnNthRow;
     ostream* echoData;
+    MockConsumerExecStreamTupleChecker* checkData;
     vector<string> rowStrings;
 private:
     long rowCount;
+    long incorrectRowCount;
+    int consecutiveUnderflowCt;
     TupleData inputTuple;
     TuplePrinter tuplePrinter;
     bool recvEOS;
+    ExecStreamResult innerExecute(ExecStreamQuantum const&);
 
 public:
+    MockConsumerExecStream();
+    virtual ~MockConsumerExecStream();
+
     // implement ExecStream
     virtual void prepare(MockConsumerExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 
-    long getRowCount() const
-    {
+    long getRowCount() const {
         return rowCount;
+    }
+
+    long getIncorrectRowCount() const {
+        return incorrectRowCount;
     }
 
     const vector<string>& getRowVector() {
