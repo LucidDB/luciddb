@@ -552,6 +552,18 @@ public abstract class JmiJsonUtil
      */
     public abstract String getLurqlClass(RefObject element);
 
+    /**
+     * Clears all internal caches, effectively resetting the object. This is
+     * useful when pointing to a different repository or when one knows or
+     * suspects that the cached information is out of date.
+     */
+    public synchronized void flush()
+    {
+        loadCache.clear();
+        serverMofIds.clear();
+        unresolvedReferences.clear();
+        referenceKeys.clear();
+    }
 }
 
 // End JmiJsonUtil.java
