@@ -22,7 +22,7 @@
 */
 package net.sf.farrago.type.runtime;
 
-import net.sf.farrago.resource.*;
+import net.sf.farrago.resource.FarragoResource;
 
 
 /**
@@ -252,10 +252,15 @@ public class RuntimeTypeUtil
         int pos,
         char escapeChar)
     {
+        boolean negated = false;
+        boolean allNegated = false;
         int i = pos + 1;
         for (i = pos + 1; i < sqlPattern.length(); i++) {
             char c = sqlPattern.charAt(i);
             if (c == ']') {
+                if (negated && !allNegated) {
+                    javaPattern.append(']');
+                }
                 return i - 1;
             } else if (c == escapeChar) {
                 i++;
@@ -275,8 +280,14 @@ public class RuntimeTypeUtil
                 }
             } else if (c == '-') {
                 javaPattern.append('-');
-            } else if (c == '^') {
-                javaPattern.append('^');
+            } else if (c == '^' && !negated) {
+                negated = true;
+                if (i == pos + 1) {
+                    allNegated = true;
+                    javaPattern.append('^');
+                } else {
+                    javaPattern.append("&&[^)");
+                }
             } else if (sqlPattern.startsWith("[:", i)) {
                 int numOfRegCharSets = regCharClasses.length / 2;
                 boolean found = false;

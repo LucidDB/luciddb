@@ -22,24 +22,32 @@
 */
 package org.eigenbase.sql.test;
 
-import java.math.*;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.regex.Pattern;
 
-import java.sql.*;
-import java.text.*;
+import junit.framework.TestCase;
 
-import java.util.*;
-import java.util.regex.*;
-
-import junit.framework.*;
-
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.SqlDialect;
+import org.eigenbase.sql.SqlJdbcFunctionCall;
+import org.eigenbase.sql.SqlLiteral;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlTester.VmName;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.BasicSqlType;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.util.SqlString;
-import org.eigenbase.test.*;
-import org.eigenbase.util.*;
+import org.eigenbase.test.SqlLimitsTest;
+import org.eigenbase.util.Bug;
+import org.eigenbase.util.TestUtil;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -96,7 +104,7 @@ import org.eigenbase.util.*;
  * </ul>
  *
  * @author Julian Hyde
- * @version $Id$
+ * @version $Id: //open/dt/dev/farrago/src/org/eigenbase/sql/test/SqlOperatorTests.java#110 $
  * @since October 1, 2004
  */
 public abstract class SqlOperatorTests
@@ -3177,77 +3185,67 @@ public abstract class SqlOperatorTests
                 true);
         }
 
-        if (Bug.Frg375Fixed) {
-            getTester().checkBoolean(
-                "'cd' similar to '[a-e^c]d' ", Boolean.FALSE); // FRG-375
-        }
+        getTester().checkBoolean(
+            "'cd' similar to '[a-e^c]d' ", Boolean.FALSE); // FRG-375
 
-        // following tests use regular character set identifiers.
-        // Not implemented yet. FRG-377.
-        if (Bug.Frg377Fixed) {
-            getTester().checkBoolean(
-                "'y' similar to '[:ALPHA:]*'",
-                Boolean.TRUE);
+        getTester().checkBoolean(
+            "'y' similar to '[[:ALPHA:]]*'",
+            Boolean.TRUE);
 
-            getTester().checkBoolean(
-                "'yd32' similar to '[:LOWER:]{2}[:DIGIT:]*'",
-                Boolean.TRUE);
+        getTester().checkBoolean(
+            "'yd32' similar to '[[:LOWER:]]{2}[[:DIGIT:]]*'", Boolean.TRUE);
 
-            getTester().checkBoolean(
-                "'yd32' similar to '[:ALNUM:]*'",
-                Boolean.TRUE);
+        getTester().checkBoolean(
+            "'yd32' similar to '[[:ALNUM:]]*'",
+            Boolean.TRUE);
 
-            getTester().checkBoolean(
-                "'yd32' similar to '[:ALNUM:]*[:DIGIT:]?'",
-                Boolean.TRUE);
+        getTester().checkBoolean(
+            "'yd32' similar to '[[:ALNUM:]]*[[:DIGIT:]]?'", Boolean.TRUE);
 
-            getTester().checkBoolean(
-                "'yd32' similar to '[:ALNUM:]?[:DIGIT:]*'",
+        getTester().checkBoolean(
+            "'yd32' similar to '[[:ALNUM:]]?[[:DIGIT:]]*'", Boolean.FALSE);
+
+        getTester().checkBoolean(
+            "'yd3223' similar to '([[:LOWER:]]{2})[[:DIGIT:]]{2,5}'",
+            Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'yd3223' similar to '[[:LOWER:]]{2}[[:DIGIT:]]{2,}'",
+            Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'yd3223' similar to '[[:LOWER:]]{2}[[:DIGIT:]]{4}'", Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'yd3223' similar to '[[:LOWER:]]{2}[[:DIGIT:]]{3}'",
                 Boolean.FALSE);
 
-            getTester().checkBoolean(
-                "'yd3223' similar to '([:LOWER:]{2})[:DIGIT:]{2,5}'",
-                Boolean.TRUE);
+        getTester().checkBoolean(
+            "'yd  3223' similar to '[[:UPPER:]]{2}  [[:DIGIT:]]{3}'",
+            Boolean.FALSE);
 
-            getTester().checkBoolean(
-                "'yd3223' similar to '[:LOWER:]{2}[:DIGIT:]{2,}'",
-                Boolean.TRUE);
+        getTester().checkBoolean(
+            "'YD  3223' similar to '[[:UPPER:]]{2}  [[:DIGIT:]]{3}'",
+            Boolean.FALSE);
 
-            getTester().checkBoolean(
-                "'yd3223' similar to '[:LOWER:]{2}||[:DIGIT:]{4}'",
-                Boolean.TRUE);
+        getTester().checkBoolean(
+            "'YD  3223' similar to "
+            + "'[[:UPPER:]]{2}[[:WHITESPACE:]]*[[:DIGIT:]]{4}'",
+            Boolean.TRUE);
 
-            getTester().checkBoolean(
-                "'yd3223' similar to '[:LOWER:]{2}[:DIGIT:]{3}'",
-                Boolean.FALSE);
+        getTester().checkBoolean(
+            "'YD\t3223' similar to '[[:UPPER:]]{2}[[:SPACE:]]*[[:DIGIT:]]{4}'",
+            Boolean.FALSE);
 
-            getTester().checkBoolean(
-                "'yd  3223' similar to '[:UPPER:]{2}  [:DIGIT:]{3}'",
-                Boolean.FALSE);
+        getTester().checkBoolean(
+            "'YD\t3223' similar to "
+            + "'[[:UPPER:]]{2}[[:WHITESPACE:]]*[[:DIGIT:]]{4}'",
+            Boolean.TRUE);
 
-            getTester().checkBoolean(
-                "'YD  3223' similar to '[:UPPER:]{2}  [:DIGIT:]{3}'",
-                Boolean.FALSE);
-
-            getTester().checkBoolean(
-                "'YD  3223' similar to "
-                + "'[:UPPER:]{2}||[:WHITESPACE:]*[:DIGIT:]{4}'",
-                Boolean.TRUE);
-
-            getTester().checkBoolean(
-                "'YD\t3223' similar to '[:UPPER:]{2}[:SPACE:]*[:DIGIT:]{4}'",
-                Boolean.FALSE);
-
-            getTester().checkBoolean(
-                "'YD\t3223' similar to "
-                + "'[:UPPER:]{2}[:WHITESPACE:]*[:DIGIT:]{4}'",
-                Boolean.TRUE);
-
-            getTester().checkBoolean(
-                "'YD\t\t3223' similar to "
-                + "'([:UPPER:]{2}[:WHITESPACE:]+)||[:DIGIT:]{4}'",
-                Boolean.TRUE);
-        }
+        getTester().checkBoolean(
+            "'YD\t\t3223' similar to "
+            + "'([[:UPPER:]]{2}[[:WHITESPACE:]]+)[[:DIGIT:]]{4}'",
+            Boolean.TRUE);
     }
 
     public void testEscapeOperator()

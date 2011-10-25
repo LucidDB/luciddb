@@ -273,106 +273,108 @@ SqlSimilarPrepRewriteCharEnumeration(
     {
         // ASCII
 
-        // If a <character enumeration> contains a <regular character
-        // set identifier> it must be either [[:foo:]] or
-        // [^[:foo:]]. All other patterns containing a <regular
-        // character set identifier>, e.g. [abc[:foo:]], are assumed
-        // (by my reading of the BNF) to be ill-formed.
-        if (!expPat.compare(pos, 3, "^[:")) {
-            // skip past ^ and process as a usual (e.g. as [:foo:])
-            pos++;
-        } else if (!expPat.compare(pos, 2, "[:")) {
-            // no-op
-        } else {
-            // The <character enumeration> does not contain a
-            // <regular character set identifier>.
-            //
-            // SQL2003 Part 2 Section 8.6 Syntax Rule 5 and Syntax Rule 6.  Only
-            // <escaped character> and <non-escaped character> are
-            // legal between [ and ]. i.e. Unescaped special
-            // characters not allowed in <character enumeration>.
-            // Of course the exception is '-' <minus sign> and '^'
-            // <circumflex>.
 
-            std::string syntaxRule6ForCharEnum("[]()|+*_%?{}");
-            syntaxRule6ForCharEnum.append(escapeChar, 1);
+        // SQL2003 Part 2 Section 8.6 Syntax Rule 5 and Syntax Rule 6.  Only
+        // <escaped character> and <non-escaped character> are
+        // legal between [ and ]. i.e. Unescaped special
+        // characters not allowed in <character enumeration>.
+        // Of course the exception is '-' <minus sign> and '^'
+        // <circumflex>.
 
-            size_t pos2 = pos;
-            while ((pos2 = expPat.find_first_of(syntaxRule6ForCharEnum, pos2))
-                   != std::string::npos)
-            {
-                if (expPat[pos2] == escapeChar) {
-                    // skip over next char, assume that it is special
-                    pos2 += 2;
-                } else if (expPat[pos2] == ']') {
-                    // no more special chars. Set is OK
-                    break;
+        std::string syntaxRule6ForCharEnum("^[]()|+*_%?{}");
+        syntaxRule6ForCharEnum.append(escapeChar, 1);
+
+        size_t negatedPos = 0;
+        size_t pos2 = pos;
+        while ((pos2 = expPat.find_first_of(syntaxRule6ForCharEnum, pos2))
+               != std::string::npos)
+        {
+            char c = expPat[pos2];
+            if (c == escapeChar) {
+                // skip over next char, assume that it is special
+                pos2 += 2;
+            } else if (c == '^' && negatedPos == 0) {
+                negatedPos = pos2++;
+            } else if (c == ']') {
+                // no more special chars. Set is OK
+                if (negatedPos > pos) {
+                    // have xxx^yyy
+                    std::string subtractor(
+                        expPat, negatedPos + 1, pos2 - negatedPos - 1);
+                    expPat.replace(negatedPos, pos2 - negatedPos + 1, "])");
+                    expPat.insert(pos - 1, "((?![" + subtractor + "])");
+                    pos = pos2 + 8;
                 } else {
-                    // A special char (as defined by Syntax Rule 6) found
-                    // unescaped inside character enumeration
-                    //
-                    // SQL2003 Part 2 Section 8.6 General Rule 2
-                    // Data Exception - Invalid Regular Expression
+                    // hav xxx or ^xxx
+                    pos = pos2 + 1;
+                }
+                return;
+            } else if (c == '[') {
+                // SQL2003 Part 2 Section 8.6 Syntax Rule 3
+                // and 8.6 BNF <character enumeration>
+                // Must make a few substitutions as regex doesn't match
+                // SIMILAR. Also, regex doesn't use [:ALPHA:], only [:alpha:].
+                // See General Rule 7.m - 7.s
+                //
+                // SQL2003 Part 2 Section 8.6 General Rule 7.r, Note 189
+                // refers to SQL2003 3.1.6.42: Whitespace is defined as:
+                // U+0009, Horizontal Tabulation
+                // U+000A, Line Feed
+                // U+000B, Vertical Tabulation
+                // U+000C, Form Feed
+                // U+000D, Carriage Return
+                // U+0085, Next Line
+                // Plus Unicode General Category classes Zs, Zl, Zp:
+                // (see NOTE 6 & NOTE 7), ignoring those > U+00FF
+                // U+0020, Space
+                // U+00A0, No-Break Space
+                //
+                // Table below assumes that only [[:foo:]] and [^[:foo:]] are
+                // legal. All other patterns, e.g. [abc[:foo:]] are assumed
+                // (by my reading of the BNF) to be ill-formed.
+                //
+                // TODO: Move this table to .cpp file.
+                char const * const regCharSetIdent[][2] = {
+                    { "[:ALPHA:]", "[:alpha:]" },
+                    { "[:alpha:]", "[:alpha:]" },
+                    { "[:UPPER:]", "[:upper:]" },
+                    { "[:upper:]", "[:upper:]" },
+                    { "[:LOWER:]", "[:lower:]" },
+                    { "[:lower:]", "[:lower:]" },
+                    { "[:DIGIT:]", "[:digit:]" },
+                    { "[:digit:]", "[:digit:]" },
+                    { "[:SPACE:]", " " },
+                    { "[:space:]", " " },
+                    { "[:WHITESPACE:]", "\x20\xa0\x09\x0a\x0b\x0c\x0d\x85" },
+                    { "[:whitespace:]", "\x20\xa0\x09\x0a\x0b\x0c\x0d\x85" },
+                    { "[:ALNUM:]", "[:alnum:]" },
+                    { "[:alnum:]", "[:alnum:]" },
+                    { "", "" },
+                };
+                int i, len;
+                for (i = 0; *regCharSetIdent[i][0]; i++) {
+                    len = strlen(regCharSetIdent[i][0]);
+                    if (!expPat.compare(pos2, len, regCharSetIdent[i][0])) {
+                        expPat.replace(pos2, len, regCharSetIdent[i][1]);
+                        pos2 += strlen(regCharSetIdent[i][1]);
+                        break;
+                    }
+                }
+                // SQL2003 Part 2 Section 8.6 General Rule 2
+                // Data Exception - Invalid Regular Expression
+                if (!*regCharSetIdent[i][0]) {
                     throw SqlState::instance().code2201B();
                 }
-            }
-            return;
-        }
-
-        //
-        // Continue with <regular character set identifier> processing
-        //
-
-        // SQL2003 Part 2 Section 8.6 Syntax Rule 3
-        // and 8.6 BNF <character enumeration>
-        // Must make a few substitutions as regex doesn't match
-        // SIMILAR. Also, regex doesn't use [:ALPHA:], only [:alpha:].
-        // See General Rule 7.m - 7.s
-        //
-        // SQL2003 Part 2 Section 8.6 General Rule 7.r, Note 189 refers to
-        // SQL2003 3.1.6.42: Whitespace is defined as:
-        // U+0009, Horizontal Tabulation
-        // U+000A, Line Feed
-        // U+000B, Vertical Tabulation
-        // U+000C, Form Feed
-        // U+000D, Carriage Return
-        // U+0085, Next Line
-        // Plus Unicode General Category classes Zs, Zl, Zp:
-        // (see NOTE 6 & NOTE 7), ignoring those > U+00FF
-        // U+0020, Space
-        // U+00A0, No-Break Space
-        //
-        // Table below assumes that only [[:foo:]] and [^[:foo:]] are
-        // legal. All other patterns, e.g. [abc[:foo:]] are assumed
-        // (by my reading of the BNF) to be ill-formed.
-        //
-        // TODO: Move this table to .cpp file.
-        char const * const regCharSetIdent[][2] = {
-            { "[:ALPHA:]", "[:alpha:]" },
-            { "[:alpha:]", "[:alpha:]" },
-            { "[:UPPER:]", "[:upper:]" },
-            { "[:upper:]", "[:upper:]" },
-            { "[:LOWER:]", "[:lower:]" },
-            { "[:lower:]", "[:lower:]" },
-            { "[:DIGIT:]", "[:digit:]" },
-            { "[:digit:]", "[:digit:]" },
-            { "[:SPACE:]", " " },
-            { "[:space:]", " " },
-            { "[:WHITESPACE:]", "\x20\xa0\x09\x0a\x0b\x0c\x0d\x85" },
-            { "[:whitespace:]", "\x20\xa0\x09\x0a\x0b\x0c\x0d\x85" },
-            { "[:ALNUM:]", "[:alnum:]" },
-            { "[:alnum:]", "[:alnum:]" },
-            { "", "" },
-        };
-        int i, len;
-        for (i = 0; *regCharSetIdent[i][0]; i++) {
-            len = strlen(regCharSetIdent[i][0]);
-            if (!expPat.compare(pos, len, regCharSetIdent[i][0])) {
-                expPat.replace(pos, len, regCharSetIdent[i][1]);
-                pos += strlen(regCharSetIdent[i][1]);
-                return;
+            } else {
+                // A special char (as defined by Syntax Rule 6) found
+                // unescaped inside character enumeration
+                //
+                // SQL2003 Part 2 Section 8.6 General Rule 2
+                // Data Exception - Invalid Regular Expression
+                throw SqlState::instance().code2201B();
             }
         }
+       // Opening '[' w/o closing ']'
         // SQL2003 Part 2 Section 8.6 General Rule 2
         // Data Exception - Invalid Regular Expression
         throw SqlState::instance().code2201B();
@@ -411,7 +413,6 @@ SqlSimilarPrepReWrite(
         //         % -> .*
 
         size_t pos = 0;
-        bool characterEnumeration = false; // e.g. [A-Z]
         while ((pos = expPat.find_first_of(sqlSpecial, pos))
             != std::string::npos)
         {
@@ -457,22 +458,13 @@ SqlSimilarPrepReWrite(
                     // the BNF, a non-escaped special character is not
                     // legal inside a character enumeration. Besides,
                     // it doesn't make sense.
-                    characterEnumeration = true;
                     pos++;
                     SqlSimilarPrepRewriteCharEnumeration
                         <CodeUnitBytes, MaxCodeUnitsPerCodePoint>
                         (expPat, pos, SqlSimilarPrepSyntaxRule6, escapeChar);
                     break;
-                case ']':
-                    if (!characterEnumeration) {
-                        // Closing ']'  w/o opening ']'
-                        // SQL2003 Part 2 Section 8.6 General Rule 2
-                        // Data Exception - Invalid Regular Expression
-                        throw SqlState::instance().code2201B();
-                    }
-                    characterEnumeration = false;
-                    pos++;
-                    break;
+                case ']':   // Outside of character enumeration
+                    throw SqlState::instance().code2201B();
                 case '_':   // SQL '_' -> regex '.'
                     expPat.replace(pos, 1, ".");
                     pos++;
@@ -514,13 +506,6 @@ SqlSimilarPrepReWrite(
                 }
             }
         } // while()
-
-        if (characterEnumeration) {
-            // Opening '[' w/o closing ']'
-            // SQL2003 Part 2 Section 8.6 General Rule 2
-            // Data Exception - Invalid Regular Expression
-            throw SqlState::instance().code2201B();
-        }
     }
 }
 

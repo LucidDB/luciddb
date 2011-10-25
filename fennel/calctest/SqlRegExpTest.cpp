@@ -849,30 +849,18 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
 
         // [a^b], [a-c^d-f]
         // SQL2003 Part 2 Section 8.6 General Rule 7.l (7L)
-        // boost regex does not support this
-        // SqlSimilarPrep does not currently have a workaround.
-        // TODO: Add a workaround in SqlSimilarPrep to allow this to work
-#if 0
-        { "[a^b]",     "ac",    "t" },
-        { "[a^b]",     "aa",    "t" },
-        { "[a-c^d-f]", "ad",    "t" },
-        { "[a-c^d-f]", "cf",    "t" },
+        { "[a^b]",     "a",    "t" },
+        { "[a^b]",     "b",    "f" },
+        { "[a-c^d-f]", "a",    "t" },
+        { "[a-c^d-f]", "c",    "t" },
 
         { "[a^b]",     "",      "f" },
-        { "[a^b]",     "a",     "f" },
-        { "[a^b]",     "b",     "f" },
-        { "[a^b]",     "bb",    "f" },
-        { "[a^b]",     "ab",    "f" },
-        { "[a^b]",     "acd",   "f" },
         { "[a-c^d-f]", "",      "f" },
-        { "[a-c^d-f]", "aa",    "f" },
-        { "[a-c^d-f]", "ag",    "f" },
-        { "[a-c^d-f]", "ca",    "f" },
-        { "[a-c^d-f]", "cg",    "f" },
-        { "[a-c^d-f]", "ad",    "f" },
-        { "[a-c^d-f]", "af",    "f" },
-        { "[a-c^d-f]", "aaa",   "f" },
-#endif
+        { "[a-c^d-f]", "a",    "t" },
+        { "[a-c^d-f]", "d",    "f" },
+        { "[a-c^c-f]", "c",    "f" },
+        { "[a-c^c-f]", "b",    "t" },
+        { "[a-c^d-f]", "c",    "t" },
 
         // SQL2003 Part 2 Section 8.6 General Rule 7.m
         { "[[:alpha:]]",  "a",  "t" },
