@@ -104,6 +104,9 @@ public class FarragoJmiJsonUtil
         } else if (beanType.equals("RoutineParameter")) {
             result =
                 sql2003.getFemRoutineParameter().createFemRoutineParameter();
+        } else if (beanType.equals("ColumnListRoutineParameter")) {
+            result = sql2003.getFemColumnListRoutineParameter()
+                .createFemColumnListRoutineParameter();
         } else if (beanType.equals("StorageOption")) {
             result = medPkg.getFemStorageOption().createFemStorageOption();
         } else if (beanType.equals("UniqueKeyConstraint")) {

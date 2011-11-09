@@ -181,12 +181,14 @@ public abstract class FarragoLurqlUDR
         PreparedStatement resultInserter) throws SQLException
     {
         final Collection<RefObject> results = getObjects(lurqlQuery);
-        for (RefObject refObject : results) {
-            if (refObject instanceof CwmModelElement) {
-                resultInserter.setString(
-                    1,
-                    ((CwmModelElement) refObject).getName());
-                resultInserter.executeUpdate();
+        if (results != null) {
+            for (RefObject refObject : results) {
+                if (refObject instanceof CwmModelElement) {
+                    resultInserter.setString(
+                        1,
+                        ((CwmModelElement) refObject).getName());
+                    resultInserter.executeUpdate();
+                }
             }
         }
     }
@@ -222,18 +224,20 @@ public abstract class FarragoLurqlUDR
                         schema.getOwnedElement(),
                         name);
         }
-        final DdlGenerator ddlGen =
-            FarragoUdrRuntime.getSession().getPersonality().newDdlGenerator(
-                SqlDialect.EIGENBASE,
-                FarragoUdrRuntime.getRepos().getModelView());
-        final GeneratedDdlStmt stmt = new GeneratedDdlStmt();
-        ddlGen.generateCreate(element, stmt);
-        final String[] chunks = StringChunker.slice(stmt.toString());
-        try {
-            StringChunker.writeChunks(chunks, resultInserter);
-        } catch (SQLException e) {
-            tracer.warning("Problem getting object DDL: " + e.getMessage());
-            tracer.warning("Stack trace: " + Util.getStackTrace(e));
+        if (element != null) {
+            final DdlGenerator ddlGen =
+                FarragoUdrRuntime.getSession().getPersonality().newDdlGenerator(
+                    SqlDialect.EIGENBASE,
+                    FarragoUdrRuntime.getRepos().getModelView());
+            final GeneratedDdlStmt stmt = new GeneratedDdlStmt();
+            ddlGen.generateCreate(element, stmt);
+            final String[] chunks = StringChunker.slice(stmt.toString());
+            try {
+                StringChunker.writeChunks(chunks, resultInserter);
+            } catch (SQLException e) {
+                tracer.warning("Problem getting object DDL: " + e.getMessage());
+                tracer.warning("Stack trace: " + Util.getStackTrace(e));
+            }
         }
     }
 }
