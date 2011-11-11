@@ -180,6 +180,14 @@ public class FarragoTupleIterResultSet
                 }
             }
             return rc;
+        } catch (SqlTimeoutException ste) {
+            // throw timeout exception. If caller doesnt handle it, hopefully
+            // it will get wrapped as FarragoJdbcUtil.SqlException later
+            if (tracer.isLoggable(Level.FINE)) {
+                tracer.fine(
+                    "Query Timeout in FarragoTupleIterResultSet.next()");
+            }
+            throw ste;
         } catch (Throwable ex) {
             // trace exceptions as part of JDBC API
             throw FarragoJdbcUtil.newSqlException(ex, jdbcTracer);
