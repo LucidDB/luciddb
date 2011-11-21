@@ -154,7 +154,7 @@ public abstract class JmiJsonUtil
 
     /**
      * COnstructs and returns a RefObject based on the metadata passed in the
-     * JSON bean. Uses the target package (generally the farrgo package) to
+     * JSON bean. Uses the target package (generally the farrago package) to
      * construct the appropriate type of object based on the type information
      * in the JSON bean.
      * @param bean JsonMetadataBean instance representing the remote object's
@@ -331,8 +331,8 @@ public abstract class JmiJsonUtil
     /**
      * Moves &quot; references&quot; that don't actually refer to another
      * catalog object into the attributes list where they belong. This is a
-     * workaround to the fact that some attributes (notably, iniial values for
-     * clumns and parameters) are of type Reference, when they aren't really
+     * workaround to the fact that some attributes (notably, initial values for
+     * columns and parameters) are of type Reference, when they aren't really
      * references. This probably reflects an error in the model, but we can
      * work around it.
      *
@@ -398,7 +398,6 @@ public abstract class JmiJsonUtil
         } catch (Exception e) {
             tracer.severe("Exception flattening attribute " + e.getMessage());
             tracer.severe("Stack trace: " + Util.getStackTrace(e));
-            e.printStackTrace();
         }
         return refEnum;
     }

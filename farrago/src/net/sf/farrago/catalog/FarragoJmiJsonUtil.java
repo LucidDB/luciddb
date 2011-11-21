@@ -60,7 +60,7 @@ public class FarragoJmiJsonUtil
         Arrays.asList(new String[] {"TagAnnotation", "RowCountStats",
             "constraint", "clientConstraint", "trigger", "usingTrigger",
             "specification", "optionScopeColumn", "Histogram", "KeyComponent",
-            "ownedElement", "importer", "PathElement"
+            "ownedElement", "importer", "PathElement", "ColumnSet"
             });
 
     /* (non-Javadoc)
@@ -220,9 +220,10 @@ public class FarragoJmiJsonUtil
             if ((se != null) && (se instanceof CwmModelElement)) {
                 CwmModelElement cme = (CwmModelElement) se;
                 baseKey = getQualifiedName(cme) + "." + fso.getName();
+            } else {
+                tracer.warning("Generating key for StorageOption with no element");
+                baseKey = fso.getName();
             }
-            tracer.warning("Generating key for StorageOption with no element");
-            baseKey = fso.getName();
         } else {
             tracer.warning("Trying to get key for unexpected Object "
                 + object.refClass().getClass().getName());
@@ -400,7 +401,7 @@ public class FarragoJmiJsonUtil
      *
      * @param refKey String representing the name of the reference
      * @param objectKey String representing the key to the object referenced
-     * @param element CwmModelElement that containsthe reference
+     * @param element CwmModelElement that contains the reference
      * @param bean JsonMetadataBean that originally generated the element
      * @param beanKey String to hold the object key for the element, only
      * altered when refKey is &quot;namespace&quot;
@@ -534,12 +535,12 @@ public class FarragoJmiJsonUtil
     public String getLurqlClass(RefObject element)
     {
         String result = null;
-        if (element instanceof CwmCatalog) {
+        if (element instanceof FemDataServer) {
+            result = "DataServer";
+        } else if (element instanceof CwmCatalog) {
             result = "Catalog";
         } else if (element instanceof CwmSchema) {
             result = "Schema";
-        } else if (element instanceof FemDataServer) {
-            result = "DataServer";
         } else if (element instanceof FemDataWrapper) {
             result = "DataWrapper";
         } else if (element instanceof FemLocalTable) {
