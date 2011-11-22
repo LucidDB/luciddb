@@ -21,11 +21,14 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.resource.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.validate.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.util.SqlBasicVisitor;
+import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.validate.SqlMonotonicity;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 
 /**
@@ -140,7 +143,9 @@ public class SqlAsOperator
         SqlCall call,
         SqlValidatorScope scope)
     {
-        return call.operands[0].getMonotonicity(scope);
+        return scope.getValidator().getAliasedMonotonicity(
+            call.operands[0].getMonotonicity(scope),
+            (SqlIdentifier) call.operands[1]);
     }
 }
 

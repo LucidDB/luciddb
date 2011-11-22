@@ -22,29 +22,88 @@
 */
 package org.eigenbase.sql.validate;
 
-import java.math.*;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import java.util.*;
-import java.util.logging.*;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.resgen.*;
-import org.eigenbase.resource.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.trace.*;
-import org.eigenbase.util.*;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.RelRecordType;
+import org.eigenbase.resgen.ResourceDefinition;
+import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.SqlAccessEnum;
+import org.eigenbase.sql.SqlAccessType;
+import org.eigenbase.sql.SqlCall;
+import org.eigenbase.sql.SqlCallBinding;
+import org.eigenbase.sql.SqlDataTypeSpec;
+import org.eigenbase.sql.SqlDelete;
+import org.eigenbase.sql.SqlDml;
+import org.eigenbase.sql.SqlDynamicParam;
+import org.eigenbase.sql.SqlExplain;
+import org.eigenbase.sql.SqlFunction;
+import org.eigenbase.sql.SqlFunctionCategory;
+import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.SqlInsert;
+import org.eigenbase.sql.SqlIntervalLiteral;
+import org.eigenbase.sql.SqlIntervalQualifier;
+import org.eigenbase.sql.SqlJoin;
+import org.eigenbase.sql.SqlJoinOperator;
+import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.SqlLiteral;
+import org.eigenbase.sql.SqlMerge;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlNodeList;
+import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.SqlOrderByOperator;
+import org.eigenbase.sql.SqlSampleSpec;
+import org.eigenbase.sql.SqlSelect;
+import org.eigenbase.sql.SqlSelectKeyword;
+import org.eigenbase.sql.SqlSyntax;
+import org.eigenbase.sql.SqlUpdate;
+import org.eigenbase.sql.SqlUtil;
+import org.eigenbase.sql.SqlWindow;
+import org.eigenbase.sql.SqlWindowOperator;
+import org.eigenbase.sql.fun.SqlCase;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.type.AssignableOperandTypeChecker;
+import org.eigenbase.sql.type.ExplicitReturnTypeInference;
+import org.eigenbase.sql.type.SqlOperandTypeInference;
+import org.eigenbase.sql.type.SqlReturnTypeInference;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.trace.EigenbaseTrace;
+import org.eigenbase.util.BitString;
+import org.eigenbase.util.Bug;
+import org.eigenbase.util.EigenbaseException;
+import org.eigenbase.util.IdentityHashSet;
+import org.eigenbase.util.Pair;
+import org.eigenbase.util.Util;
 
 
 /**
  * Default implementation of {@link SqlValidator}.
  *
  * @author jhyde
- * @version $Id$
+ * @version $Id: //open/dt/dev/farrago/src/org/eigenbase/sql/validate/SqlValidatorImpl.java#129 $
  * @since Mar 3, 2005
  */
 public class SqlValidatorImpl
@@ -4602,6 +4661,13 @@ public class SqlValidatorImpl
             cursorPosToSelectMap = new HashMap<Integer, SqlSelect>();
             columnListParamToParentCursorMap = new HashMap<String, String>();
         }
+    }
+
+    @Override
+    public SqlMonotonicity getAliasedMonotonicity(
+        SqlMonotonicity exprMonotonicity, SqlIdentifier alias)
+    {
+        return exprMonotonicity;
     }
 
 }

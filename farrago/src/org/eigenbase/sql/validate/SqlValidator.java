@@ -21,11 +21,29 @@
 */
 package org.eigenbase.sql.validate;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.sql.SqlCall;
+import org.eigenbase.sql.SqlDataTypeSpec;
+import org.eigenbase.sql.SqlDelete;
+import org.eigenbase.sql.SqlDynamicParam;
+import org.eigenbase.sql.SqlFunction;
+import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.SqlInsert;
+import org.eigenbase.sql.SqlIntervalQualifier;
+import org.eigenbase.sql.SqlLiteral;
+import org.eigenbase.sql.SqlMerge;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlNodeList;
+import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.SqlSelect;
+import org.eigenbase.sql.SqlUpdate;
+import org.eigenbase.sql.SqlWindow;
+import org.eigenbase.util.EigenbaseException;
 
 
 /**
@@ -773,6 +791,18 @@ public interface SqlValidator
      * @return Row type of the cursor
      */
     RelDataType getCursorRowType(SqlCall cursorCall);
+
+    /**
+     * Calculates the monotonicity of an AS expression.
+     *
+     * @param exprMonotonicity
+     *            monotonicity of expression
+     * @param alias
+     *            name of alias
+     * @return monotonicity of AS expression
+     */
+    SqlMonotonicity getAliasedMonotonicity(
+        SqlMonotonicity exprMonotonicity, SqlIdentifier alias);
 }
 
 // End SqlValidator.java
