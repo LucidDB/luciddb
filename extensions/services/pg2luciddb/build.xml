@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build-project" name="luciddb-postgres-adapter">
+	
+	<property name="build.dir" value="${basedir}/build"/>
+	<property name="luciddb.postgres.adapter.jar" value="${build.dir}/luciddb-postgres-adapter.jar"/>
+	<property name="luciddb.postgres.pg_catalog.jar" value="${build.dir}/luciddb-postgres-adapter-catalog.jar"/>
+	<property name="thirdparty.dir" value="${basedir}/../../../thirdparty"/>
+
+    <path id="luciddb-postgres-adapter.classpath">
+        <pathelement location="classes"/>
+        <pathelement location="${thirdparty.dir}/hsqldb.jar"/>
+        <pathelement location="lib/log4j.jar"/>
+        <pathelement location="lib/LucidDbClient.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="classes"/>
+        <mkdir dir="${build.dir}"/>
+        <copy includeemptydirs="false" todir="classes">
+            <fileset dir="src" excludes="**/*.launch, **/*.java"/>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="classes"/>
+        <delete dir="${build.dir}"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+	
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" destdir="classes" >
+            <src path="src"/>
+            <classpath refid="luciddb-postgres-adapter.classpath"/>
+        </javac>
+    </target>
+	
+	<target name="package-service-jar" depends="build-project">
+		<jar destfile="${luciddb.postgres.adapter.jar}">
+			<fileset dir="classes" id="id">
+    			<include name="**/*"/>
+				<exclude name="org/luciddb/pg2luciddb/pg_catalog_plugin.class"/>
+    		</fileset>
+		</jar>
+	</target>
+	
+	<target name="package-catalog-jar" depends="build-project">
+		<jar destfile="${luciddb.postgres.pg_catalog.jar}">
+			<fileset dir="classes" id="id">
+    			<include name="org/luciddb/pg2luciddb/pg_catalog_plugin.class"/>
+    		</fileset>
+			<fileset dir="install">
+				<include name="deployment.txt"/>
+			</fileset>
+			<manifest>
+			        <section name="deployment.txt"> 
+			          <attribute 
+			             name="SQLJDeploymentDescriptor" 
+			             value="TRUE" />
+			        </section>
+			      </manifest>
+
+		</jar>
+	</target>
+	
+	<target name="package" depends="package-catalog-jar, package-service-jar" />
+	
+</project>

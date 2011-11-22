@@ -1,0 +1,5 @@
+# authorized hosts:
+# please specify one IP per line
+
+127.0.0.1
+192.168.75.200

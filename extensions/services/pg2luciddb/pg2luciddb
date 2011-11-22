@@ -1,0 +1,7 @@
+#!/bin/sh
+
+BIN_DIR=$(cd `dirname $0`; pwd)
+
+CLASSPATH_PG2LUCIDDB=$BIN_DIR/build/luciddb-postgres-adapter.jar:$BIN_DIR/lib/log4j.jar:$BIN_DIR/lib/LucidDbClient.jar:$BIN_DIR/lib/hsqldb.jar
+
+java -cp $CLASSPATH_PG2LUCIDDB -DPG2LucidDB.logger=conf/log4j.properties org.luciddb.pg2luciddb.Server conf/PG2LucidDB.properties

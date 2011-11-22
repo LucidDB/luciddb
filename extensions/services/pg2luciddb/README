@@ -1,0 +1,106 @@
+--------------------------------------------------------------------------------------------
+PG2LucidDB: PostgreSQL frontend for LucidDB column-oriented database
+--------------------------------------------------------------------------------------------
+
+Original Contributor to Eigenbase is Alexander Mekhrishvili
+
+What is it?
+
+  * This is cross-platform tool which acts as a bridge between PostgreSQL's frontend protocol
+    and LucidDB database engine (http://www.luciddb.org/). In another words - this is the only
+    tool which allows to access LucidDB from almost any programming language which has native
+    driver for widely known PostgreSQL database
+
+
+Why should I use it? 
+
+  * LucidDB is an outstanding column-based database engine. One of it's most significant drawback
+    in comparison with another competitors is the fact that it can be accessed only from Java-based 
+    application using it's own JDBC driver. The main goal of PG2LucidDB is to fill this gap & make 
+    it's possible to use the power of LucidDB from any third-party applications & programming languages
+
+
+Why PostgreSQL's protocol?
+ 
+  * The're 3 main reasons behind that decision:
+
+    1. PostgreSQL is very mature & well-known database engine. It's already has drivers for almost
+       all programming languages which gives an ability to implement only server-side part and use
+       already existing client-side tools 
+
+    2. It was relatively simple to implement it
+
+    3. There were already several existing products which acts in the same way: H2 database
+       (http://www.h2database.com/html/main.html) and Continuent Tungsten Connector 
+       (http://www.continuent.com/community/tungsten-connector). Actually PG2LucidDB partially
+       uses the sources from H2 database repository.
+
+
+Is it free?
+ 
+  * Completely. This program is free software; you can redistribute it and/or modify
+    it under the terms of version 2 of the GNU General Public License as published by the 
+    Free Software Foundation. 
+
+
+Is is stable & production ready?
+
+  * Due to very significant differences between PostgreSQL & LucidDB it will be almost impossible to make all the 
+    things working "out of the box" (i.e. - schema retrieval queries for ODBC provider). A lot of testing under
+    real conditions and heavy load is required to proof PG2LucidDB's stability and probably there are still
+    a lot of bugs in the code, so - use it at your own risk. The good news are that current bridge's version works 
+    pretty fine and already gives ability to query LucidDB from almost any programming language (it has been tested
+    with PHP, Perl, C# using .NET provider and JScript using ODBC provider)
+
+
+
+---- OLD STUFF 
+
+
+How to install?
+
+  * Just follow these sample steps:
+
+    1. Extract all the files from ZIP into directory on your server (it could be either dedicated box or 
+       the same as you use for your LucidDB instance)
+    2. Copy pg_catalog_plugin.jar from build directory to your LucidDB's plugin directory
+    3. Modify config files in conf directory. Pay attention to:
+
+       - JDBC connection string to your LucidDB in PG2LucidDB.properties file
+       - Database admin's username & password in PG2LucidDB.properties file
+       - Specify your db's users in allowed.users file (don't forget to create users in LucidDB first)
+       - Specify the hosts which will be allowed to connect to PG2LucidDB in authorized.hosts file or 
+         disable this check in PG2LucidDB.properties file
+
+    5. On WINDOWS: check that you have JAVA_HOME variable with valid path to installed Java runtime
+    4. Run PG2LucidDB:
+
+       - On *nix: ./pg2luciddb
+       - On WINDOWS: pg2luciddb.bat
+
+       First time it will take pretty long time to start, because PG2LucidDB will initialize it's own 
+       database schema (PG_CATALOG)
+
+    5. On WINDOWS: If you want to install PG2LucidDB as a service please check win32 project's folder
+       for more details and ready to run batch files. You will need Microsoft .NET Framework 2.0 to run ServiceWrapper 
+       application
+
+
+How to use it?
+
+  * Just see sample scripts in the samples directory. 
+
+
+How to build from the scratch?
+
+  * On WINDOWS:
+
+     1. Check that you have JDK version 1.5 or 1.6 installed a
+     2. Set JDK_HOME environment variable 
+     2. Run build_jdk5.bat or build_jdk6.bat
+
+
+I've found a bug or have a great idea to share; what should I do?
+
+  * Contact me at <alexander.mekhrishvili@gmail.com> or send an e-mail to LucidDB's mailing list:
+    (http://sourceforge.net/mailarchive/forum.php?forum_name=luciddb-users)                                   

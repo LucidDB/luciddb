@@ -1,0 +1,45 @@
+SQLActions[ ] = {
+
+"BEGIN INSTALL
+
+-- mofid to integer:
+create function mofIdToInteger(input varchar(1024))
+returns int
+language java
+no sql
+external name 'thisjar:org.luciddb.pg2luciddb.pg_catalog_plugin.mofIdToInteger';
+
+-- get user by id:
+create function pg_get_userbyid(input int)
+returns varchar(255)
+language java
+reads sql data
+external name 'thisjar:org.luciddb.pg2luciddb.pg_catalog_plugin.getUserById';
+
+-- dummy procedure:
+create procedure dummy_procedure(input varchar(255))
+language java
+no sql
+external name 'thisjar:org.luciddb.pg2luciddb.pg_catalog_plugin.dummyProcedure';
+
+create or replace view pg_user 
+as
+select 
+  -- mofIdToInteger("mofId") as oid,
+   "name" as usename,
+    true usecreatedb,
+    true usesuper
+from sys_fem."Security"."User";
+
+END INSTALL",
+
+"BEGIN REMOVE
+
+drop function mofIdToInteger cascade;
+drop function pg_get_userbyid cascade;
+drop procedure dummy_procedure cascade;
+drop view pg_user;
+
+END REMOVE"
+
+}

@@ -1,0 +1,4 @@
+# allowed users:
+# each line should contains username & password pairs in the following format: <user> = <pass>
+
+sa =

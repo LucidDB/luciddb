@@ -1,0 +1,3 @@
+# jdbc driver options per user
+
+#rnd = ;schema=luciddbclientnet
