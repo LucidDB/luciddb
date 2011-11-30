@@ -41,6 +41,7 @@ import org.eigenbase.util.*;
 public class FarragoLurqlService extends FarragoService
 {
     private JmiJsonUtil jmiJsonUtil = null;
+    private Object lockHandle = new Object();
 
     /**
      * Creates an instance of the FarragoLurqlService for a given server
@@ -126,32 +127,35 @@ public class FarragoLurqlService extends FarragoService
         Connection connection = null;
         Statement statement = null;
         ResultSet rs = null;
-        try {
-            connection = getConnection();
-            statement = getStatement(connection);
-            rs = statement.executeQuery(wrappedLurqlQuery);
-            while (rs.next()) {
-                result.add(rs.getString(1));
-            }
-            rs.close();
-            rs = null;
-            releaseStatement(statement);
-            releaseConnection(connection);
-        } catch (SQLException e) {
-            tracer.warning("Error executing query '" + wrappedLurqlQuery + "'");
-            tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
-        } finally {
+        synchronized (lockHandle) {
             try {
-                if (rs != null) {
-                    rs.close();
-                    rs = null;
+                connection = getConnection();
+                statement = getStatement(connection);
+                rs = statement.executeQuery(wrappedLurqlQuery);
+                while (rs.next()) {
+                    result.add(rs.getString(1));
                 }
+                rs.close();
+                rs = null;
                 releaseStatement(statement);
                 releaseConnection(connection);
-            } catch (SQLException se) {
+            } catch (SQLException e) {
+                tracer.warning(
+                    "Error executing query '" + wrappedLurqlQuery + "'");
+                tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
             } finally {
-                statement = null;
-                connection = null;
+                try {
+                    if (rs != null) {
+                        rs.close();
+                        rs = null;
+                    }
+                    releaseStatement(statement);
+                    releaseConnection(connection);
+                } catch (SQLException se) {
+                } finally {
+                    statement = null;
+                    connection = null;
+                }
             }
         }
         return result;
@@ -166,33 +170,36 @@ public class FarragoLurqlService extends FarragoService
         Statement statement = null;
         ResultSet rs = null;
         Collection<RefBaseObject> result = null;
-        try {
-            connection = getConnection();
-            statement = getStatement(connection);
-            rs = statement.executeQuery(wrappedLurqlQuery);
-            String interchangeString = StringChunker.readChunks(rs, 2);
-            tracer.finer("Interchange data is:\n" + interchangeString);
-            result = parseInterchange(target, interchangeString, format);
-            tracer.fine("Remotely imported " + result.size() + " objects");
-            rs.close();
-            rs = null;
-            releaseStatement(statement);
-            releaseConnection(connection);
-        } catch (SQLException e) {
-            tracer.warning("Error executing query '" + wrappedLurqlQuery + "'");
-            tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
-        } finally {
+        synchronized (lockHandle) {
             try {
-                if (rs != null) {
-                    rs.close();
-                    rs = null;
-                }
+                connection = getConnection();
+                statement = getStatement(connection);
+                rs = statement.executeQuery(wrappedLurqlQuery);
+                String interchangeString = StringChunker.readChunks(rs, 2);
+                tracer.finer("Interchange data is:\n" + interchangeString);
+                result = parseInterchange(target, interchangeString, format);
+                tracer.fine("Remotely imported " + result.size() + " objects");
+                rs.close();
+                rs = null;
                 releaseStatement(statement);
                 releaseConnection(connection);
-            } catch (SQLException se) {
+            } catch (SQLException e) {
+                tracer.warning(
+                    "Error executing query '" + wrappedLurqlQuery + "'");
+                tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
             } finally {
-                statement = null;
-                connection = null;
+                try {
+                    if (rs != null) {
+                        rs.close();
+                        rs = null;
+                    }
+                    releaseStatement(statement);
+                    releaseConnection(connection);
+                } catch (SQLException se) {
+                } finally {
+                    statement = null;
+                    connection = null;
+                }
             }
         }
         return result;
@@ -271,30 +278,32 @@ public class FarragoLurqlService extends FarragoService
         Connection connection = null;
         Statement statement = null;
         ResultSet rs = null;
-        try {
-            connection = getConnection();
-            statement = getStatement(connection);
-            rs = statement.executeQuery(query);
-            result = StringChunker.readChunks(rs, 2);
-            rs.close();
-            rs = null;
-            releaseStatement(statement);
-            releaseConnection(connection);
-        } catch (SQLException e) {
-            tracer.warning("Error executing query '" + query + "'");
-            tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
-        } finally {
+        synchronized (lockHandle) {
             try {
-                if (rs != null) {
-                    rs.close();
-                    rs = null;
-                }
+                connection = getConnection();
+                statement = getStatement(connection);
+                rs = statement.executeQuery(query);
+                result = StringChunker.readChunks(rs, 2);
+                rs.close();
+                rs = null;
                 releaseStatement(statement);
                 releaseConnection(connection);
-            } catch (SQLException se) {
+            } catch (SQLException e) {
+                tracer.warning("Error executing query '" + query + "'");
+                tracer.warning("Stack trace:\n" + Util.getStackTrace(e));
             } finally {
-                statement = null;
-                connection = null;
+                try {
+                    if (rs != null) {
+                        rs.close();
+                        rs = null;
+                    }
+                    releaseStatement(statement);
+                    releaseConnection(connection);
+                } catch (SQLException se) {
+                } finally {
+                    statement = null;
+                    connection = null;
+                }
             }
         }
         return result;
