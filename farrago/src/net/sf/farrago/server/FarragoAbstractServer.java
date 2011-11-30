@@ -22,7 +22,6 @@
 package net.sf.farrago.server;
 
 import java.io.*;
-
 import java.rmi.registry.*;
 
 import net.sf.farrago.catalog.*;
@@ -399,7 +398,9 @@ public abstract class FarragoAbstractServer
     {
         public void run()
         {
-            stopHard();
+            if (!stopSoft()) {
+                stopHard();
+            }
         }
     }
 }
