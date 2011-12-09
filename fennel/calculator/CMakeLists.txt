@@ -4,6 +4,8 @@ include_directories(${DEFAULT_INCLUDE})
 
 link_directories(${DEFAULT_LIB})
 
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES CalcLexer.cpp)
+
 INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/FindParsers.cmake)
 
 IF(PARSERS_FOUND)
