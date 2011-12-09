@@ -116,7 +116,7 @@ public abstract class FarragoLurqlUDR
             final Collection<RefObject> results = getObjects(lurql);
             String json = getJmiJsonUtil().generateJSON(
                 Collections.unmodifiableCollection(results));
-            tracer.info("JSON =\n" + json);
+            tracer.finer("JSON =\n" + json);
             String[] chunks = StringChunker.slice(json);
             StringChunker.writeChunks(chunks, resultInserter);
         } catch (SQLException e) {
