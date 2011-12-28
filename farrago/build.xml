@@ -2049,9 +2049,12 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
   <target name="dist">
     <copy file="${release.properties.src}" tofile="${release.properties}" 
           overwrite="true"/>
-    <p4counter property="p4.change" name="change"/>
+    <exec executable="git" outputproperty="git.commit">
+      <arg value="rev-parse" />
+      <arg value="HEAD" />
+    </exec>
     <propertyfile file="${release.properties}">
-      <entry key="product.build.number" value="${p4.change}"/>
+      <entry key="product.build.number" value="${git.commit}"/>
     </propertyfile>
     <antcall target="releaseProps"/>
     <copy file="${release.properties}" todir="${farrago.dist.dir}" force="true"/>
