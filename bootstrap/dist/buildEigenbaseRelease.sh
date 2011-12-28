@@ -19,13 +19,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 
-if test "`p4 opened`" != ""; then
-    echo "You have Perforce files open for edit in this client; aborting."
-    exit -1
-fi
-  
 usage() {
-    echo "Usage:  buildEigenbaseRelease.sh <label> <major> <minor> <point>"
+    echo "Usage:  buildEigenbaseRelease.sh <tag> <major> <minor> <point>"
 }
 
 # Get parameters
@@ -37,7 +32,7 @@ fi
 set -e
 set -v
 
-LABEL="$1"
+TAG="$1"
 MAJOR="$2"
 MINOR="$3"
 POINT="$4"
@@ -73,20 +68,21 @@ else
     fi
 fi
 
-# Generate version info
-# This will fail if requested label doesn't exist
-echo "$BINARY_RELEASE" > $DIST_DIR/VERSION
-echo "Perforce change @`p4 counter change`" >> $DIST_DIR/VERSION
-p4 label -o $LABEL >> $DIST_DIR/VERSION
+GIT_COMMIT=`git rev-parse HEAD`
 
-# Start from a clean sync to requested label
+# Stash any changes dev might have made before checking out clean tag
 cd $OPEN_DIR
-rm -rf thirdparty fennel farrago luciddb extensions
-p4 sync -f thirdparty/...@$LABEL
-p4 sync -f fennel/...@$LABEL
-p4 sync -f farrago/...@$LABEL
-p4 sync -f luciddb/...@$LABEL
-p4 sync -f extensions/...@$LABEL
+git add -A
+git add -u
+git stash save
+git checkout $TAG
+git clean -f -d
+
+# Generate version info
+# This will fail if requested tag doesn't exist
+echo "$BINARY_RELEASE" > $DIST_DIR/VERSION
+echo "Git commit @$GIT_COMMIT" >> $DIST_DIR/VERSION
+git log -n 1 --pretty $TAG >> $DIST_DIR/VERSION
 
 # Verify that client was mapped correctly
 if [ ! -e thirdparty ]; then
@@ -129,8 +125,8 @@ if [ $cygwin = "false" ]; then
 cd $DIST_DIR
 rm -f $SRC_RELEASE.$ARCHIVE_SUFFIX
 rm -rf $SRC_RELEASE
-mkdir $SRC_RELEASE
-cp -R $OPEN_DIR/thirdparty $SRC_RELEASE
+mkdir -p $SRC_RELEASE/thirdparty
+cp -R $OPEN_DIR/thirdparty/* $SRC_RELEASE/thirdparty/
 # Delete and stub out irrelevant thirdparty archives
 rm -f $SRC_RELEASE/thirdparty/icu-2.8.patch.tgz
 rm -f $SRC_RELEASE/thirdparty/tpch.tar.gz
@@ -221,12 +217,16 @@ cd $OPEN_DIR/farrago
 if [ $cygwin = "true" ]; then
   BIN_NAME=farrago.zip
 else
-  BIN_NAME=$BINARY_RELEASE.$P4_CHANGE.$ARCHIVE_SUFFIX
+  BIN_NAME=$BINARY_RELEASE.$GIT_COMMIT.$ARCHIVE_SUFFIX
 fi
-P4_CHANGE=`p4 counter change`
-cp ../farrago/dist/$BIN_NAME $DIST_DIR/$BINARY_RELEASE.$P4_CHANGE.$ARCHIVE_SUFFIX
+cp ../farrago/dist/$BIN_NAME $DIST_DIR/$BINARY_RELEASE.$GIT_COMMIT.$ARCHIVE_SUFFIX
 
 cd $OPEN_DIR/luciddb
 ./initBuild.sh --without-farrago-build --with-optimization --without-debug
 mv dist/luciddb.$ARCHIVE_SUFFIX \
     $DIST_DIR/$LUCIDDB_BINARY_RELEASE.$ARCHIVE_SUFFIX
+
+# Finally attempt to restore their stash. If any of our files would be
+# overwritten this will fail and the stash will not be applied.
+git stash pop
+
