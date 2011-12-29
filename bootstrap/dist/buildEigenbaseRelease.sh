@@ -68,8 +68,6 @@ else
     fi
 fi
 
-GIT_COMMIT=`git rev-parse HEAD`
-
 # Stash any changes dev might have made before checking out clean tag
 cd $OPEN_DIR
 git add -A
@@ -77,6 +75,8 @@ git add -u
 git stash save
 git checkout $TAG
 git clean -f -d
+
+GIT_COMMIT=`git rev-parse HEAD`
 
 # Generate version info
 # This will fail if requested tag doesn't exist
