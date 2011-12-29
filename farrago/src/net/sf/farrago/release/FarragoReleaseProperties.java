@@ -90,8 +90,8 @@ public class FarragoReleaseProperties
     /**
      * Build number for the product.
      */
-    public final IntegerProperty productBuildNumber =
-        new IntegerProperty(this, "product.build.number", 0);
+    public final StringProperty productBuildNumber =
+        new StringProperty(this, "product.build.number", "0");
 
     /**
      * Name of the JDBC driver as reported via java.sql.DatabaseMetaData.
@@ -152,7 +152,7 @@ public class FarragoReleaseProperties
         result.append(productVersionMinor.get());
         result.append(".");
         result.append(productVersionPoint.get());
-        if (productBuildNumber.get() > 0) {
+        if (!productBuildNumber.get().equals(0)) {
             result.append(".");
             result.append(productBuildNumber.get());
         }
