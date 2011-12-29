@@ -152,7 +152,7 @@ public class FarragoReleaseProperties
         result.append(productVersionMinor.get());
         result.append(".");
         result.append(productVersionPoint.get());
-        if (!productBuildNumber.get().equals(0)) {
+        if (!productBuildNumber.get().equals("0")) {
             result.append(".");
             result.append(productBuildNumber.get());
         }
