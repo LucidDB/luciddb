@@ -229,4 +229,5 @@ mv dist/luciddb.$ARCHIVE_SUFFIX \
 # Finally attempt to restore their stash. If any of our files would be
 # overwritten this will fail and the stash will not be applied.
 git stash pop
+true # ensure $? == 0
 
