@@ -1482,9 +1482,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
   <!-- Verify that all source files have the required headers -->
   <!-- TODO:  see if this works in non-Linux environments -->
   <target name="checkSourceFilePreambles">
-    <exec os="Linux" dir="${farrago.dir}" failonerror="true"
-      executable="${fennel.dir}/build/checkPreambleFarrago.sh">
-    </exec>
+    <echo message="checking source file preambles no longer"/>
   </target>
 
   <!-- Ensure that javadoc has no warnings/errors. -->
