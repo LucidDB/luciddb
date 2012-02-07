@@ -48,13 +48,3 @@ officially frozen in future releases.
 Please report issues at Eigenbase JIRA:
 
 http://issues.eigenbase.org
-
-----------------------------------------------------------------------
-LICENSE
-
-Copyright (C) 1999-2011 The Eigenbase Project and others
-
-This distribution of Eigenbase is licensed under the GNU General
-Public License; see file COPYING for details.  License terms for
-third-party libraries contained in this distribution are provided as
-text files in the lib directory.
