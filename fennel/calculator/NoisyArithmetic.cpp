@@ -1,40 +1,20 @@
 /*
-// $Id$
-// Fennel is a library of data storage and processing components.
-// Copyright (C) 2005 The Eigenbase Project
-// Copyright (C) 2004 SQLstream, Inc.
-// Copyright (C) 2009 Dynamo BI Corporation
-//
-// This program is free software; you can redistribute it and/or modify it
-// under the terms of the GNU General Public License as published by the Free
-// Software Foundation; either version 2 of the License, or (at your option)
-// any later version approved by The Eigenbase Project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-// ---
-//
-// Arithmetic function on various types but Raises exceptions on various
-// error conditions (overflow, divide-by-zero etc.)
-//
-// TODO:
-//      1. How does little/big endian effect the bit shift used in
-//          unsigned multiplication?
-//      3. Shift/Bit/Round operator etc.
-//
-*/
-/* TEMP. TODO. LATER, gcc>=4.1 is braindead: optimizes fp instructions until
-    AFTER the fp status check (fetestexcept()). At the same time FENV_ACCESS ON
-    is not yet implemented. ref. dtbug #1490.
+// Licensed to DynamoBI Corporation (DynamoBI) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  DynamoBI licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
 
-   Ref. this macro in code and cleanup by removing redundant code
+//   http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
 */
 #define DTBUG1490   (1)
 

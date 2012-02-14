@@ -1,31 +1,23 @@
 #!/bin/bash
-# $Id$
-# Eigenbase master build script for creating release images
-# Copyright (C) 2005 The Eigenbase Project
-# Copyright (C) 2005 SQLstream, Inc.
-# Copyright (C) 2005 Dynamo BI Corporation
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later Eigenbase-approved version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
+# Licensed to DynamoBI Corporation (DynamoBI) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  DynamoBI licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
 
-if test "`p4 opened`" != ""; then
-    echo "You have Perforce files open for edit in this client; aborting."
-    exit -1
-fi
-  
+#   http:www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 usage() {
-    echo "Usage:  buildEigenbaseRelease.sh <label> <major> <minor> <point>"
+    echo "Usage:  buildEigenbaseRelease.sh <tag> <major> <minor> <point>"
 }
 
 # Get parameters
@@ -37,7 +29,7 @@ fi
 set -e
 set -v
 
-LABEL="$1"
+TAG="$1"
 MAJOR="$2"
 MINOR="$3"
 POINT="$4"
@@ -73,20 +65,21 @@ else
     fi
 fi
 
-# Generate version info
-# This will fail if requested label doesn't exist
-echo "$BINARY_RELEASE" > $DIST_DIR/VERSION
-echo "Perforce change @`p4 counter change`" >> $DIST_DIR/VERSION
-p4 label -o $LABEL >> $DIST_DIR/VERSION
-
-# Start from a clean sync to requested label
+# Stash any changes dev might have made before checking out clean tag
 cd $OPEN_DIR
-rm -rf thirdparty fennel farrago luciddb extensions
-p4 sync -f thirdparty/...@$LABEL
-p4 sync -f fennel/...@$LABEL
-p4 sync -f farrago/...@$LABEL
-p4 sync -f luciddb/...@$LABEL
-p4 sync -f extensions/...@$LABEL
+git add -A
+git add -u
+git stash save
+git checkout $TAG
+git clean -f -d
+
+GIT_COMMIT=`git rev-parse HEAD`
+
+# Generate version info
+# This will fail if requested tag doesn't exist
+echo "$BINARY_RELEASE" > $DIST_DIR/VERSION
+echo "Git commit @$GIT_COMMIT" >> $DIST_DIR/VERSION
+git log -n 1 --pretty $TAG >> $DIST_DIR/VERSION
 
 # Verify that client was mapped correctly
 if [ ! -e thirdparty ]; then
@@ -129,8 +122,8 @@ if [ $cygwin = "false" ]; then
 cd $DIST_DIR
 rm -f $SRC_RELEASE.$ARCHIVE_SUFFIX
 rm -rf $SRC_RELEASE
-mkdir $SRC_RELEASE
-cp -R $OPEN_DIR/thirdparty $SRC_RELEASE
+mkdir -p $SRC_RELEASE/thirdparty
+cp -R $OPEN_DIR/thirdparty/* $SRC_RELEASE/thirdparty/
 # Delete and stub out irrelevant thirdparty archives
 rm -f $SRC_RELEASE/thirdparty/icu-2.8.patch.tgz
 rm -f $SRC_RELEASE/thirdparty/tpch.tar.gz
@@ -221,12 +214,18 @@ cd $OPEN_DIR/farrago
 if [ $cygwin = "true" ]; then
   BIN_NAME=farrago.zip
 else
-  BIN_NAME=$BINARY_RELEASE.$P4_CHANGE.$ARCHIVE_SUFFIX
+  BIN_NAME=$BINARY_RELEASE.$GIT_COMMIT.$ARCHIVE_SUFFIX
 fi
-P4_CHANGE=`p4 counter change`
-cp ../farrago/dist/$BIN_NAME $DIST_DIR/$BINARY_RELEASE.$P4_CHANGE.$ARCHIVE_SUFFIX
+cp ../farrago/dist/$BIN_NAME $DIST_DIR/$BINARY_RELEASE.$GIT_COMMIT.$ARCHIVE_SUFFIX
 
 cd $OPEN_DIR/luciddb
 ./initBuild.sh --without-farrago-build --with-optimization --without-debug
 mv dist/luciddb.$ARCHIVE_SUFFIX \
     $DIST_DIR/$LUCIDDB_BINARY_RELEASE.$ARCHIVE_SUFFIX
+
+# Finally attempt to restore their stash. If any of our files would be
+# overwritten this will fail and the stash will not be applied.
+if [[ "" != `git stash list` ]]; then
+  git stash pop
+fi
+

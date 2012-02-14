@@ -18,6 +18,11 @@ Source releases of LucidDB are available:
 http://docs.eigenbase.org/LucidDbBuildFromSourceDistribution
 
 ----------------------------------------------------------------------
+LICENSE
+
+LucidDB is Apache 2.0 licensed.  See LICENSE file for full text
+
+----------------------------------------------------------------------
 GETTING IN TOUCH
 
 User forums are available at:
@@ -47,19 +52,6 @@ http://studio.dynamobi.com
 Note that in version 0.9.4 the JDBC Driver has been changed significantly
 requiring reinstallation of the LucidDBClient.jar into systems that access
 previously accessed 0.9.3 LucidDB.
-
-------------------------------------------------------------
-LEGAL
-
-Copyright (C) 1999-2011 The Eigenbase Project and others
-Copyright (C) 1999-2011 DynamoBI Corporation
-
-LucidDB and the LucidDB logo are trademarks of DynamoBI Corporation
-
-This distribution of LucidDB is licensed under the GNU General
-Public License; see file COPYING for details.  License terms for
-third-party libraries contained in this distribution are provided as
-text files in the lib directory.
 
 To obtain the source code from which this distribution was built,
 please visit http://www.eigenbase.org/download.html.
