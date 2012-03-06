@@ -1,0 +1,24 @@
+#!/bin/bash
+BIN_DIR=$(cd `dirname $0`; pwd)
+
+case $1 in
+start-daemon)
+  echo "Starting LucidDB Server via bin/lucidDbServer"
+  cd $BIN_DIR/../
+  ./bin/lucidDbServer >&- <&- 2>&- &
+  ;;
+start)
+  echo "Starting LucidDB Server via bin/lucidDbServer"
+  cd $BIN_DIR/../
+  ./bin/lucidDbServer >&- 
+  ;;
+stop)
+  cd $BIN_DIR/../
+  echo "call sys_root.shutdown_database(true, 5000);" | bin/sqllineClient
+  echo "Stopping LucidDB Server via bin/sqllineClient (shutdown_database procedure call)"
+  ;;
+*)
+    echo "$0 [ start | start-daemon | stop ]"
+    exit 0
+    ;;
+esac
