@@ -1,7 +1,7 @@
 luciddb
 =======
 
-LucidDB has had a long run as the first pure play open soruce columnur database.
+LucidDB has had a long run as the first pure play open source column store database.
 
 However, with no commercial sponsors and no ongoing community activity it's time to OFFICIALLY shut the doors.
 
