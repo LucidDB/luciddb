@@ -9,7 +9,9 @@ There will be no future code, or binary releases (this repository may dissapear 
 
 Appreciate all the effort by all those involved with LucidDB.
 
-Optiq, has given home and new life to portions of the LucidDB codebase.  If you're interested in speaking SQL to NoSQL sources please checkout the Optiq project.  https://github.com/julianhyde/optiq
+Optiq, has given home and new life to portions of the LucidDB codebase.  If you're interested in speaking SQL to NoSQL sources please checkout the Optiq project. 
+
+https://github.com/julianhyde/optiq
 
 
 
